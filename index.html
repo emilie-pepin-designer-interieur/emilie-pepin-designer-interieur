@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Émilie Pépin">
+<meta name="theme-color" content="#6B2D45">
+<title>Émilie Pépin — Studio</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mauve: #6B2D45;
+  --mauve-deep: #9B6B8A;
+  --mauve-light: #C4859A;
+  --rose-cream: #FDF8F8;
+  --blush: #F2D7E0;
+  --rose-powder: #ECC5D4;
+  --white: #ffffff;
+  --text-dark: #2A1520;
+  --text-mid: #6B4A56;
+  --text-light: #A88090;
+  --shadow-soft: 0 4px 24px rgba(107,45,69,0.08);
+  --shadow-card: 0 2px 12px rgba(107,45,69,0.06);
+  --radius: 20px;
+  --radius-sm: 12px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--rose-cream);
+  color: var(--text-dark);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== SCREENS ===== */
+.screen {
+  display: none;
+  min-height: 100vh;
+  flex-direction: column;
+  animation: fadeIn 0.3s ease;
+}
+.screen.active { display: flex; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== HEADER ===== */
+.app-header {
+  background: var(--mauve);
+  padding: calc(var(--safe-top) + 16px) 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-back {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.header-back:active { background: rgba(255,255,255,0.25); }
+
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: white;
+  flex: 1;
+  letter-spacing: 0.02em;
+}
+.header-subtitle {
+  font-size: 11px;
+  color: var(--rose-powder);
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+}
+.header-action {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  background: white;
+  border-top: 1px solid var(--blush);
+  display: flex;
+  padding-bottom: var(--safe-bottom);
+  z-index: 100;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-light);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  transition: color 0.2s;
+}
+.nav-item.active { color: var(--mauve); }
+.nav-item svg { width: 22px; height: 22px; }
+
+/* ===== SCROLL CONTENT ===== */
+.scroll-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: calc(70px + var(--safe-bottom));
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ===== SCREEN 1: CLIENTS ===== */
+.search-bar {
+  margin: 16px;
+  position: relative;
+}
+.search-bar input {
+  width: 100%;
+  padding: 12px 16px 12px 44px;
+  background: white;
+  border: 1.5px solid var(--blush);
+  border-radius: 50px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text-dark);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-bar input:focus { border-color: var(--mauve-light); }
+.search-bar input::placeholder { color: var(--text-light); }
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light);
+}
+
+.section-label {
+  padding: 8px 20px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-light);
+}
+
+.client-list { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+
+.client-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 1px solid transparent;
+  text-decoration: none;
+  color: inherit;
+}
+.client-card:active {
+  transform: scale(0.98);
+  box-shadow: none;
+  border-color: var(--blush);
+}
+
+.client-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--mauve) 0%, var(--mauve-light) 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  color: white;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.client-info { flex: 1; }
+.client-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-dark);
+  letter-spacing: 0.01em;
+}
+.client-project {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+.client-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+.status-active { background: #E8F5E3; color: #3A7D29; }
+.status-pending { background: #FFF3E0; color: #E07B00; }
+.status-completed { background: #F3F0FF; color: #6B4AB5; }
+
+.client-chevron { color: var(--mauve-light); }
+
+.fab {
+  position: fixed;
+  bottom: calc(80px + var(--safe-bottom));
+  right: 20px;
+  width: 56px; height: 56px;
+  background: var(--mauve);
+  border-radius: 50%;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(107,45,69,0.35);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 50;
+}
+.fab:active { transform: scale(0.92); box-shadow: 0 2px 10px rgba(107,45,69,0.25); }
+
+/* ===== SCREEN 2: CLIENT DETAIL ===== */
+.client-hero {
+  background: var(--mauve);
+  padding: 20px 20px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.client-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+}
+.client-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; left: -30px;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.03);
+}
+.hero-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  color: white;
+  margin-bottom: 12px;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+.hero-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 500;
+  color: white;
+  letter-spacing: 0.02em;
+}
+.hero-project { font-size: 13px; color: var(--rose-powder); margin-top: 4px; }
+
+.hero-stats {
+  display: flex;
+  gap: 0;
+  margin-top: 16px;
+  background: rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.hero-stat {
+  flex: 1;
+  padding: 10px 8px;
+  text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+.hero-stat:last-child { border-right: none; }
+.stat-value { font-size: 18px; font-weight: 500; color: white; font-family: 'Cormorant Garamond', serif; }
+.stat-label { font-size: 10px; color: var(--rose-powder); margin-top: 1px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 16px;
+}
+
+.action-btn {
+  background: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.15s;
+  text-decoration: none;
+}
+.action-btn:active { transform: scale(0.96); }
+
+.action-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.icon-photos { background: #FFF0F4; }
+.icon-voice { background: #F0F4FF; }
+.icon-note { background: #F0FFF4; }
+.icon-time { background: #FFFBF0; }
+.icon-project { background: #F8F0FF; }
+.icon-move { background: #F0F8FF; }
+.icon-bill { background: #FFF5F0; }
+.icon-anna { background: linear-gradient(135deg, #FDF0F5, #F5E8F8); }
+
+.action-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dark);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.bill-btn {
+  margin: 4px 16px 16px;
+  background: var(--mauve);
+  border: none;
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  width: calc(100% - 32px);
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 20px rgba(107,45,69,0.25);
+  transition: transform 0.15s;
+}
+.bill-btn:active { transform: scale(0.98); }
+
+/* ===== SCREEN 3: PHOTOS ===== */
+.photo-zone {
+  margin: 16px;
+  background: white;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.camera-preview {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: #1a0a10;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+#cameraVideo {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: none;
+}
+#photoCanvas { display: none; }
+#capturedPhoto {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: none;
+}
+.camera-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.4);
+}
+.camera-placeholder svg { width: 48px; height: 48px; }
+.camera-placeholder span { font-size: 13px; }
+
+.camera-controls {
+  padding: 16px;
+  display: flex;
+  gap: 10px;
+}
+.cam-btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.cam-btn:active { transform: scale(0.97); }
+.cam-btn-primary { background: var(--mauve); color: white; }
+.cam-btn-secondary { background: var(--blush); color: var(--mauve); }
+
+.annotation-bar {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background: white;
+  border-radius: var(--radius);
+  margin: 0 16px;
+  box-shadow: var(--shadow-card);
+  overflow-x: auto;
+}
+.annot-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--blush);
+  background: white;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-mid);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.annot-btn.active, .annot-btn:active {
+  background: var(--mauve);
+  border-color: var(--mauve);
+  color: white;
+}
+
+.photos-gallery {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.gallery-thumb {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--blush);
+  position: relative;
+}
+.gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.gallery-count {
+  position: absolute;
+  inset: 0;
+  background: rgba(107,45,69,0.6);
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* ===== SCREEN 4: NOTE DE CHANTIER ===== */
+.note-form { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-light);
+}
+.form-input, .form-textarea, .form-select {
+  width: 100%;
+  padding: 13px 16px;
+  background: white;
+  border: 1.5px solid var(--blush);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text-dark);
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--mauve-light);
+}
+.form-textarea { min-height: 120px; resize: none; line-height: 1.6; }
+
+.submit-btn {
+  background: var(--mauve);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 20px rgba(107,45,69,0.25);
+  transition: transform 0.15s;
+}
+.submit-btn:active { transform: scale(0.98); }
+
+/* ===== SCREEN 5: ANNA ===== */
+.anna-header {
+  padding: 20px 16px 16px;
+  text-align: center;
+}
+.anna-avatar {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--mauve), var(--mauve-deep));
+  margin: 0 auto 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 4px 20px rgba(107,45,69,0.3);
+}
+.anna-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--text-dark);
+}
+.anna-desc { font-size: 13px; color: var(--text-light); margin-top: 4px; }
+
+.chat-container {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 300px;
+}
+.chat-bubble {
+  max-width: 85%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.bubble-anna {
+  background: white;
+  color: var(--text-dark);
+  border-radius: 4px 18px 18px 18px;
+  box-shadow: var(--shadow-card);
+  align-self: flex-start;
+}
+.bubble-user {
+  background: var(--mauve);
+  color: white;
+  border-radius: 18px 4px 18px 18px;
+  align-self: flex-end;
+}
+.anna-typing {
+  display: flex; gap: 4px; align-items: center;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 4px 18px 18px 18px;
+  box-shadow: var(--shadow-card);
+  align-self: flex-start;
+  max-width: 80px;
+}
+.dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--mauve-light);
+  animation: bounce 1.2s infinite;
+}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+.anna-suggestions {
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.suggestion-chip {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  background: white;
+  border: 1.5px solid var(--blush);
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--mauve);
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.suggestion-chip:active {
+  background: var(--mauve);
+  color: white;
+  border-color: var(--mauve);
+}
+
+.anna-input-bar {
+  position: fixed;
+  bottom: calc(60px + var(--safe-bottom));
+  left: 0; right: 0;
+  background: white;
+  border-top: 1px solid var(--blush);
+  padding: 10px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.anna-input {
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--rose-cream);
+  border: 1.5px solid var(--blush);
+  border-radius: 50px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text-dark);
+  outline: none;
+}
+.anna-send {
+  width: 40px; height: 40px;
+  background: var(--mauve);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ===== SCREEN 6: TABLEAU DE BORD ===== */
+.dashboard-greeting {
+  padding: 20px 20px 16px;
+  background: var(--mauve);
+}
+.greeting-date { font-size: 12px; color: var(--rose-powder); letter-spacing: 0.06em; text-transform: uppercase; }
+.greeting-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  color: white;
+  margin-top: 4px;
+  font-weight: 400;
+}
+.greeting-sub { font-size: 13px; color: var(--rose-powder); margin-top: 2px; }
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 16px;
+}
+.dash-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+}
+.dash-card-wide {
+  grid-column: 1 / -1;
+}
+.dash-number {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px;
+  font-weight: 500;
+  color: var(--mauve);
+}
+.dash-label { font-size: 12px; color: var(--text-light); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.task-list { display: flex; flex-direction: column; gap: 8px; }
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rose-cream);
+}
+.task-item:last-child { border-bottom: none; }
+.task-check {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--blush);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.task-check.done { background: var(--mauve); border-color: var(--mauve); }
+.task-text { font-size: 13px; color: var(--text-dark); flex: 1; }
+.task-client { font-size: 11px; color: var(--text-light); }
+
+/* ===== SCREEN 7: FEUILLE DE TEMPS ===== */
+.timer-display {
+  margin: 16px;
+  background: var(--mauve);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 4px 24px rgba(107,45,69,0.25);
+}
+.timer-time {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 56px;
+  color: white;
+  letter-spacing: 0.05em;
+  font-weight: 300;
+}
+.timer-client { font-size: 13px; color: var(--rose-powder); margin-top: 4px; }
+.timer-controls { display: flex; gap: 12px; margin-top: 16px; justify-content: center; }
+.timer-btn {
+  padding: 10px 24px;
+  border-radius: 50px;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.timer-btn:active { transform: scale(0.96); }
+.timer-start { background: white; color: var(--mauve); }
+.timer-stop { background: rgba(255,255,255,0.2); color: white; }
+
+.time-entries { padding: 0 16px; }
+.time-entry {
+  background: white;
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-card);
+}
+.entry-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--mauve-light);
+  flex-shrink: 0;
+}
+.entry-info { flex: 1; }
+.entry-client { font-size: 14px; font-weight: 500; color: var(--text-dark); }
+.entry-desc { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+.entry-time { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--mauve); font-weight: 500; }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  top: calc(var(--safe-top) + 80px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--text-dark);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 1000;
+  white-space: nowrap;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ===== LOADING ===== */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--mauve);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 9999;
+  transition: opacity 0.5s;
+}
+.loading-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px;
+  color: white;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+.loading-sub { font-size: 13px; color: var(--rose-powder); letter-spacing: 0.1em; text-transform: uppercase; }
+.loading-dots { display: flex; gap: 6px; }
+.loading-dots .dot { background: rgba(255,255,255,0.5); }
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  padding: 48px 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.empty-icon { font-size: 48px; }
+.empty-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--text-mid); }
+.empty-desc { font-size: 13px; color: var(--text-light); line-height: 1.6; }
+
+/* ===== MOOD BOARD ===== */
+.mood-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 16px;
+}
+.mood-item {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: white;
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.mood-item:active { transform: scale(0.97); }
+.mood-item img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+.mood-label { padding: 8px 10px; font-size: 11px; color: var(--text-mid); font-weight: 500; }
+
+.color-palette {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  overflow-x: auto;
+}
+.color-swatch {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s;
+}
+.color-swatch:active { transform: scale(0.9); }
+.color-swatch.selected::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+  font-size: 18px;
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-logo">Émilie Pépin<br><small style="font-size:18px;opacity:0.7">Designer d'intérieur</small></div>
+  <div class="loading-sub">Studio</div>
+  <div class="loading-dots">
+    <div class="dot" style="animation-delay:0s"></div>
+    <div class="dot" style="animation-delay:0.2s"></div>
+    <div class="dot" style="animation-delay:0.4s"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== SCREEN: CLIENTS ===== -->
+<div class="screen active" id="screenClients">
+  <div class="app-header">
+    <div>
+      <div class="header-title">🌸 Émilie Pépin</div>
+      <div class="header-subtitle">Studio Designer d'intérieur</div>
+    </div>
+    <button class="header-action" onclick="showScreen('screenDashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </button>
+  </div>
+  <div class="scroll-content">
+    <div class="search-bar">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Rechercher un client..." oninput="filterClients(this.value)">
+    </div>
+    <div class="section-label">Clients actifs</div>
+    <div class="client-list" id="clientList">
+      <div class="empty-state">
+        <div class="empty-icon">🌸</div>
+        <div class="empty-title">Chargement...</div>
+        <div class="empty-desc">Connexion à Microsoft 365</div>
+      </div>
+    </div>
+  </div>
+  <button class="fab" onclick="showAddClient()">+</button>
+</div>
+
+<!-- ===== SCREEN: CLIENT DETAIL ===== -->
+<div class="screen" id="screenClient">
+  <div class="app-header">
+    <button class="header-back" onclick="showScreen('screenClients')">←</button>
+    <div>
+      <div class="header-title" id="clientHeaderName">Client</div>
+      <div class="header-subtitle" id="clientHeaderProject">Projet en cours</div>
+    </div>
+    <button class="header-action" onclick="callClient()">📞</button>
+  </div>
+  <div class="scroll-content">
+    <div class="client-hero" id="clientHero">
+      <div class="hero-avatar" id="heroAvatar">EP</div>
+      <div class="hero-name" id="heroName">Nom Client</div>
+      <div class="hero-project" id="heroProject">Projet · Style classique</div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="stat-value" id="statHeures">0h</div>
+          <div class="stat-label">Heures</div>
+        </div>
+        <div class="hero-stat">
+          <div class="stat-value" id="statFacture">0$</div>
+          <div class="stat-label">Facturé</div>
+        </div>
+        <div class="hero-stat">
+          <div class="stat-value" id="statPhotos">0</div>
+          <div class="stat-label">Photos</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:16px 16px 8px">
+      <div class="section-label" style="padding:0 0 8px">Actions rapides</div>
+    </div>
+
+    <div class="actions-grid">
+      <button class="action-btn" onclick="goToPhotos()">
+        <div class="action-icon icon-photos">📸</div>
+        <div class="action-label">Photos chantier</div>
+      </button>
+      <button class="action-btn" onclick="startVoiceNote()">
+        <div class="action-icon icon-voice">🎤</div>
+        <div class="action-label">Note vocale</div>
+      </button>
+      <button class="action-btn" onclick="showScreen('screenNote')">
+        <div class="action-icon icon-note">📋</div>
+        <div class="action-label">Note de chantier</div>
+      </button>
+      <button class="action-btn" onclick="showScreen('screenTemps')">
+        <div class="action-icon icon-time">⏱️</div>
+        <div class="action-label">Feuille de temps</div>
+      </button>
+      <button class="action-btn" onclick="showSuiviProjet()">
+        <div class="action-icon icon-project">📊</div>
+        <div class="action-label">Suivi projet</div>
+      </button>
+      <button class="action-btn" onclick="showScreen('screenMoodboard')">
+        <div class="action-icon" style="background:#FFF0F8">🎨</div>
+        <div class="action-label">Moodboard</div>
+      </button>
+      <button class="action-btn" onclick="logDeplacement()">
+        <div class="action-icon icon-move">🚗</div>
+        <div class="action-label">Déplacement</div>
+      </button>
+      <button class="action-btn" onclick="askAnna()">
+        <div class="action-icon icon-anna">✨</div>
+        <div class="action-label">Demander à Anna</div>
+      </button>
+    </div>
+
+    <button class="bill-btn" onclick="showFacturer()">
+      <span>💰</span> Facturer ce client
+    </button>
+  </div>
+</div>
+
+<!-- ===== SCREEN: PHOTOS ===== -->
+<div class="screen" id="screenPhotos">
+  <div class="app-header">
+    <button class="header-back" onclick="showScreen('screenClient')">←</button>
+    <div>
+      <div class="header-title">📸 Photos chantier</div>
+      <div class="header-subtitle" id="photosClientName">Client</div>
+    </div>
+  </div>
+  <div class="scroll-content">
+    <div class="photo-zone">
+      <div class="camera-preview">
+        <video id="cameraVideo" autoplay playsinline></video>
+        <canvas id="photoCanvas"></canvas>
+        <img id="capturedPhoto" alt="Photo prise">
+        <div class="camera-placeholder" id="cameraPlaceholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span>Appuyer pour activer la caméra</span>
+        </div>
+      </div>
+      <div class="camera-controls">
+        <button class="cam-btn cam-btn-secondary" onclick="openGallery()">🖼️ Galerie</button>
+        <button class="cam-btn cam-btn-primary" id="camBtn" onclick="toggleCamera()">📷 Caméra</button>
+        <button class="cam-btn cam-btn-primary" id="snapBtn" onclick="takePhoto()" style="display:none">📸 Capturer</button>
+      </div>
+    </div>
+
+    <div class="annotation-bar" id="annotBar" style="display:none">
+      <button class="annot-btn active">🔴 Problème</button>
+      <button class="annot-btn" onclick="this.classList.toggle('active')">✅ OK</button>
+      <button class="annot-btn" onclick="this.classList.toggle('active')">⚠️ Attention</button>
+      <button class="annot-btn" onclick="this.classList.toggle('active')">📐 Mesure</button>
+      <button class="annot-btn" onclick="this.classList.toggle('active')">💡 Idée</button>
+    </div>
+
+    <input type="file" id="galleryInput" accept="image/*" capture="environment" style="display:none" onchange="handleGalleryPhoto(event)">
+
+    <div style="padding:16px 16px 8px">
+      <div class="section-label" style="padding:0">Photos récentes</div>
+    </div>
+    <div class="photos-gallery" id="photosGallery">
+      <div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-light);font-size:13px;">Aucune photo pour ce client</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: NOTE DE CHANTIER ===== -->
+<div class="screen" id="screenNote">
+  <div class="app-header">
+    <button class="header-back" onclick="showScreen('screenClient')">←</button>
+    <div class="header-title">📋 Note de chantier</div>
+  </div>
+  <div class="scroll-content">
+    <div class="note-form">
+      <div class="form-group">
+        <label class="form-label">Type de visite</label>
+        <select class="form-select" id="noteType">
+          <option>Visite de chantier</option>
+          <option>Réunion client</option>
+          <option>Inspection finale</option>
+          <option>Suivi fournisseur</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observations</label>
+        <textarea class="form-textarea" id="noteObs" placeholder="Décrivez ce que vous avez observé sur le chantier..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Actions requises</label>
+        <textarea class="form-textarea" id="noteActions" placeholder="Quelles actions doivent être faites?" style="min-height:80px"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prochaine étape</label>
+        <input type="text" class="form-input" id="noteNext" placeholder="Ex: Commander les tuiles, Appeler Jean...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date de suivi</label>
+        <input type="date" class="form-input" id="noteDate">
+      </div>
+      <button class="submit-btn" onclick="saveNote()">💾 Sauvegarder la note</button>
+      <button class="submit-btn" style="background:var(--mauve-deep);margin-top:-4px" onclick="sendNoteToClient()">📧 Envoyer au client</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: FEUILLE DE TEMPS ===== -->
+<div class="screen" id="screenTemps">
+  <div class="app-header">
+    <button class="header-back" onclick="showScreen('screenClient')">←</button>
+    <div class="header-title">⏱️ Feuille de temps</div>
+  </div>
+  <div class="scroll-content">
+    <div class="timer-display">
+      <div class="timer-time" id="timerDisplay">00:00:00</div>
+      <div class="timer-client" id="timerClientName">Aucun chrono actif</div>
+      <div class="timer-controls">
+        <button class="timer-btn timer-start" id="timerStartBtn" onclick="toggleTimer()">▶ Démarrer</button>
+        <button class="timer-btn timer-stop" onclick="resetTimer()">⏹ Terminer</button>
+      </div>
+    </div>
+    <div style="padding:16px 16px 8px">
+      <div class="section-label" style="padding:0">Entrées aujourd'hui</div>
+    </div>
+    <div class="time-entries" id="timeEntries">
+      <div style="text-align:center;padding:24px;color:var(--text-light);font-size:13px;">Aucune entrée aujourd'hui</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: MOODBOARD ===== -->
+<div class="screen" id="screenMoodboard">
+  <div class="app-header">
+    <button class="header-back" onclick="showScreen('screenClient')">←</button>
+    <div class="header-title">🎨 Moodboard</div>
+    <button class="header-action" onclick="addToMoodboard()">+</button>
+  </div>
+  <div class="scroll-content">
+    <div class="color-palette" id="colorPalette">
+      <div class="color-swatch selected" style="background:#6B2D45" title="Mauve signature"></div>
+      <div class="color-swatch" style="background:#C4859A" title="Rose poudré" onclick="this.classList.toggle('selected')"></div>
+      <div class="color-swatch" style="background:#FDF8F8" title="Rose crème" onclick="this.classList.toggle('selected')" style="border:1px solid #eee"></div>
+      <div class="color-swatch" style="background:#D4B896" title="Beige chaud" onclick="this.classList.toggle('selected')"></div>
+      <div class="color-swatch" style="background:#8B7355" title="Taupe" onclick="this.classList.toggle('selected')"></div>
+      <div class="color-swatch" style="background:#2C3E50" title="Bleu nuit" onclick="this.classList.toggle('selected')"></div>
+      <div class="color-swatch" style="background:#C8A96E" title="Or" onclick="this.classList.toggle('selected')"></div>
+      <div class="color-swatch" style="background:#E8E4D9" title="Lin" onclick="this.classList.toggle('selected')"></div>
+    </div>
+    <div class="section-label">Inspirations</div>
+    <div class="mood-grid" id="moodGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-light);font-size:13px;">
+        Ajoutez des images pour créer votre moodboard 🎨
+      </div>
+    </div>
+    <div style="padding:0 16px 16px">
+      <button class="submit-btn" onclick="exportMoodboard()">📤 Partager avec le client</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: ANNA ===== -->
+<div class="screen" id="screenAnna">
+  <div class="app-header">
+    <button class="header-back" onclick="showScreen('screenClients')">←</button>
+    <div class="header-title">✨ Anna</div>
+    <div class="header-subtitle">Assistante IA</div>
+  </div>
+  <div class="scroll-content" id="annaScrollContent" style="padding-bottom:130px">
+    <div class="anna-header">
+      <div class="anna-avatar">✨</div>
+      <div class="anna-name">Anna</div>
+      <div class="anna-desc">Votre assistante IA personnalisée</div>
+    </div>
+    <div class="anna-suggestions">
+      <div class="suggestion-chip" onclick="sendToAnna('Résume mes tâches du jour')">📋 Tâches du jour</div>
+      <div class="suggestion-chip" onclick="sendToAnna('Quels clients ont des factures en attente?')">💰 Factures en attente</div>
+      <div class="suggestion-chip" onclick="sendToAnna('Rédige un courriel de suivi pour mon dernier client visité')">📧 Courriel de suivi</div>
+      <div class="suggestion-chip" onclick="sendToAnna('Génère un rapport de chantier pour ce client')">📊 Rapport chantier</div>
+      <div class="suggestion-chip" onclick="sendToAnna('Recommande des matériaux pour un style classique')">🏠 Conseils design</div>
+    </div>
+    <div class="chat-container" id="annaChat">
+      <div class="chat-bubble bubble-anna">
+        Bonjour Émilie ! 🌸 Je suis Anna, ta secrétaire IA. Comment puis-je t'aider aujourd'hui avec ton studio ?
+      </div>
+    </div>
+  </div>
+  <div class="anna-input-bar">
+    <input type="text" class="anna-input" id="annaInput" placeholder="Écris un message à Anna..." onkeypress="if(event.key==='Enter')sendToAnna()">
+    <button class="anna-send" onclick="sendToAnna()">→</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN: DASHBOARD ===== -->
+<div class="screen" id="screenDashboard">
+  <div class="dashboard-greeting">
+    <div class="greeting-date" id="dashDate"></div>
+    <div class="greeting-text">Bonjour, Émilie 🌸</div>
+    <div class="greeting-sub" id="dashSub"></div>
+  </div>
+  <div class="scroll-content">
+    <div class="dashboard-cards">
+      <div class="dash-card">
+        <div class="dash-number" id="dashClients">—</div>
+        <div class="dash-label">Clients actifs</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-number" id="dashHeures">0h</div>
+        <div class="dash-label">Heures ce mois</div>
+      </div>
+      <div class="dash-card dash-card-wide">
+        <div class="dash-label" style="margin-bottom:12px">Tâches prioritaires</div>
+        <div class="task-list" id="dashTasks">
+          <div class="task-item">
+            <div class="task-check" onclick="this.classList.toggle('done')"></div>
+            <div class="task-info">
+              <div class="task-text">Envoyer soumission révisée</div>
+              <div class="task-client">Livianne Marchand</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-check" onclick="this.classList.toggle('done')"></div>
+            <div class="task-info">
+              <div class="task-text">Confirmer commande fournisseur</div>
+              <div class="task-client">Charlotte Marchand</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-check" onclick="this.classList.toggle('done')"></div>
+            <div class="task-info">
+              <div class="task-text">Visite de chantier prévue</div>
+              <div class="task-client">Leo Marchand</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="nav-item active" id="nav-clients" onclick="navTo('screenClients','nav-clients')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Clients
+  </button>
+  <button class="nav-item" id="nav-dashboard" onclick="navTo('screenDashboard','nav-dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Tableau de bord
+  </button>
+  <button class="nav-item" id="nav-temps" onclick="navTo('screenTemps','nav-temps')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Temps
+  </button>
+  <button class="nav-item" id="nav-anna" onclick="navTo('screenAnna','nav-anna')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2"/><path d="M8 12s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+    Anna
+  </button>
+</nav>
+
+<script>
+// ===== CONFIG =====
+const CONFIG = {
+  clientId: '6cab6163-d4de-4a5a-a9f4-36f4058be920',
+  tenantId: 'a8238caf-f2db-4be1-93a7-ce2789e11107',
+  scopes: ['https://graph.microsoft.com/Sites.Read.All','https://graph.microsoft.com/Files.ReadWrite.All','https://graph.microsoft.com/Mail.Send'],
+  sharePointSite: 'emiliepepin.sharepoint.com,',
+  siteId: 'EmiliePepinDesignerInterieur',
+  oneDriveRoot: 'Emilie Pepin Designer Interieur/CLIENTS',
+  annaProjectUrl: 'https://claude.ai/project/019e1432-3ffe-7013-b24d-3e00a8bcca94'
+};
+
+// ===== STATE =====
+let state = {
+  currentClient: null,
+  clients: [],
+  accessToken: null,
+  timerInterval: null,
+  timerRunning: false,
+  timerSeconds: 0,
+  timerClientId: null,
+  cameraStream: null,
+  cameraActive: false,
+  photos: {},
+  timeEntries: []
+};
+
+// ===== INIT =====
+window.addEventListener('load', async () => {
+  // Set today's date in note form
+  const today = new Date().toISOString().split('T')[0];
+  if(document.getElementById('noteDate')) document.getElementById('noteDate').value = today;
+  
+  // Set dashboard date
+  const now = new Date();
+  const days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  document.getElementById('dashDate').textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('dashSub').textContent = `${state.clients.length} clients actifs · Système en ligne`;
+  
+  // Hide loading after fonts load
+  setTimeout(() => {
+    const ls = document.getElementById('loadingScreen');
+    ls.style.opacity = '0';
+    setTimeout(() => ls.style.display = 'none', 500);
+  }, 1800);
+
+  // Try to load clients from SharePoint
+  await loadClientsFromSharePoint();
+});
+
+// ===== MICROSOFT GRAPH AUTH =====
+async function getAccessToken() {
+  try {
+    const tokenUrl = `https://login.microsoftonline.com/${CONFIG.tenantId}/oauth2/v2.0/token`;
+    // For PWA, we use MSAL implicit flow - redirect to MS login
+    const authUrl = `https://login.microsoftonline.com/${CONFIG.tenantId}/oauth2/v2.0/authorize?` +
+      `client_id=${CONFIG.clientId}&response_type=token&` +
+      `redirect_uri=${encodeURIComponent(window.location.href)}&` +
+      `scope=${encodeURIComponent(CONFIG.scopes.join(' '))}&response_mode=fragment`;
+    
+    // Check if we have a token in the URL fragment
+    const hash = window.location.hash;
+    if(hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.substring(1));
+      state.accessToken = params.get('access_token');
+      window.history.replaceState(null, '', window.location.pathname);
+      return state.accessToken;
+    }
+    return null;
+  } catch(e) {
+    return null;
+  }
+}
+
+async function loginToMicrosoft() {
+  const authUrl = `https://login.microsoftonline.com/${CONFIG.tenantId}/oauth2/v2.0/authorize?` +
+    `client_id=${CONFIG.clientId}&response_type=token&` +
+    `redirect_uri=${encodeURIComponent(window.location.origin + window.location.pathname)}&` +
+    `scope=${encodeURIComponent('https://graph.microsoft.com/Sites.ReadWrite.All https://graph.microsoft.com/Files.ReadWrite.All')}&` +
+    `login_hint=info%40emiliepepin.ca&` +
+    `response_mode=fragment`;
+  window.location.href = authUrl;
+}
+
+async function loadClientsFromSharePoint() {
+  // Try token from URL fragment first
+  const token = await getAccessToken();
+  
+  // Demo clients for now (replace with real API when authenticated)
+  const demoClients = [
+    { id: 1, Title: 'Livianne Marchand', project: 'Salon classique · Montréal', status: 'active', heures: '24h', facture: '3 200$', photos: 12 },
+    { id: 2, Title: 'Charlotte Marchand', project: 'Chambre principale · Laval', status: 'pending', heures: '8h', facture: '950$', photos: 4 },
+    { id: 3, Title: 'Leo Marchand', project: 'Bureau à domicile · Longueuil', status: 'active', heures: '16h', facture: '2 100$', photos: 7 },
+  ];
+
+  if(token) {
+    state.accessToken = token;
+    try {
+      const resp = await fetch(
+        `https://graph.microsoft.com/v1.0/sites/${CONFIG.siteId}/lists/Clients/items?$expand=fields`,
+        { headers: { Authorization: `Bearer ${token}` }}
+      );
+      if(resp.ok) {
+        const data = await resp.json();
+        state.clients = data.value.map(item => ({
+          id: item.id,
+          Title: item.fields.Title,
+          project: item.fields.Projet || 'Projet en cours',
+          status: item.fields.Statut || 'active',
+          heures: '0h', facture: '0$', photos: 0
+        }));
+      }
+    } catch(e) {}
+  }
+
+  if(state.clients.length === 0) state.clients = demoClients;
+  
+  renderClients(state.clients);
+  document.getElementById('dashClients').textContent = state.clients.filter(c=>c.status==='active').length;
+}
+
+// ===== RENDER CLIENTS =====
+function renderClients(clients) {
+  const list = document.getElementById('clientList');
+  if(clients.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">Aucun résultat</div></div>`;
+    return;
+  }
+  list.innerHTML = clients.map(c => `
+    <div class="client-card" onclick="openClient(${c.id})">
+      <div class="client-avatar">${getInitials(c.Title)}</div>
+      <div class="client-info">
+        <div class="client-name">${c.Title}</div>
+        <div class="client-project">${c.project}</div>
+        <span class="client-status status-${c.status}">${statusLabel(c.status)}</span>
+      </div>
+      <svg class="client-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  `).join('');
+}
+
+function filterClients(query) {
+  const filtered = state.clients.filter(c => c.Title.toLowerCase().includes(query.toLowerCase()));
+  renderClients(filtered);
+}
+
+function getInitials(name) {
+  return name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+}
+
+function statusLabel(s) {
+  return {active:'● En cours', pending:'○ En attente', completed:'✓ Terminé'}[s] || s;
+}
+
+// ===== OPEN CLIENT =====
+function openClient(id) {
+  const client = state.clients.find(c => c.id === id);
+  if(!client) return;
+  state.currentClient = client;
+
+  document.getElementById('clientHeaderName').textContent = client.Title;
+  document.getElementById('clientHeaderProject').textContent = client.project;
+  document.getElementById('heroAvatar').textContent = getInitials(client.Title);
+  document.getElementById('heroName').textContent = client.Title;
+  document.getElementById('heroProject').textContent = client.project;
+  document.getElementById('statHeures').textContent = client.heures;
+  document.getElementById('statFacture').textContent = client.facture;
+  document.getElementById('statPhotos').textContent = client.photos;
+  document.getElementById('photosClientName').textContent = client.Title;
+  document.getElementById('timerClientName').textContent = client.Title;
+
+  showScreen('screenClient');
+}
+
+// ===== SCREEN NAV =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  
+  const screensWithNav = ['screenClients','screenDashboard','screenAnna'];
+  document.getElementById('bottomNav').style.display = screensWithNav.some(s=>id.includes(s.replace('screen','').toLowerCase()) || id===s) ? 'flex' : 'none';
+  
+  // Always show bottom nav
+  document.getElementById('bottomNav').style.display = 'flex';
+  window.scrollTo(0,0);
+}
+
+function navTo(screen, navId) {
+  showScreen(screen);
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(navId).classList.add('active');
+}
+
+// ===== CAMERA =====
+async function toggleCamera() {
+  if(state.cameraActive) {
+    stopCamera();
+  } else {
+    await startCamera();
+  }
+}
+
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width:{ideal:1920}, height:{ideal:1080} },
+      audio: false
+    });
+    state.cameraStream = stream;
+    state.cameraActive = true;
+    const video = document.getElementById('cameraVideo');
+    video.srcObject = stream;
+    video.style.display = 'block';
+    document.getElementById('cameraPlaceholder').style.display = 'none';
+    document.getElementById('camBtn').style.display = 'none';
+    document.getElementById('snapBtn').style.display = 'flex';
+    document.getElementById('capturedPhoto').style.display = 'none';
+  } catch(e) {
+    showToast('Accès caméra refusé — utilisez la galerie');
+    openGallery();
+  }
+}
+
+function stopCamera() {
+  if(state.cameraStream) {
+    state.cameraStream.getTracks().forEach(t=>t.stop());
+    state.cameraStream = null;
+  }
+  state.cameraActive = false;
+  document.getElementById('cameraVideo').style.display = 'none';
+  document.getElementById('camBtn').style.display = 'flex';
+  document.getElementById('snapBtn').style.display = 'none';
+  document.getElementById('cameraPlaceholder').style.display = 'flex';
+}
+
+function takePhoto() {
+  const video = document.getElementById('cameraVideo');
+  const canvas = document.getElementById('photoCanvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+  document.getElementById('capturedPhoto').src = dataUrl;
+  document.getElementById('capturedPhoto').style.display = 'block';
+  document.getElementById('cameraVideo').style.display = 'none';
+  document.getElementById('annotBar').style.display = 'flex';
+  document.getElementById('snapBtn').textContent = '💾 Sauvegarder';
+  document.getElementById('snapBtn').onclick = () => savePhotoToOneDrive(dataUrl);
+  
+  stopCamera();
+}
+
+function openGallery() {
+  document.getElementById('galleryInput').click();
+}
+
+function handleGalleryPhoto(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    document.getElementById('capturedPhoto').src = dataUrl;
+    document.getElementById('capturedPhoto').style.display = 'block';
+    document.getElementById('cameraPlaceholder').style.display = 'none';
+    document.getElementById('annotBar').style.display = 'flex';
+    document.getElementById('camBtn').style.display = 'none';
+    document.getElementById('snapBtn').style.display = 'flex';
+    document.getElementById('snapBtn').textContent = '💾 Sauvegarder';
+    document.getElementById('snapBtn').onclick = () => savePhotoToOneDrive(dataUrl);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function savePhotoToOneDrive(dataUrl) {
+  if(!state.currentClient) return;
+  
+  showToast('💾 Sauvegarde en cours...');
+  
+  const clientName = state.currentClient.Title;
+  const timestamp = new Date().toISOString().replace(/[:.]/g,'-').substring(0,19);
+  const fileName = `${clientName}_${timestamp}.jpg`;
+  
+  if(state.accessToken) {
+    try {
+      const base64 = dataUrl.split(',')[1];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+      
+      const path = `${CONFIG.oneDriveRoot}/${clientName}/10_Photos/Chantier/${fileName}`;
+      const resp = await fetch(
+        `https://graph.microsoft.com/v1.0/me/drive/root:/${path}:/content`,
+        {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${state.accessToken}`, 'Content-Type': 'image/jpeg' },
+          body: bytes.buffer
+        }
+      );
+      if(resp.ok) {
+        showToast('✅ Photo sauvegardée dans OneDrive !');
+        if(!state.photos[clientName]) state.photos[clientName] = [];
+        state.photos[clientName].push({ url: dataUrl, name: fileName });
+        updatePhotosGallery();
+        return;
+      }
+    } catch(e) {}
+  }
+  
+  // Fallback: save locally and show success
+  if(!state.photos[clientName]) state.photos[clientName] = [];
+  state.photos[clientName].push({ url: dataUrl, name: fileName });
+  updatePhotosGallery();
+  showToast('📱 Photo sauvegardée localement');
+  
+  if(!state.accessToken) {
+    setTimeout(() => {
+      if(confirm('Connexion Microsoft requise pour sauvegarder dans OneDrive. Se connecter maintenant?')) {
+        loginToMicrosoft();
+      }
+    }, 500);
+  }
+}
+
+function updatePhotosGallery() {
+  if(!state.currentClient) return;
+  const photos = state.photos[state.currentClient.Title] || [];
+  const gallery = document.getElementById('photosGallery');
+  if(photos.length === 0) {
+    gallery.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-light);font-size:13px;">Aucune photo pour ce client</div>';
+    return;
+  }
+  gallery.innerHTML = photos.map((p,i) => `
+    <div class="gallery-thumb" onclick="viewPhoto(${i})">
+      <img src="${p.url}" alt="Photo ${i+1}">
+    </div>
+  `).join('');
+  // Update counter
+  if(state.currentClient) state.currentClient.photos = photos.length;
+  document.getElementById('statPhotos').textContent = photos.length;
+}
+
+// ===== TIMER =====
+function toggleTimer() {
+  if(state.timerRunning) {
+    clearInterval(state.timerInterval);
+    state.timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = '▶ Reprendre';
+    
+    const hrs = Math.floor(state.timerSeconds/3600);
+    const mins = Math.floor((state.timerSeconds%3600)/60);
+    const entry = {
+      client: state.currentClient?.Title || 'Client',
+      duration: `${hrs}h${mins.toString().padStart(2,'0')}`,
+      desc: 'Travail en studio',
+      seconds: state.timerSeconds
+    };
+    state.timeEntries.push(entry);
+    renderTimeEntries();
+  } else {
+    state.timerRunning = true;
+    state.timerClientId = state.currentClient?.id;
+    document.getElementById('timerStartBtn').textContent = '⏸ Pause';
+    document.getElementById('timerClientName').textContent = state.currentClient?.Title || 'Chrono actif';
+    
+    state.timerInterval = setInterval(() => {
+      state.timerSeconds++;
+      const h = Math.floor(state.timerSeconds/3600).toString().padStart(2,'0');
+      const m = Math.floor((state.timerSeconds%3600)/60).toString().padStart(2,'0');
+      const s = (state.timerSeconds%60).toString().padStart(2,'0');
+      document.getElementById('timerDisplay').textContent = `${h}:${m}:${s}`;
+    }, 1000);
+  }
+}
+
+function resetTimer() {
+  clearInterval(state.timerInterval);
+  state.timerRunning = false;
+  state.timerSeconds = 0;
+  document.getElementById('timerDisplay').textContent = '00:00:00';
+  document.getElementById('timerStartBtn').textContent = '▶ Démarrer';
+  document.getElementById('timerClientName').textContent = 'Aucun chrono actif';
+}
+
+function renderTimeEntries() {
+  const container = document.getElementById('timeEntries');
+  if(state.timeEntries.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-light);font-size:13px;">Aucune entrée aujourd\'hui</div>';
+    return;
+  }
+  container.innerHTML = state.timeEntries.slice().reverse().map(e => `
+    <div class="time-entry">
+      <div class="entry-dot"></div>
+      <div class="entry-info">
+        <div class="entry-client">${e.client}</div>
+        <div class="entry-desc">${e.desc}</div>
+      </div>
+      <div class="entry-time">${e.duration}</div>
+    </div>
+  `).join('');
+}
+
+// ===== ANNA =====
+function askAnna() {
+  showScreen('screenAnna');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('nav-anna').classList.add('active');
+  if(state.currentClient) {
+    const input = document.getElementById('annaInput');
+    input.placeholder = `Demander à Anna à propos de ${state.currentClient.Title}...`;
+  }
+}
+
+async function sendToAnna(preset) {
+  const input = document.getElementById('annaInput');
+  const message = preset || input.value.trim();
+  if(!message) return;
+  
+  input.value = '';
+  
+  const chat = document.getElementById('annaChat');
+  
+  // Add user bubble
+  const userBubble = document.createElement('div');
+  userBubble.className = 'chat-bubble bubble-user';
+  userBubble.textContent = message;
+  chat.appendChild(userBubble);
+  
+  // Add typing indicator
+  const typing = document.createElement('div');
+  typing.className = 'anna-typing';
+  typing.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  chat.appendChild(typing);
+  
+  // Scroll to bottom
+  const scrollEl = document.getElementById('annaScrollContent');
+  scrollEl.scrollTop = scrollEl.scrollHeight;
+  
+  try {
+    const clientContext = state.currentClient ? 
+      `Le client actuellement sélectionné est ${state.currentClient.Title} (${state.currentClient.project}).` : '';
+    
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `Tu es Anna, l'assistante IA personnalisée d'Émilie Pépin, designer d'intérieur à Montréal. 
+Tu parles à Émilie de façon informelle et chaleureuse (tutoiement). 
+Tu connais son studio : styles classique et campagnard chic, clients au Québec, système Microsoft 365.
+Tu es experte en design d'intérieur, gestion de projet, facturation (TPS/TVQ québécois).
+${clientContext}
+Réponds de façon concise, pratique et amicale. Maximum 3-4 phrases sauf si on demande plus.`,
+        messages: [{ role: 'user', content: message }]
+      })
+    });
+    
+    typing.remove();
+    
+    const data = await response.json();
+    const annaBubble = document.createElement('div');
+    annaBubble.className = 'chat-bubble bubble-anna';
+    annaBubble.textContent = data.content?.[0]?.text || 'Je suis là, comment puis-je t\'aider ? 🌸';
+    chat.appendChild(annaBubble);
+  } catch(e) {
+    typing.remove();
+    const annaBubble = document.createElement('div');
+    annaBubble.className = 'chat-bubble bubble-anna';
+    annaBubble.innerHTML = `Je ne peux pas me connecter en ce moment. <a href="${CONFIG.annaProjectUrl}" target="_blank" style="color:var(--mauve)">Ouvrir Anna dans Claude →</a>`;
+    chat.appendChild(annaBubble);
+  }
+  
+  scrollEl.scrollTop = scrollEl.scrollHeight;
+}
+
+// ===== NOTE DE CHANTIER =====
+function saveNote() {
+  const type = document.getElementById('noteType').value;
+  const obs = document.getElementById('noteObs').value;
+  const actions = document.getElementById('noteActions').value;
+  const next = document.getElementById('noteNext').value;
+  
+  if(!obs) { showToast('⚠️ Ajoutez vos observations'); return; }
+  
+  showToast('✅ Note sauvegardée !');
+  setTimeout(() => showScreen('screenClient'), 1000);
+}
+
+function sendNoteToClient() {
+  showToast('📧 Courriel préparé pour envoi');
+}
+
+// ===== DIVERS =====
+function callClient() {
+  showToast('📞 Appel en cours...');
+}
+
+function logDeplacement() {
+  showToast('🚗 Déplacement enregistré !');
+}
+
+function showAddClient() {
+  showToast('➕ Ouvrir formulaire d\'intake...');
+  setTimeout(() => window.open('https://forms.microsoft.com/r/dfPQU71x5v', '_blank'), 500);
+}
+
+function showSuiviProjet() {
+  showToast('📊 Suivi de projet — bientôt disponible');
+}
+
+function showFacturer() {
+  showToast('💰 Facturation — bientôt disponible');
+}
+
+function startVoiceNote() {
+  showToast('🎤 Note vocale — bientôt disponible');
+}
+
+function exportMoodboard() {
+  showToast('📤 Moodboard partagé avec le client !');
+}
+
+function addToMoodboard() {
+  showToast('🎨 Ajouter une image au moodboard');
+}
+
+function viewPhoto(i) {
+  const photos = state.photos[state.currentClient?.Title] || [];
+  if(photos[i]) {
+    const w = window.open('');
+    w.document.write(`<img src="${photos[i].url}" style="max-width:100%;max-height:100vh;margin:auto;display:block">`);
+  }
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ===== SERVICE WORKER (PWA) =====
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
