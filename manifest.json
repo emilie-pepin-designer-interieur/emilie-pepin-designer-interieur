@@ -2,18 +2,19 @@
   "name": "Émilie Pépin Designer d'intérieur",
   "short_name": "Émilie Pépin",
   "description": "Studio de design d'intérieur — Gestion des projets clients",
-  "start_url": "/",
+  "start_url": "/emilie-pepin-designer-interieur/",
+  "scope": "/emilie-pepin-designer-interieur/",
   "display": "standalone",
   "background_color": "#6B2D45",
   "theme_color": "#6B2D45",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%236B2D45'/><text x='96' y='130' font-size='100' text-anchor='middle' fill='white'>🌸</text></svg>",
+      "src": "icon.png",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "productivity"],
   "lang": "fr-CA"
 }
