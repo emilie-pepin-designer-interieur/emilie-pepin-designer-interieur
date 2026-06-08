@@ -768,7 +768,19 @@ function loginToMicrosoft() {
     `&redirect_uri=${encodeURIComponent(CONFIG.redirectUri)}` +
     `&scope=${encodeURIComponent(CONFIG.scopes)}` +
     `&login_hint=info%40emiliepepin.ca&response_mode=fragment&prompt=select_account`;
-  window.location.href = url;
+  // Open in new tab for PWA compatibility on iPhone
+  const popup = window.open(url, '_blank');
+  // Check for token when user returns to app
+  window.addEventListener('focus', checkTokenOnReturn, { once: false });
+}
+
+function checkTokenOnReturn() {
+  const token = getStoredToken();
+  if(token && !state.accessToken) {
+    state.accessToken = token;
+    updateLoginButton();
+    loadClients();
+  }
 }
 
 function logoutMicrosoft() {
