@@ -12,6 +12,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<script src="https://alcdn.msauth.net/browser/3.0.0/js/msal-browser.min.js"></script>
 <style>
 :root {
   --mauve: #6B2D45;
@@ -722,14 +724,94 @@ window.addEventListener('load', async () => {
   await initAuth();
 });
 
-// ===== AUTH =====
+// ===== AUTH MSAL =====
+let msalInstance = null;
+
+function initMsal() {
+  try {
+    msalInstance = new msal.PublicClientApplication({
+      auth: {
+        clientId: CONFIG.clientId,
+        authority: `https://login.microsoftonline.com/${CONFIG.tenantId}`,
+        redirectUri: CONFIG.redirectUri,
+        navigateToLoginRequestUrl: true
+      },
+      cache: {
+        cacheLocation: 'localStorage',
+        storeAuthStateInCookie: true
+      }
+    });
+    return true;
+  } catch(e) {
+    console.error('MSAL init error:', e);
+    return false;
+  }
+}
+
+async function initAuth() {
+  const msalOk = initMsal();
+  
+  if(msalOk) {
+    try {
+      // Handle redirect response
+      const resp = await msalInstance.handleRedirectPromise();
+      if(resp && resp.accessToken) {
+        state.accessToken = resp.accessToken;
+        showToast('✅ Connecté à Microsoft 365 !');
+      } else {
+        // Try silent token
+        const accounts = msalInstance.getAllAccounts();
+        if(accounts.length > 0) {
+          try {
+            const silent = await msalInstance.acquireTokenSilent({
+              scopes: CONFIG.scopes.split(' '),
+              account: accounts[0]
+            });
+            state.accessToken = silent.accessToken;
+          } catch(e) {}
+        }
+      }
+    } catch(e) {
+      console.error('MSAL auth error:', e);
+    }
+  }
+
+  updateLoginButton();
+  await loadClients();
+}
+
+async function loginToMicrosoft() {
+  if(msalInstance) {
+    try {
+      await msalInstance.loginRedirect({
+        scopes: CONFIG.scopes.split(' '),
+        loginHint: 'info@emiliepepin.ca',
+        prompt: 'select_account'
+      });
+    } catch(e) {
+      // Fallback to manual OAuth
+      manualLogin();
+    }
+  } else {
+    manualLogin();
+  }
+}
+
+function manualLogin() {
+  const url = `https://login.microsoftonline.com/${CONFIG.tenantId}/oauth2/v2.0/authorize?` +
+    `client_id=${CONFIG.clientId}&response_type=token` +
+    `&redirect_uri=${encodeURIComponent(CONFIG.redirectUri)}` +
+    `&scope=${encodeURIComponent(CONFIG.scopes)}` +
+    `&login_hint=info%40emiliepepin.ca&response_mode=fragment`;
+  window.location.href = url;
+}
+
+// Fallback token storage
 function getStoredToken() {
   try {
     const token = localStorage.getItem('ep_token');
     const expiry = localStorage.getItem('ep_expiry');
     if(token && expiry && Date.now() < parseInt(expiry)) return token;
-    localStorage.removeItem('ep_token');
-    localStorage.removeItem('ep_expiry');
   } catch(e) {}
   return null;
 }
@@ -737,54 +819,16 @@ function getStoredToken() {
 function storeToken(token, expiresIn) {
   try {
     localStorage.setItem('ep_token', token);
-    localStorage.setItem('ep_expiry', Date.now() + (parseInt(expiresIn) * 1000) - 120000);
+    localStorage.setItem('ep_expiry', Date.now() + (parseInt(expiresIn)*1000) - 120000);
   } catch(e) {}
 }
 
-async function initAuth() {
-  // Check URL fragment for token (returning from Microsoft login)
-  const hash = window.location.hash;
-  if(hash.includes('access_token')) {
-    const params = new URLSearchParams(hash.substring(1));
-    const token = params.get('access_token');
-    const expiresIn = params.get('expires_in') || '3600';
-    if(token) {
-      storeToken(token, expiresIn);
-      state.accessToken = token;
-      window.history.replaceState(null, '', window.location.pathname);
-      showToast('✅ Connecté à Microsoft 365 !');
-    }
-  } else {
-    state.accessToken = getStoredToken();
-  }
-  
-  updateLoginButton();
-  await loadClients();
-}
-
-function loginToMicrosoft() {
-  const url = `https://login.microsoftonline.com/${CONFIG.tenantId}/oauth2/v2.0/authorize?` +
-    `client_id=${CONFIG.clientId}&response_type=token` +
-    `&redirect_uri=${encodeURIComponent(CONFIG.redirectUri)}` +
-    `&scope=${encodeURIComponent(CONFIG.scopes)}` +
-    `&login_hint=info%40emiliepepin.ca&response_mode=fragment&prompt=select_account`;
-  // Open in new tab for PWA compatibility on iPhone
-  const popup = window.open(url, '_blank');
-  // Check for token when user returns to app
-  window.addEventListener('focus', checkTokenOnReturn, { once: false });
-}
-
-function checkTokenOnReturn() {
-  const token = getStoredToken();
-  if(token && !state.accessToken) {
-    state.accessToken = token;
-    updateLoginButton();
-    loadClients();
-  }
-}
-
 function logoutMicrosoft() {
-  try { localStorage.removeItem('ep_token'); localStorage.removeItem('ep_expiry'); } catch(e) {}
+  try {
+    localStorage.removeItem('ep_token');
+    localStorage.removeItem('ep_expiry');
+    if(msalInstance) msalInstance.logoutRedirect({ postLogoutRedirectUri: CONFIG.redirectUri });
+  } catch(e) {}
   state.accessToken = null;
   state.clients = [];
   state.siteId = null;
