@@ -426,13 +426,20 @@ body {
       <div class="header-title" id="clientHeaderName">Client</div>
       <div class="header-subtitle" id="clientHeaderProject">Projet en cours</div>
     </div>
-    <button class="header-action" onclick="callClient()">📞</button>
+    <button onclick="callClient()" style="padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:5px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.06 6.06l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      Appeler
+    </button>
   </div>
   <div class="scroll-content">
     <div class="client-hero">
       <div class="hero-avatar" id="heroAvatar">EP</div>
       <div class="hero-name" id="heroName">Nom Client</div>
       <div class="hero-project" id="heroProject">Projet</div>
+      <!-- Phone button -->
+      <button id="clientPhoneBtn" onclick="callClient()" style="display:none;margin-top:10px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:50px;padding:8px 16px;color:white;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;align-items:center;gap:6px;width:100%;justify-content:center;">📞</button>
+      <!-- Address with navigation -->
+      <button id="clientAddress" onclick="openNavigation()" style="display:none;margin-top:8px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:50px;padding:7px 14px;color:rgba(255,255,255,0.85);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;align-items:center;gap:6px;width:100%;justify-content:center;text-align:center;"></button>
       <div class="hero-stats">
         <div class="hero-stat"><div class="stat-value" id="statHeures">0h</div><div class="stat-label">Heures</div></div>
         <div class="hero-stat"><div class="stat-value" id="statFacture">0$</div><div class="stat-label">Facturé</div></div>
@@ -1007,7 +1014,8 @@ async function loadClients() {
       project: item.fields.Projet || item.fields.TypeProjet || 'Projet en cours',
       status: item.fields.Statut || 'active',
       email: item.fields.Courriel || item.fields.Email || '',
-      phone: item.fields.Telephone || '',
+      phone: item.fields.Telephone || item.fields.T_x00e9_l_x00e9_phone || '',
+      address: item.fields.Adresse || item.fields.Adresse_x0020_chantier || '',
       heures: '0h', facture: '0$', photos: 0
     }));
     showToast(`✅ ${state.clients.length} client${state.clients.length > 1 ? 's' : ''} chargé${state.clients.length > 1 ? 's' : ''} !`);
@@ -1067,6 +1075,26 @@ function openClient(id) {
   document.getElementById('statPhotos').textContent = (state.photos[c.Title] || []).length;
   document.getElementById('photosClientName').textContent = c.Title;
   document.getElementById('timerClientName').textContent = c.Title;
+  
+  // Update contact info
+  const phoneBtn = document.getElementById('clientPhoneBtn');
+  const addressEl = document.getElementById('clientAddress');
+  if(phoneBtn) {
+    if(c.phone) {
+      phoneBtn.textContent = '📞 ' + c.phone;
+      phoneBtn.style.display = 'flex';
+    } else {
+      phoneBtn.style.display = 'none';
+    }
+  }
+  if(addressEl) {
+    if(c.address) {
+      addressEl.textContent = '📍 ' + c.address;
+      addressEl.style.display = 'flex';
+    } else {
+      addressEl.style.display = 'none';
+    }
+  }
   showScreen('screenClient');
 }
 
@@ -1871,9 +1899,24 @@ function exportMoodboard() { showToast('📤 Moodboard partagé avec le client !
 // ===== DIVERS =====
 function callClient() {
   if(state.currentClient?.phone) {
-    window.location.href = `tel:${state.currentClient.phone}`;
+    window.location.href = 'tel:' + state.currentClient.phone.replace(/\s/g, '');
   } else {
-    showToast('📞 Numéro non disponible');
+    showToast('Numero non disponible — ajoutez-le dans SharePoint');
+  }
+}
+
+function openNavigation() {
+  if(state.currentClient?.address) {
+    const addr = encodeURIComponent(state.currentClient.address);
+    // Opens Apple Maps on iPhone, Google Maps on others
+    const isIphone = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    if(isIphone) {
+      window.open('maps://?q=' + addr);
+    } else {
+      window.open('https://www.google.com/maps/search/?api=1&query=' + addr);
+    }
+  } else {
+    showToast('Adresse non disponible');
   }
 }
 
