@@ -1203,8 +1203,15 @@ function openClient(id) {
 
 // ===== SCREEN NAV =====
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = '';
+  });
+  const el = document.getElementById(id);
+  if(el) {
+    el.classList.add('active');
+    if(id === 'screenPhotos') el.style.display = 'flex';
+  }
   window.scrollTo(0, 0);
 }
 function navTo(screen, navId) {
@@ -1242,12 +1249,19 @@ let lastPinchDist = 0;
 
 function goToPhotos() {
   if(state.currentClient) {
-    document.getElementById('photosClientNameCam').textContent = state.currentClient.Title;
-    document.getElementById('gallerySheetTitle').textContent = 'Photos — ' + state.currentClient.Title;
+    setEl('photosClientNameCam', state.currentClient.Title);
+    setEl('gallerySheetTitle', 'Photos — ' + state.currentClient.Title);
     updatePhotosGallery();
   }
-  showScreen('screenPhotos');
-  startCamera();
+  // Show the photos screen
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const screen = document.getElementById('screenPhotos');
+  if(screen) {
+    screen.classList.add('active');
+    screen.style.display = 'flex';
+  }
+  window.scrollTo(0, 0);
+  setTimeout(() => startCamera(), 200);
 }
 
 function exitCameraMode() {
