@@ -459,8 +459,8 @@ body {
   <div class="app-header">
     <button class="header-back" onclick="showScreen('screenClient')">←</button>
     <div class="header-titles">
-      <div class="header-title">📸 Photos chantier</div>
-      <div class="header-subtitle" id="photosClientName">Client</div>
+      <div class="header-subtitle" style="color:var(--rose-powder);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;">Photos chantier</div>
+      <div class="header-title" id="photosClientName" style="font-size:24px;font-family:'Cormorant Garamond',serif;font-weight:500;">Client</div>
     </div>
   </div>
   <div class="scroll-content">
@@ -496,12 +496,31 @@ body {
         <!-- Tools -->
         <div style="padding:10px 12px;border-top:1px solid var(--blush);">
           <div style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:6px;font-style:italic;">Choisissez un outil pour annoter • Pincez pour zoomer</div>
-          <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;">
-            <button class="annot-tool" id="tool-pen" onclick="setTool('pen',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;color:var(--text-mid);font-size:12px;font-weight:500;cursor:pointer;">✏️ Crayon</button>
-            <button class="annot-tool" id="tool-arrow" onclick="setTool('arrow',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;color:var(--text-mid);font-size:12px;font-weight:500;cursor:pointer;">➡️ Flèche</button>
-            <button class="annot-tool" id="tool-circle" onclick="setTool('circle',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;color:var(--text-mid);font-size:12px;font-weight:500;cursor:pointer;">⭕ Cercle</button>
-            <button class="annot-tool" id="tool-text" onclick="setTool('text',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;color:var(--text-mid);font-size:12px;font-weight:500;cursor:pointer;">📝 Texte</button>
-            <button class="annot-tool" id="tool-erase" onclick="setTool('erase',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;color:var(--text-mid);font-size:12px;font-weight:500;cursor:pointer;">🧹 Effacer</button>
+          <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;align-items:center;">
+            <!-- Crayon -->
+            <button class="annot-tool" id="tool-pen" onclick="setTool('pen',this)" title="Crayon" style="flex-shrink:0;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--blush);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B6B8A" stroke-width="2" stroke-linecap="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            </button>
+            <!-- Flèche -->
+            <button class="annot-tool" id="tool-arrow" onclick="setTool('arrow',this)" title="Flèche" style="flex-shrink:0;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--blush);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B6B8A" stroke-width="2" stroke-linecap="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="8 5 19 5 19 16"/></svg>
+            </button>
+            <!-- Cercle -->
+            <button class="annot-tool" id="tool-circle" onclick="setTool('circle',this)" title="Cercle" style="flex-shrink:0;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--blush);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B6B8A" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+            </button>
+            <!-- Rectangle -->
+            <button class="annot-tool" id="tool-rect" onclick="setTool('rect',this)" title="Rectangle" style="flex-shrink:0;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--blush);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B6B8A" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
+            </button>
+            <!-- Texte -->
+            <button class="annot-tool" id="tool-text" onclick="setTool('text',this)" title="Texte" style="flex-shrink:0;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--blush);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B6B8A" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+            </button>
+            <!-- Effacer -->
+            <button class="annot-tool" id="tool-erase" onclick="setTool('erase',this)" title="Effacer" style="flex-shrink:0;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--blush);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B6B8A" stroke-width="2"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+            </button>
           </div>
           <!-- Colors -->
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
@@ -1137,16 +1156,11 @@ function openNativeCamera() {
 }
 
 async function saveCurrentPhotoNow() {
-  const photoData = state.currentPhotoData;
-  if(!photoData) {
+  if(!state.currentPhotoData) {
     showToast('Prenez ou choisissez une photo dabord');
     return;
   }
-  if(!state.currentClient) {
-    showToast('Aucun client selectionne');
-    return;
-  }
-  await savePhotoToOneDrive(photoData);
+  await saveCurrentPhoto();
 }
 
 async function openOneDrive() {
@@ -1284,54 +1298,77 @@ function setupAnnotEvents(canvas, ctx) {
   let lastPinchDist = 0;
 
   // Touch events for iPhone
+  let panStartX = 0, panStartY = 0, panScrollLeft = 0, panScrollTop = 0;
+
   canvas.addEventListener('touchstart', (e) => {
     if(e.touches.length === 2) {
-      // Pinch start
       lastPinchDist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
       return;
     }
-    if(!annotState.tool) return; // No tool = allow page scroll
-    e.preventDefault();
     const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / (rect.width / currentZoom);
-    const scaleY = canvas.height / (rect.height / currentZoom);
-    startDraw(ctx, (touch.clientX - rect.left) / currentZoom * scaleX, (touch.clientY - rect.top) / currentZoom * scaleY);
+    if(annotState.tool) {
+      // Drawing mode
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / (rect.width / currentZoom);
+      const scaleY = canvas.height / (rect.height / currentZoom);
+      startDraw(ctx, (touch.clientX - rect.left) / currentZoom * scaleX, (touch.clientY - rect.top) / currentZoom * scaleY);
+    } else if(currentZoom > 1) {
+      // Pan mode when zoomed
+      e.preventDefault();
+      const container = canvas.parentElement;
+      panStartX = touch.clientX;
+      panStartY = touch.clientY;
+      panScrollLeft = container.scrollLeft || 0;
+      panScrollTop = container.scrollTop || 0;
+    }
+    // else: no tool, not zoomed = allow page scroll
   }, { passive: false });
   
   canvas.addEventListener('touchmove', (e) => {
     if(e.touches.length === 2) {
-      // Pinch zoom
       e.preventDefault();
       const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
       if(lastPinchDist > 0) {
-        const delta = (dist - lastPinchDist) / 200;
+        const delta = (dist - lastPinchDist) / 180;
         currentZoom = Math.min(4.0, Math.max(0.5, currentZoom + delta));
         applyZoom();
       }
       lastPinchDist = dist;
       return;
     }
-    if(!annotState.tool) return;
-    e.preventDefault();
     const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / (rect.width / currentZoom);
-    const scaleY = canvas.height / (rect.height / currentZoom);
-    moveDraw(ctx, (touch.clientX - rect.left) / currentZoom * scaleX, (touch.clientY - rect.top) / currentZoom * scaleY);
+    if(annotState.tool) {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / (rect.width / currentZoom);
+      const scaleY = canvas.height / (rect.height / currentZoom);
+      moveDraw(ctx, (touch.clientX - rect.left) / currentZoom * scaleX, (touch.clientY - rect.top) / currentZoom * scaleY);
+    } else if(currentZoom > 1) {
+      e.preventDefault();
+      const container = canvas.parentElement;
+      const dx = touch.clientX - panStartX;
+      const dy = touch.clientY - panStartY;
+      // Pan by moving canvas transform origin
+      const newX = Math.max(-(canvas.offsetWidth * currentZoom - canvas.offsetWidth), Math.min(0, (parseFloat(canvas.style.marginLeft) || 0) + dx * 0.5));
+      canvas.style.marginLeft = newX + 'px';
+      panStartX = touch.clientX;
+      panStartY = touch.clientY;
+    }
   }, { passive: false });
   
   canvas.addEventListener('touchend', (e) => {
     lastPinchDist = 0;
-    if(!annotState.tool) return;
-    e.preventDefault();
-    endDraw(ctx);
+    if(annotState.tool) {
+      e.preventDefault();
+      endDraw(ctx);
+    }
   }, { passive: false });
   
   // Mouse events for desktop
@@ -1441,6 +1478,16 @@ function drawArrow(ctx, x1, y1, x2, y2) {
 }
 
 function setTool(tool, btn) {
+  // Toggle off if same tool clicked again
+  if(annotState.tool === tool) {
+    annotState.tool = null;
+    document.querySelectorAll('.annot-tool').forEach(b => {
+      b.style.background = 'white';
+      b.style.color = 'var(--text-mid)';
+      b.style.borderColor = 'var(--blush)';
+    });
+    return;
+  }
   annotState.tool = tool;
   document.querySelectorAll('.annot-tool').forEach(b => {
     b.style.background = 'white';
@@ -1499,52 +1546,52 @@ function applyZoom() {
   const canvas = document.getElementById('annotCanvas');
   canvas.style.transform = 'scale(' + currentZoom + ')';
   canvas.style.transformOrigin = 'top left';
-  canvas.parentElement.style.overflow = currentZoom > 1 ? 'auto' : 'hidden';
-  canvas.parentElement.style.height = currentZoom > 1 ? (canvas.offsetHeight * currentZoom) + 'px' : 'auto';
+  const container = canvas.parentElement;
+  if(currentZoom > 1) {
+    container.style.overflow = 'hidden';
+    container.style.height = Math.round(canvas.offsetHeight * currentZoom) + 'px';
+  } else {
+    container.style.overflow = 'hidden';
+    container.style.height = 'auto';
+    canvas.style.marginLeft = '0px';
+  }
   document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
 }
 
 async function saveAnnotatedPhoto() {
   const canvas = document.getElementById('annotCanvas');
-  // Reset zoom before saving to get full resolution
+  // Reset zoom before saving
   const prevTransform = canvas.style.transform;
   canvas.style.transform = 'none';
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  // Save annotated version as current photo
+  state.currentPhotoData = canvas.toDataURL('image/jpeg', 0.92);
   canvas.style.transform = prevTransform;
-  
-  const saved = await savePhotoToOneDrive(dataUrl);
-  if(saved !== false) {
-    document.getElementById('annotEditor').style.display = 'none';
-    document.getElementById('cameraPlaceholder').style.display = 'flex';
-    currentZoom = 1.0;
-    state.currentPhotoData = null;
-  }
+  await saveCurrentPhoto();
 }
 
 async function saveCurrentPhoto() {
-  if(!state.currentPhotoData) { showToast('⚠️ Aucune photo à sauvegarder'); return; }
-  if(!state.currentClient) { showToast('⚠️ Aucun client sélectionné'); return; }
+  if(!state.currentPhotoData) { showToast('Aucune photo a sauvegarder'); return; }
+  if(!state.currentClient) { showToast('Selectionnez un client dabord'); return; }
   
   const clientName = state.currentClient.Title;
-  const ts = new Date().toISOString().replace(/[:.]/g,'-').substring(0,16);
-  const annotation = state.currentAnnotation || 'photo';
-  const fileName = `${clientName}_${ts}_${annotation}.jpg`;
+  const ts = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 16);
+  const fileName = clientName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + ts + '.jpg';
   
-  showToast('💾 Sauvegarde en cours...');
-  
+  showToast('Sauvegarde en cours...');
+
   if(state.accessToken) {
     try {
-      // Convert base64 to binary
-      const base64 = state.currentPhotoData.split(',')[1];
-      const binary = atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for(let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const dataUrl = state.currentPhotoData;
+      const base64 = dataUrl.split(',')[1];
+      const binaryStr = atob(base64);
+      const bytes = new Uint8Array(binaryStr.length);
+      for(let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
       
-      const path = `/${CONFIG.oneDriveRoot}/${clientName}/10_Photos/Chantier/${fileName}`;
-      const resp = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:${path}:/content`, {
+      const path = '/me/drive/root:/' + CONFIG.oneDriveRoot + '/' + clientName + '/10_Photos/Chantier/' + fileName + ':/content';
+      const resp = await fetch('https://graph.microsoft.com/v1.0' + path, {
         method: 'PUT',
         headers: {
-          Authorization: `Bearer ${state.accessToken}`,
+          'Authorization': 'Bearer ' + state.accessToken,
           'Content-Type': 'image/jpeg'
         },
         body: bytes.buffer
@@ -1552,68 +1599,46 @@ async function saveCurrentPhoto() {
       
       if(resp.ok) {
         showToast('Photo sauvegardee dans OneDrive !');
-        addPhotoToGallery(clientName, dataUrl, fileName);
-        state.currentPhotoData = null;
-        document.getElementById('savePhotoBar').style.display = 'none';
-        document.getElementById('annotBar').style.display = 'none';
-        document.getElementById('capturedPhoto').style.display = 'none';
-        document.getElementById('cameraPlaceholder').style.display = 'flex';
-        document.getElementById('statPhotos').textContent = (state.photos[clientName] || []).length;
-        if(state.currentClient) state.currentClient.photos = (state.photos[clientName] || []).length;
+        addPhotoToGallery(clientName, state.currentPhotoData, fileName);
+        resetAfterSave();
         return;
       } else {
-        showToast('Erreur OneDrive - sauvegarde locale');
+        const err = await resp.text().catch(() => '');
+        console.error('OneDrive error:', resp.status, err);
+        showToast('Erreur ' + resp.status + ' - sauvegarde locale');
       }
     } catch(e) {
+      console.error('Save error:', e);
       showToast('Erreur reseau - sauvegarde locale');
     }
   } else {
-    showToast('Sauvegarde locale - connectez Microsoft 365 pour OneDrive');
+    showToast('Connectez Microsoft 365 pour OneDrive');
   }
   
-  // Fallback local
+  // Local fallback
   addPhotoToGallery(clientName, state.currentPhotoData, fileName);
+  resetAfterSave();
+}
+
+function resetAfterSave() {
   state.currentPhotoData = null;
-}
-
-function addPhotoToGallery(clientName, dataUrl, fileName) {
-  if(!state.photos[clientName]) state.photos[clientName] = [];
-  state.photos[clientName].push({ url: dataUrl, name: fileName });
-  updatePhotosGallery();
-}
-
-function updatePhotosGallery() {
-  if(!state.currentClient) return;
-  const photos = state.photos[state.currentClient.Title] || [];
-  const gallery = document.getElementById('photosGallery');
-  if(photos.length === 0) {
-    gallery.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune photo pour ce client</div>';
-    return;
-  }
-  gallery.innerHTML = photos.map((p,i) => `
-    <div class="gallery-thumb" onclick="viewPhoto(${i})">
-      <img src="${p.url}" alt="${p.name}">
-    </div>
-  `).join('');
-}
-
-function goToPhotos() {
+  document.getElementById('capturedPhoto').style.display = 'none';
+  document.getElementById('cameraPlaceholder').style.display = 'flex';
+  document.getElementById('annotEditor').style.display = 'none';
+  annotState.tool = null;
+  currentZoom = 1.0;
+  document.querySelectorAll('.annot-tool').forEach(b => {
+    b.style.background = 'white';
+    b.style.color = 'var(--text-mid)';
+    b.style.borderColor = 'var(--blush)';
+  });
   if(state.currentClient) {
-    document.getElementById('photosClientName').textContent = state.currentClient.Title;
-    updatePhotosGallery();
-  }
-  showScreen('screenPhotos');
-}
-
-function viewPhoto(i) {
-  const photos = state.photos[state.currentClient?.Title] || [];
-  if(photos[i]) {
-    const w = window.open('');
-    w.document.write(`<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${photos[i].url}" style="max-width:100%;max-height:100vh;object-fit:contain"><p style="position:fixed;bottom:10px;left:0;right:0;text-align:center;color:white;font-family:sans-serif;font-size:12px">${photos[i].name}</p></body></html>`);
+    const count = (state.photos[state.currentClient.Title] || []).length;
+    document.getElementById('statPhotos').textContent = count;
   }
 }
 
-// ===== NOTE DE CHANTIER =====
+
 async function saveNote() {
   const type = document.getElementById('noteType').value;
   const obs = document.getElementById('noteObs').value;
