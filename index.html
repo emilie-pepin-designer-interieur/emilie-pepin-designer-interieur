@@ -1797,7 +1797,24 @@ function resetAfterSave() {
   }
 }
 
-// ===== TOAST =====
+// ===== PHOTOS GALLERY UPDATE =====
+function updatePhotosGallery() {
+  const gallery = document.getElementById('photosGallery');
+  if(!gallery) return;
+  const clientName = state.currentClient ? state.currentClient.Title : null;
+  const photos = clientName ? (state.photos[clientName] || []) : [];
+  if(photos.length === 0) {
+    gallery.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune photo</div>';
+    return;
+  }
+  gallery.innerHTML = photos.map((p, i) => `
+    <div class="gallery-thumb" onclick="viewPhotoFull('${p.url}')">
+      <img src="${p.url}" alt="Photo ${i+1}">
+    </div>
+  `).join('');
+}
+  
+  // ===== TOAST =====
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
