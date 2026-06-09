@@ -461,112 +461,209 @@ body {
 
 <!-- ===== SCREEN PHOTOS ===== -->
 <div class="screen" id="screenPhotos">
-  <div class="app-header">
-    <button class="header-back" onclick="showScreen('screenClient')">←</button>
-    <div class="header-titles">
-      <div class="header-subtitle" style="color:var(--rose-powder);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;">Photos chantier</div>
-      <div class="header-title" id="photosClientName" style="font-size:24px;font-family:'Cormorant Garamond',serif;font-weight:500;">Client</div>
+  <!-- FULLSCREEN CAMERA STYLE APPLE -->
+  <div id="cameraFullscreen" style="position:relative;width:100%;background:#000;flex:1;display:flex;flex-direction:column;min-height:100vh;">
+    
+    <!-- Header overlay -->
+    <div style="position:absolute;top:0;left:0;right:0;z-index:10;padding:calc(var(--safe-top)+12px) 16px 12px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(0,0,0,0.6),transparent);">
+      <button onclick="exitCameraMode()" style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.4);border:none;color:white;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:white;font-weight:500;" id="photosClientNameCam">Client</div>
+      <button onclick="toggleFlash()" id="flashBtn" style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.4);border:none;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">⚡</button>
     </div>
-  </div>
-  <div class="scroll-content">
-    <div class="photo-zone">
-      <div class="camera-preview" id="cameraPreview">
-        <video id="cameraVideo" autoplay playsinline muted></video>
-        <canvas id="photoCanvas"></canvas>
-        <img id="capturedPhoto" alt="Photo">
-        <div class="camera-placeholder" id="cameraPlaceholder">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span>Choisissez une option ci-dessous</span>
-        </div>
+
+    <!-- Camera/Video preview -->
+    <video id="cameraVideo" autoplay playsinline muted style="width:100%;height:100vh;object-fit:cover;display:block;"></video>
+    <canvas id="photoCanvas" style="display:none;"></canvas>
+    
+    <!-- Captured photo preview (full screen) -->
+    <img id="capturedPhoto" alt="Photo" style="display:none;width:100%;height:100vh;object-fit:contain;position:absolute;inset:0;background:#000;">
+    
+    <!-- Video recording indicator -->
+    <div id="recordingIndicator" style="display:none;position:absolute;top:calc(var(--safe-top)+60px);left:50%;transform:translateX(-50%);background:rgba(255,0,0,0.8);color:white;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;">
+      ● REC <span id="recordTimer">00:00</span>
+    </div>
+
+    <!-- Bottom controls - Apple style -->
+    <div style="position:absolute;bottom:0;left:0;right:0;padding:0 0 calc(var(--safe-bottom)+20px) 0;background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);">
+      
+      <!-- Mode selector (Photo / Vidéo) -->
+      <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;">
+        <button id="modePhoto" onclick="setMode('photo')" style="background:none;border:none;color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.08em;text-shadow:0 1px 3px rgba(0,0,0,0.5);">PHOTO</button>
+        <button id="modeVideo" onclick="setMode('video')" style="background:none;border:none;color:rgba(255,255,255,0.5);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;letter-spacing:0.08em;">VIDÉO</button>
       </div>
-      <div class="camera-controls">
-        <button class="cam-btn cam-btn-secondary" onclick="openGallery()" style="display:flex;align-items:center;justify-content:center;gap:6px;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="9" height="9" rx="2" fill="#C4859A"/><rect x="13" y="2" width="9" height="9" rx="2" fill="#9B6B8A"/><rect x="2" y="13" width="9" height="9" rx="2" fill="#9B6B8A"/><rect x="13" y="13" width="9" height="9" rx="2" fill="#6B2D45"/></svg>
+
+      <!-- Main controls row -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 28px;">
+        
+        <!-- Thumbnail (last photo) -->
+        <div id="lastPhotoThumb" onclick="openLastPhoto()" style="width:54px;height:54px;border-radius:10px;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+
+        <!-- Shutter button -->
+        <button id="shutterBtn" onclick="captureMedia()" style="width:76px;height:76px;border-radius:50%;background:white;border:4px solid rgba(255,255,255,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.1s;box-shadow:0 0 0 2px rgba(255,255,255,0.5);">
+          <div id="shutterInner" style="width:62px;height:62px;border-radius:50%;background:white;"></div>
+        </button>
+
+        <!-- Flip camera -->
+        <button onclick="flipCamera()" style="width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,0.4);border:none;color:white;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        </button>
+      </div>
+
+      <!-- Galerie button -->
+      <div style="display:flex;justify-content:center;margin-top:14px;">
+        <button onclick="openGallery()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:8px 20px;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="9" height="9" rx="1.5" fill="rgba(255,255,255,0.7)"/><rect x="13" y="2" width="9" height="9" rx="1.5" fill="rgba(255,255,255,0.5)"/><rect x="2" y="13" width="9" height="9" rx="1.5" fill="rgba(255,255,255,0.5)"/><rect x="13" y="13" width="9" height="9" rx="1.5" fill="rgba(255,255,255,0.3)"/></svg>
           Galerie
         </button>
-        <button class="cam-btn cam-btn-primary" onclick="openNativeCamera()">📷 Prendre une photo</button>
       </div>
     </div>
-    <!-- Save button -->
-    <div style="padding:0 14px 10px;" id="photoActionBtns">
-      <button onclick="saveCurrentPhotoNow()" style="width:100%;padding:14px;border-radius:14px;border:none;background:#6B2D45;color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;" id="saveNowBtn">💾 Sauvegarder dans OneDrive</button>
-    </div>
-    <!-- ANNOTATION EDITOR -->
-    <div id="annotEditor" style="display:none;margin:0 14px 14px;">
-      <div style="background:white;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-card);">
-        <!-- Canvas for annotations -->
-        <div style="position:relative;width:100%;">
-          <canvas id="annotCanvas" style="width:100%;display:block;cursor:crosshair;touch-action:none;"></canvas>
-        </div>
-        <!-- Tools -->
-        <div style="padding:10px 12px;border-top:1px solid var(--blush);">
-          <div style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:6px;font-style:italic;">Choisissez un outil pour annoter • Pincez pour zoomer</div>
-          <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;align-items:center;">
-            <!-- Crayon -->
-            <button class="annot-tool" id="tool-pen" onclick="setTool('pen',this)" title="Crayon" style="flex-shrink:0;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--blush);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B6B8A" stroke-width="2" stroke-linecap="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-            </button>
-            <!-- Flèche -->
-            <button class="annot-tool" id="tool-arrow" onclick="setTool('arrow',this)" title="Flèche" style="flex-shrink:0;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--blush);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B6B8A" stroke-width="2" stroke-linecap="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="8 5 19 5 19 16"/></svg>
-            </button>
-            <!-- Cercle -->
-            <button class="annot-tool" id="tool-circle" onclick="setTool('circle',this)" title="Cercle" style="flex-shrink:0;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--blush);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B6B8A" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
-            </button>
-            <!-- Rectangle -->
-            <button class="annot-tool" id="tool-rect" onclick="setTool('rect',this)" title="Rectangle" style="flex-shrink:0;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--blush);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B6B8A" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
-            </button>
-            <!-- Texte -->
-            <button class="annot-tool" id="tool-text" onclick="setTool('text',this)" title="Texte" style="flex-shrink:0;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--blush);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B6B8A" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-            </button>
-            <!-- Effacer -->
-            <button class="annot-tool" id="tool-erase" onclick="setTool('erase',this)" title="Effacer" style="flex-shrink:0;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--blush);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B6B8A" stroke-width="2"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
-            </button>
-          </div>
-          <!-- Colors -->
-          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-            <span style="font-size:11px;color:var(--text-light);font-weight:500;">Couleur:</span>
-            <div id="color-red" onclick="setColor('#FF3B30',this)" style="width:26px;height:26px;border-radius:50%;background:#FF3B30;cursor:pointer;border:3px solid #FF3B30;"></div>
-            <div id="color-orange" onclick="setColor('#FF9500',this)" style="width:26px;height:26px;border-radius:50%;background:#FF9500;cursor:pointer;border:2px solid transparent;"></div>
-            <div id="color-yellow" onclick="setColor('#FFCC00',this)" style="width:26px;height:26px;border-radius:50%;background:#FFCC00;cursor:pointer;border:2px solid transparent;"></div>
-            <div id="color-green" onclick="setColor('#34C759',this)" style="width:26px;height:26px;border-radius:50%;background:#34C759;cursor:pointer;border:2px solid transparent;"></div>
-            <div id="color-blue" onclick="setColor('#007AFF',this)" style="width:26px;height:26px;border-radius:50%;background:#007AFF;cursor:pointer;border:2px solid transparent;"></div>
-            <div id="color-mauve" onclick="setColor('#6B2D45',this)" style="width:26px;height:26px;border-radius:50%;background:#6B2D45;cursor:pointer;border:2px solid transparent;"></div>
-            <div id="color-white" onclick="setColor('#FFFFFF',this)" style="width:26px;height:26px;border-radius:50%;background:white;cursor:pointer;border:2px solid #ddd;"></div>
-          </div>
-          <!-- Size -->
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-            <span style="font-size:11px;color:var(--text-light);font-weight:500;">Épaisseur:</span>
-            <input type="range" id="brushSize" min="2" max="20" value="4" style="flex:1;" oninput="updateBrushSize(this.value)">
-            <span id="brushSizeLabel" style="font-size:11px;color:var(--text-light);min-width:20px;">4</span>
-          </div>
-          <!-- Zoom controls -->
-          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
-            <span style="font-size:11px;color:var(--text-light);font-weight:500;">Zoom:</span>
-            <button onclick="zoomAnnot(-0.25)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--blush);background:white;font-size:16px;cursor:pointer;">−</button>
-            <span id="zoomLevel" style="font-size:12px;color:var(--text-mid);min-width:35px;text-align:center;">100%</span>
-            <button onclick="zoomAnnot(0.25)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--blush);background:white;font-size:16px;cursor:pointer;">+</button>
-            <button onclick="resetZoom()" style="padding:6px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;font-size:11px;color:var(--text-mid);cursor:pointer;">Réinitialiser</button>
-          </div>
-          <!-- Action buttons -->
-          <div style="display:flex;gap:8px;">
-            <button onclick="undoAnnotation()" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:1.5px solid var(--blush);background:white;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">↩️ Annuler</button>
-            <button onclick="clearAnnotations()" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:1.5px solid var(--blush);background:white;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">🗑️ Effacer</button>
-            <button onclick="saveAnnotatedPhoto()" style="flex:2;padding:10px;border-radius:var(--radius-sm);border:none;background:#6B2D45;color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;">💾 Sauvegarder dans OneDrive</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleGalleryPhoto(event)">
-    <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleGalleryPhoto(event)" multiple>
+  </div>
 
-    <div style="padding:14px 14px 6px"><div class="section-label" style="padding:0">Photos récentes</div></div>
-    <div class="photos-gallery" id="photosGallery">
-      <div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune photo pour ce client</div>
+  <!-- PHOTO EDITOR (Apple-style, shown after capture) -->
+  <div id="photoEditor" style="display:none;position:fixed;inset:0;background:#000;z-index:200;flex-direction:column;">
+    
+    <!-- Editor header -->
+    <div style="background:#1c1c1e;padding:calc(var(--safe-top)+10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;">
+      <button onclick="cancelEdit()" style="background:none;border:none;color:#FF453A;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;">Annuler</button>
+      <div style="color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;" id="editorTitle">Modifier</div>
+      <button onclick="confirmEdit()" style="background:none;border:none;color:#0A84FF;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;">OK</button>
+    </div>
+
+    <!-- Image area -->
+    <div style="flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden;" id="editorImageArea">
+      <canvas id="editCanvas" style="max-width:100%;max-height:100%;touch-action:none;cursor:crosshair;"></canvas>
+      <!-- Text input overlay -->
+      <div id="textOverlay" style="display:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+        <input type="text" id="textInput" placeholder="Votre texte..." style="background:rgba(0,0,0,0.7);color:white;border:2px solid white;border-radius:8px;padding:8px 14px;font-size:18px;font-family:'DM Sans',sans-serif;text-align:center;width:80%;outline:none;" onkeypress="if(event.key==='Enter')placeText()">
+      </div>
+    </div>
+
+    <!-- Undo/Redo bar -->
+    <div style="background:#1c1c1e;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;gap:16px;">
+        <button onclick="undoEdit()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:20px;cursor:pointer;">↩</button>
+        <button onclick="redoEdit()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:20px;cursor:pointer;">↪</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="showAdjust()" id="btnAdjust" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          Ajuster
+        </button>
+        <button onclick="showCropMode()" id="btnCrop" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>
+          Recadrer
+        </button>
+        <button onclick="showAnnotMode()" id="btnAnnot" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          Annoter
+        </button>
+        <button onclick="saveFromEditor()" style="background:#0A84FF;border:none;color:white;padding:8px 14px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          OneDrive
+        </button>
+      </div>
+    </div>
+
+    <!-- Annotation toolbar (shown when annot mode) -->
+    <div id="annotToolbar" style="display:none;background:#1c1c1e;padding:10px 12px;">
+      <!-- Tools -->
+      <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:10px;padding-bottom:4px;">
+        <button class="edit-tool" onclick="setEditTool('pen',this)" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Crayon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+        </button>
+        <button class="edit-tool" onclick="setEditTool('marker',this)" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Marqueur">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/><path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        </button>
+        <button class="edit-tool" onclick="setEditTool('arrow',this)" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Flèche">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="8 5 19 5 19 16"/></svg>
+        </button>
+        <button class="edit-tool" onclick="setEditTool('circle',this)" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Cercle">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+        </button>
+        <button class="edit-tool" onclick="setEditTool('rect',this)" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Rectangle">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
+        </button>
+        <button class="edit-tool" onclick="addTextAnnot()" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Texte">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        </button>
+        <button class="edit-tool" onclick="setEditTool('erase',this)" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Effacer">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/></svg>
+        </button>
+      </div>
+      <!-- Colors Apple-style -->
+      <div style="display:flex;gap:10px;align-items:center;justify-content:center;">
+        <div onclick="setEditColor('#FF453A',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#FF453A;cursor:pointer;border:3px solid #FF453A;"></div>
+        <div onclick="setEditColor('#FF9F0A',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#FF9F0A;cursor:pointer;border:2px solid transparent;"></div>
+        <div onclick="setEditColor('#FFD60A',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#FFD60A;cursor:pointer;border:2px solid transparent;"></div>
+        <div onclick="setEditColor('#30D158',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#30D158;cursor:pointer;border:2px solid transparent;"></div>
+        <div onclick="setEditColor('#0A84FF',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#0A84FF;cursor:pointer;border:2px solid transparent;"></div>
+        <div onclick="setEditColor('#BF5AF2',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#BF5AF2;cursor:pointer;border:2px solid transparent;"></div>
+        <div onclick="setEditColor('#FFFFFF',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:white;cursor:pointer;border:2px solid rgba(255,255,255,0.3);"></div>
+        <div onclick="setEditColor('#6B2D45',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#6B2D45;cursor:pointer;border:2px solid transparent;"></div>
+        <!-- Size -->
+        <input type="range" id="editBrushSize" min="1" max="20" value="4" style="width:80px;" oninput="editState.size=parseInt(this.value)">
+      </div>
+    </div>
+
+    <!-- Adjust toolbar -->
+    <div id="adjustToolbar" style="display:none;background:#1c1c1e;padding:12px 16px;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="color:rgba(255,255,255,0.6);font-size:12px;width:80px;">Luminosité</span>
+          <input type="range" min="-100" max="100" value="0" style="flex:1;" oninput="applyAdjust('brightness',this.value)" id="sliderBrightness">
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="color:rgba(255,255,255,0.6);font-size:12px;width:80px;">Contraste</span>
+          <input type="range" min="-100" max="100" value="0" style="flex:1;" oninput="applyAdjust('contrast',this.value)" id="sliderContrast">
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="color:rgba(255,255,255,0.6);font-size:12px;width:80px;">Saturation</span>
+          <input type="range" min="-100" max="100" value="0" style="flex:1;" oninput="applyAdjust('saturation',this.value)" id="sliderSaturation">
+        </div>
+      </div>
+    </div>
+
+    <!-- Crop toolbar -->
+    <div id="cropToolbar" style="display:none;background:#1c1c1e;padding:12px 16px;">
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button onclick="applyCropRatio(null)" style="padding:8px 14px;border-radius:8px;background:rgba(255,255,255,0.15);border:none;color:white;font-size:12px;cursor:pointer;">Libre</button>
+        <button onclick="applyCropRatio(1)" style="padding:8px 14px;border-radius:8px;background:rgba(255,255,255,0.1);border:none;color:white;font-size:12px;cursor:pointer;">1:1</button>
+        <button onclick="applyCropRatio(4/3)" style="padding:8px 14px;border-radius:8px;background:rgba(255,255,255,0.1);border:none;color:white;font-size:12px;cursor:pointer;">4:3</button>
+        <button onclick="applyCropRatio(16/9)" style="padding:8px 14px;border-radius:8px;background:rgba(255,255,255,0.1);border:none;color:white;font-size:12px;cursor:pointer;">16:9</button>
+        <button onclick="rotateCrop()" style="padding:8px 14px;border-radius:8px;background:rgba(255,255,255,0.1);border:none;color:white;font-size:12px;cursor:pointer;">↺ Rotation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIDEO EDITOR (trim) -->
+  <div id="videoEditor" style="display:none;position:fixed;inset:0;background:#000;z-index:200;flex-direction:column;">
+    <div style="background:#1c1c1e;padding:calc(var(--safe-top)+10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;">
+      <button onclick="cancelVideoEdit()" style="background:none;border:none;color:#FF453A;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;">Annuler</button>
+      <div style="color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;">Vidéo</div>
+      <button onclick="saveVideoToOneDrive()" style="background:none;border:none;color:#0A84FF;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;">Sauvegarder</button>
+    </div>
+    <video id="previewVideo" controls style="flex:1;width:100%;background:#000;"></video>
+    <div style="background:#1c1c1e;padding:16px;text-align:center;">
+      <p style="color:rgba(255,255,255,0.6);font-size:13px;font-family:'DM Sans',sans-serif;">Vidéo prête à sauvegarder dans OneDrive</p>
+    </div>
+  </div>
+
+  <!-- Gallery -->
+  <input type="file" id="galleryInput" accept="image/*,video/*" style="display:none" onchange="handleGalleryPhoto(event)">
+  <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleGalleryPhoto(event)">
+
+  <!-- Photos gallery (bottom sheet) -->
+  <div id="photosGallerySheet" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:150;" onclick="closeGallerySheet(event)">
+    <div style="position:absolute;bottom:0;left:0;right:0;background:var(--rose-cream);border-radius:20px 20px 0 0;padding:16px;max-height:70vh;overflow-y:auto;">
+      <div style="text-align:center;margin-bottom:12px;">
+        <div style="width:40px;height:4px;background:#ccc;border-radius:2px;margin:0 auto 10px;"></div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--mauve);" id="gallerySheetTitle">Photos du client</div>
+      </div>
+      <div class="photos-gallery" id="photosGallery" style="padding:0;">
+        <div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune photo</div>
+      </div>
     </div>
   </div>
 </div>
@@ -1108,43 +1205,107 @@ function navTo(screen, navId) {
   document.getElementById(navId).classList.add('active');
 }
 
-// ===== CAMERA =====
-function startCameraIfInactive() {
-  if(!state.cameraActive) toggleCamera();
+// ===== CAMERA APPLE-STYLE =====
+let cameraFacing = 'environment';
+let currentMode = 'photo';
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordTimer = null;
+let recordSeconds = 0;
+let flashEnabled = false;
+let currentVideoBlob = null;
+
+// Edit state
+let editState = {
+  tool: null,
+  color: '#FF453A',
+  size: 4,
+  drawing: false,
+  startX: 0, startY: 0,
+  history: [],
+  baseImage: null,
+  rotation: 0,
+  brightness: 0,
+  contrast: 0,
+  saturation: 0
+};
+let editZoom = 1.0;
+let lastPinchDist = 0;
+
+function goToPhotos() {
+  if(state.currentClient) {
+    document.getElementById('photosClientNameCam').textContent = state.currentClient.Title;
+    document.getElementById('gallerySheetTitle').textContent = 'Photos — ' + state.currentClient.Title;
+    updatePhotosGallery();
+  }
+  showScreen('screenPhotos');
+  startCamera();
 }
 
-async function toggleCamera() {
-  if(state.cameraActive) { stopCamera(); return; }
+function exitCameraMode() {
+  stopCamera();
+  showScreen('screenClient');
+}
+
+async function startCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: {ideal:1920}, height: {ideal:1080} },
-      audio: false
+      video: { facingMode: cameraFacing, width: {ideal:1920}, height: {ideal:1080} },
+      audio: currentMode === 'video'
     });
     state.cameraStream = stream;
     state.cameraActive = true;
     const video = document.getElementById('cameraVideo');
     video.srcObject = stream;
     video.style.display = 'block';
-    document.getElementById('cameraPlaceholder').style.display = 'none';
     document.getElementById('capturedPhoto').style.display = 'none';
-    document.getElementById('camBtn').style.display = 'none';
-    document.getElementById('snapBtn').style.display = 'flex';
-    document.getElementById('snapBtn').textContent = '📸 Capturer';
-    document.getElementById('snapBtn').onclick = takePhoto;
-    document.getElementById('savePhotoBar').style.display = 'none';
-    document.getElementById('annotBar').style.display = 'none';
   } catch(e) {
-    showToast('📷 Accès caméra refusé — utilisez la galerie');
+    showToast('Accès caméra refusé');
   }
 }
 
 function stopCamera() {
-  if(state.cameraStream) { state.cameraStream.getTracks().forEach(t => t.stop()); state.cameraStream = null; }
+  if(state.cameraStream) {
+    state.cameraStream.getTracks().forEach(t => t.stop());
+    state.cameraStream = null;
+  }
   state.cameraActive = false;
-  document.getElementById('cameraVideo').style.display = 'none';
-  document.getElementById('camBtn').style.display = 'flex';
-  document.getElementById('snapBtn').style.display = 'none';
-  if(!state.currentPhotoData) document.getElementById('cameraPlaceholder').style.display = 'flex';
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('modePhoto').style.color = mode === 'photo' ? 'white' : 'rgba(255,255,255,0.5)';
+  document.getElementById('modePhoto').style.fontWeight = mode === 'photo' ? '700' : '500';
+  document.getElementById('modeVideo').style.color = mode === 'video' ? 'white' : 'rgba(255,255,255,0.5)';
+  document.getElementById('modeVideo').style.fontWeight = mode === 'video' ? '700' : '500';
+  
+  const btn = document.getElementById('shutterBtn');
+  const inner = document.getElementById('shutterInner');
+  if(mode === 'video') {
+    inner.style.borderRadius = '6px';
+    inner.style.background = '#FF453A';
+    inner.style.width = '32px';
+    inner.style.height = '32px';
+    inner.style.margin = 'auto';
+  } else {
+    inner.style.borderRadius = '50%';
+    inner.style.background = 'white';
+    inner.style.width = '62px';
+    inner.style.height = '62px';
+    inner.style.margin = '0';
+  }
+}
+
+function captureMedia() {
+  if(currentMode === 'photo') {
+    takePhoto();
+  } else {
+    if(mediaRecorder && mediaRecorder.state === 'recording') {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  }
 }
 
 function takePhoto() {
@@ -1153,842 +1314,467 @@ function takePhoto() {
   canvas.width = video.videoWidth || 1280;
   canvas.height = video.videoHeight || 720;
   canvas.getContext('2d').drawImage(video, 0, 0);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
-  showCapturedPhoto(dataUrl);
-  stopCamera();
-}
-
-function showCapturedPhoto(dataUrl) {
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
   state.currentPhotoData = dataUrl;
-  // Show in preview area
-  document.getElementById('capturedPhoto').src = dataUrl;
-  document.getElementById('capturedPhoto').style.display = 'block';
-  document.getElementById('cameraPlaceholder').style.display = 'none';
-  // Show annotation editor below
-  document.getElementById('annotEditor').style.display = 'block';
-  // Reset tool selection
-  annotState.tool = null;
-  document.querySelectorAll('.annot-tool').forEach(b => {
-    b.style.background = 'white';
-    b.style.color = 'var(--text-mid)';
-    b.style.borderColor = 'var(--blush)';
-  });
-  // Init annotation canvas with photo
-  setTimeout(() => initAnnotCanvas(dataUrl), 150);
+  stopCamera();
+  openPhotoEditor(dataUrl);
+  updateThumb(dataUrl);
 }
 
-function openNativeCamera() {
-  document.getElementById('nativeCameraInput').click();
+function updateThumb(dataUrl) {
+  const thumb = document.getElementById('lastPhotoThumb');
+  thumb.innerHTML = '<img src="' + dataUrl + '" style="width:100%;height:100%;object-fit:cover;">';
 }
 
-async function saveCurrentPhotoNow() {
-  if(!state.currentPhotoData) {
-    showToast('Prenez ou choisissez une photo dabord');
-    return;
+function openLastPhoto() {
+  if(state.currentPhotoData) {
+    openPhotoEditor(state.currentPhotoData);
+  } else if(state.currentClient && state.photos[state.currentClient.Title]?.length > 0) {
+    const photos = state.photos[state.currentClient.Title];
+    viewPhotoFull(photos[photos.length-1].url);
   }
-  await saveCurrentPhoto();
 }
 
-async function openOneDrive() {
-  if(!state.accessToken || !state.currentClient) {
-    showToast('Connectez-vous d abord a Microsoft 365');
-    return;
-  }
-  showToast('☁️ Chargement OneDrive...');
-  const clientName = state.currentClient.Title;
-  const path = `/${CONFIG.oneDriveRoot}/${clientName}/10_Photos/Chantier`;
+function startRecording() {
+  if(!state.cameraStream) return;
+  recordedChunks = [];
   try {
-    const resp = await fetch(
-      `https://graph.microsoft.com/v1.0/me/drive/root:${path}:/children?$filter=file ne null&$top=50`,
-      { headers: { Authorization: `Bearer ${state.accessToken}` }}
-    );
-    if(resp.ok) {
-      const data = await resp.json();
-      if(data.value && data.value.length > 0) {
-        showOneDrivePicker(data.value);
-      } else {
-        showToast('📭 Aucune photo dans OneDrive pour ce client');
-      }
-    } else {
-      showToast('⚠️ Dossier OneDrive introuvable');
-    }
+    mediaRecorder = new MediaRecorder(state.cameraStream, { mimeType: 'video/webm' });
   } catch(e) {
-    showToast('⚠️ Erreur de connexion OneDrive');
+    mediaRecorder = new MediaRecorder(state.cameraStream);
+  }
+  mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    currentVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+    openVideoEditor(currentVideoBlob);
+  };
+  mediaRecorder.start();
+  document.getElementById('recordingIndicator').style.display = 'block';
+  recordSeconds = 0;
+  recordTimer = setInterval(() => {
+    recordSeconds++;
+    const m = Math.floor(recordSeconds/60).toString().padStart(2,'0');
+    const s = (recordSeconds%60).toString().padStart(2,'0');
+    document.getElementById('recordTimer').textContent = m + ':' + s;
+  }, 1000);
+  // Change shutter to stop button
+  document.getElementById('shutterInner').style.borderRadius = '6px';
+}
+
+function stopRecording() {
+  if(mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    clearInterval(recordTimer);
+    document.getElementById('recordingIndicator').style.display = 'none';
+    setMode('video'); // reset button
   }
 }
 
-function closePicker() { var el = document.getElementById("onedrivePicker"); if(el) el.remove(); }
-
-function showOneDrivePicker(files) {
-  const overlay = document.createElement('div');
-  overlay.id = 'onedrivePicker';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;display:flex;flex-direction:column;';
-  
-  // Store files globally for access from onclick
-  window._odFiles = files;
-  
-  let thumbsHtml = '';
-  files.forEach((f, i) => {
-    const thumb = f.thumbnails && f.thumbnails[0] ? 
-      '<img src="' + (f.thumbnails[0].small?.url || '') + '" style="width:100%;height:100%;object-fit:cover;">' :
-      '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:24px;">🖼️</div>';
-    thumbsHtml += '<div onclick="loadOneDrivePhotoByIndex(' + i + ')" style="aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--blush);cursor:pointer;position:relative;">' +
-      thumb +
-      '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.5);color:white;font-size:8px;padding:3px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + f.name + '</div>' +
-      '</div>';
-  });
-  
-  overlay.innerHTML = '<div style="background:white;margin:auto;width:90%;max-width:400px;border-radius:20px;overflow:hidden;max-height:80vh;display:flex;flex-direction:column;">' +
-    '<div style="background:#6B2D45;padding:16px;display:flex;align-items:center;justify-content:space-between;">' +
-    '<div style="color:white;font-size:18px;">☁️ Photos OneDrive</div>' +
-    '<button onclick="closePicker()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;">×</button>' +
-    '</div>' +
-    '<div style="overflow-y:auto;padding:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">' +
-    thumbsHtml +
-    '</div></div>';
-  
-  document.body.appendChild(overlay);
+function flipCamera() {
+  cameraFacing = cameraFacing === 'environment' ? 'user' : 'environment';
+  stopCamera();
+  startCamera();
 }
 
-async function loadOneDrivePhotoByIndex(i) {
-  const f = window._odFiles[i];
-  if(f) await loadOneDrivePhoto(f['@microsoft.graph.downloadUrl'] || '', f.name);
-}
-
-async function loadOneDrivePhoto(url, name) {
-  document.getElementById('onedrivePicker')?.remove();
-  if(!url) { showToast('⚠️ Impossible de charger cette photo'); return; }
-  showToast('⏳ Chargement de la photo...');
-  try {
-    const resp = await fetch(url);
-    const blob = await resp.blob();
-    const reader = new FileReader();
-    reader.onload = (e) => showCapturedPhoto(e.target.result);
-    reader.readAsDataURL(blob);
-  } catch(e) {
-    showToast('⚠️ Erreur de chargement');
-  }
+function toggleFlash() {
+  flashEnabled = !flashEnabled;
+  document.getElementById('flashBtn').style.background = flashEnabled ? 'rgba(255,200,0,0.6)' : 'rgba(0,0,0,0.4)';
 }
 
 function openGallery() {
-  // Open iPhone photos library directly
   document.getElementById('galleryInput').click();
 }
 
 function handleGalleryPhoto(e) {
   const file = e.target.files[0];
   if(!file) return;
+  if(file.type.startsWith('video/')) {
+    currentVideoBlob = file;
+    openVideoEditor(file);
+    return;
+  }
   const reader = new FileReader();
-  reader.onload = (ev) => showCapturedPhoto(ev.target.result);
+  reader.onload = (ev) => {
+    state.currentPhotoData = ev.target.result;
+    stopCamera();
+    openPhotoEditor(ev.target.result);
+  };
   reader.readAsDataURL(file);
   e.target.value = '';
 }
 
-function selectAnnotation(btn, type) {
-  document.querySelectorAll('.annot-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  state.currentAnnotation = type;
+// ===== PHOTO EDITOR =====
+function openPhotoEditor(dataUrl) {
+  document.getElementById('photoEditor').style.display = 'flex';
+  document.getElementById('cameraFullscreen').style.display = 'none';
+  
+  // Hide all toolbars
+  document.getElementById('annotToolbar').style.display = 'none';
+  document.getElementById('adjustToolbar').style.display = 'none';
+  document.getElementById('cropToolbar').style.display = 'none';
+  
+  // Reset edit state
+  editState = { tool: null, color: '#FF453A', size: 4, drawing: false, startX: 0, startY: 0, history: [], baseImage: null, rotation: 0, brightness: 0, contrast: 0, saturation: 0 };
+  editZoom = 1.0;
+  
+  // Init canvas
+  setTimeout(() => initEditCanvas(dataUrl), 100);
 }
 
-// ===== ANNOTATION EDITOR =====
-let annotState = {
-  tool: null,
-  color: '#FF3B30',
-  size: 4,
-  drawing: false,
-  startX: 0, startY: 0,
-  history: [],
-  baseImage: null
-};
-
-function initAnnotCanvas(imgSrc) {
-  const canvas = document.getElementById('annotCanvas');
+function initEditCanvas(dataUrl) {
+  const canvas = document.getElementById('editCanvas');
+  const area = document.getElementById('editorImageArea');
   const ctx = canvas.getContext('2d');
   const img = new Image();
   img.onload = () => {
-    // Set canvas size to match image
-    const maxW = canvas.parentElement.offsetWidth;
-    const ratio = img.height / img.width;
-    canvas.width = maxW;
-    canvas.height = maxW * ratio;
-    canvas.style.height = (maxW * ratio) + 'px';
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    annotState.baseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    annotState.history = [ctx.getImageData(0, 0, canvas.width, canvas.height)];
-    setupAnnotEvents(canvas, ctx);
+    const maxW = area.offsetWidth;
+    const maxH = area.offsetHeight;
+    const ratio = Math.min(maxW / img.width, maxH / img.height);
+    canvas.width = img.width;
+    canvas.height = img.height;
+    canvas.style.width = Math.round(img.width * ratio) + 'px';
+    canvas.style.height = Math.round(img.height * ratio) + 'px';
+    ctx.drawImage(img, 0, 0);
+    editState.baseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    editState.history = [ctx.getImageData(0, 0, canvas.width, canvas.height)];
+    setupEditEvents(canvas, ctx);
   };
-  img.src = imgSrc;
+  img.src = dataUrl;
 }
 
-function setupAnnotEvents(canvas, ctx) {
-  let lastPinchDist = 0;
-
-  // Touch events for iPhone
-  let panStartX = 0, panStartY = 0, panScrollLeft = 0, panScrollTop = 0;
-
+function setupEditEvents(canvas, ctx) {
+  let lastPinch = 0;
+  
   canvas.addEventListener('touchstart', (e) => {
     if(e.touches.length === 2) {
-      lastPinchDist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
+      lastPinch = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
       return;
     }
-    const touch = e.touches[0];
-    if(annotState.tool) {
-      // Drawing mode
-      e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / (rect.width / currentZoom);
-      const scaleY = canvas.height / (rect.height / currentZoom);
-      startDraw(ctx, (touch.clientX - rect.left) / currentZoom * scaleX, (touch.clientY - rect.top) / currentZoom * scaleY);
-    } else if(currentZoom > 1) {
-      // Pan mode when zoomed
-      e.preventDefault();
-      const container = canvas.parentElement;
-      panStartX = touch.clientX;
-      panStartY = touch.clientY;
-      panScrollLeft = container.scrollLeft || 0;
-      panScrollTop = container.scrollTop || 0;
-    }
-    // else: no tool, not zoomed = allow page scroll
+    if(!editState.tool) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    const r = canvas.getBoundingClientRect();
+    const sx = canvas.width / r.width;
+    const sy = canvas.height / r.height;
+    editStartDraw(ctx, (t.clientX - r.left) * sx, (t.clientY - r.top) * sy);
   }, { passive: false });
-  
+
   canvas.addEventListener('touchmove', (e) => {
     if(e.touches.length === 2) {
       e.preventDefault();
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      if(lastPinchDist > 0) {
-        const delta = (dist - lastPinchDist) / 180;
-        currentZoom = Math.min(4.0, Math.max(0.5, currentZoom + delta));
-        applyZoom();
-      }
-      lastPinchDist = dist;
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      if(lastPinch > 0) { editZoom = Math.min(4, Math.max(0.5, editZoom + (d - lastPinch)/200)); applyEditZoom(); }
+      lastPinch = d;
       return;
     }
-    const touch = e.touches[0];
-    if(annotState.tool) {
-      e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / (rect.width / currentZoom);
-      const scaleY = canvas.height / (rect.height / currentZoom);
-      moveDraw(ctx, (touch.clientX - rect.left) / currentZoom * scaleX, (touch.clientY - rect.top) / currentZoom * scaleY);
-    } else if(currentZoom > 1) {
-      e.preventDefault();
-      const container = canvas.parentElement;
-      const dx = touch.clientX - panStartX;
-      const dy = touch.clientY - panStartY;
-      // Pan by moving canvas transform origin
-      const newX = Math.max(-(canvas.offsetWidth * currentZoom - canvas.offsetWidth), Math.min(0, (parseFloat(canvas.style.marginLeft) || 0) + dx * 0.5));
-      canvas.style.marginLeft = newX + 'px';
-      panStartX = touch.clientX;
-      panStartY = touch.clientY;
-    }
+    if(!editState.tool) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    const r = canvas.getBoundingClientRect();
+    const sx = canvas.width / r.width;
+    const sy = canvas.height / r.height;
+    editMoveDraw(ctx, (t.clientX - r.left) * sx, (t.clientY - r.top) * sy);
   }, { passive: false });
-  
+
   canvas.addEventListener('touchend', (e) => {
-    lastPinchDist = 0;
-    if(annotState.tool) {
-      e.preventDefault();
-      endDraw(ctx);
-    }
+    lastPinch = 0;
+    if(!editState.tool) return;
+    e.preventDefault();
+    editEndDraw(ctx);
   }, { passive: false });
-  
-  // Mouse events for desktop
+
   canvas.addEventListener('mousedown', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    startDraw(ctx, (e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+    if(!editState.tool) return;
+    const r = canvas.getBoundingClientRect();
+    editStartDraw(ctx, (e.clientX - r.left) * canvas.width / r.width, (e.clientY - r.top) * canvas.height / r.height);
   });
   canvas.addEventListener('mousemove', (e) => {
-    if(!annotState.drawing) return;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    moveDraw(ctx, (e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+    if(!editState.drawing || !editState.tool) return;
+    const r = canvas.getBoundingClientRect();
+    editMoveDraw(ctx, (e.clientX - r.left) * canvas.width / r.width, (e.clientY - r.top) * canvas.height / r.height);
   });
-  canvas.addEventListener('mouseup', () => endDraw(ctx));
+  canvas.addEventListener('mouseup', () => editEndDraw(ctx));
 }
 
-function startDraw(ctx, x, y) {
-  if(!annotState.tool) return; // No tool selected - allow scroll
-  annotState.drawing = true;
-  annotState.startX = x;
-  annotState.startY = y;
-  
-  if(annotState.tool === 'pen' || annotState.tool === 'erase') {
+function applyEditZoom() {
+  const canvas = document.getElementById('editCanvas');
+  canvas.style.transform = 'scale(' + editZoom + ')';
+  canvas.style.transformOrigin = 'center center';
+}
+
+function editStartDraw(ctx, x, y) {
+  if(!editState.tool) return;
+  editState.drawing = true;
+  editState.startX = x;
+  editState.startY = y;
+  if(editState.tool === 'pen' || editState.tool === 'marker' || editState.tool === 'erase') {
     ctx.beginPath();
     ctx.moveTo(x, y);
   }
-  
-  if(annotState.tool === 'text') {
-    const text = prompt('Entrez votre annotation:');
-    if(text) {
-      ctx.font = `bold ${annotState.size * 4}px DM Sans, Arial`;
-      ctx.fillStyle = annotState.color;
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.strokeText(text, x, y);
-      ctx.fillText(text, x, y);
-      annotState.history.push(ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height));
-    }
-    annotState.drawing = false;
-  }
 }
 
-function moveDraw(ctx, x, y) {
-  if(!annotState.drawing) return;
+function editMoveDraw(ctx, x, y) {
+  if(!editState.drawing || !editState.tool) return;
+  ctx.strokeStyle = editState.color;
+  ctx.lineWidth = editState.tool === 'marker' ? editState.size * 3 : editState.size;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.globalAlpha = editState.tool === 'marker' ? 0.4 : 1.0;
   
-  if(annotState.tool === 'pen') {
-    ctx.strokeStyle = annotState.color;
-    ctx.lineWidth = annotState.size;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  } else if(annotState.tool === 'erase') {
+  if(editState.tool === 'pen' || editState.tool === 'marker') {
+    ctx.lineTo(x, y); ctx.stroke();
+  } else if(editState.tool === 'erase') {
     ctx.globalCompositeOperation = 'destination-out';
-    ctx.strokeStyle = 'rgba(0,0,0,1)';
-    ctx.lineWidth = annotState.size * 3;
-    ctx.lineCap = 'round';
-    ctx.lineTo(x, y);
-    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = editState.size * 4;
+    ctx.lineTo(x, y); ctx.stroke();
     ctx.globalCompositeOperation = 'source-over';
-  } else if(annotState.tool === 'arrow' || annotState.tool === 'circle') {
-    // Redraw base + preview shape
-    if(annotState.history.length > 0) {
-      ctx.putImageData(annotState.history[annotState.history.length - 1], 0, 0);
-    }
-    ctx.strokeStyle = annotState.color;
-    ctx.fillStyle = annotState.color;
-    ctx.lineWidth = annotState.size;
-    
-    if(annotState.tool === 'arrow') {
-      drawArrow(ctx, annotState.startX, annotState.startY, x, y);
-    } else if(annotState.tool === 'circle') {
-      const rx = Math.abs(x - annotState.startX) / 2;
-      const ry = Math.abs(y - annotState.startY) / 2;
-      const cx = (annotState.startX + x) / 2;
-      const cy = (annotState.startY + y) / 2;
+  } else if(['arrow','circle','rect'].includes(editState.tool)) {
+    ctx.globalAlpha = 1;
+    if(editState.history.length > 0) ctx.putImageData(editState.history[editState.history.length-1], 0, 0);
+    ctx.fillStyle = editState.color;
+    ctx.lineWidth = editState.size;
+    if(editState.tool === 'arrow') {
+      drawEditArrow(ctx, editState.startX, editState.startY, x, y);
+    } else if(editState.tool === 'circle') {
+      const rx = Math.abs(x-editState.startX)/2, ry = Math.abs(y-editState.startY)/2;
       ctx.beginPath();
-      ctx.ellipse(cx, cy, rx || 10, ry || 10, 0, 0, Math.PI * 2);
+      ctx.ellipse((editState.startX+x)/2, (editState.startY+y)/2, Math.max(rx,5), Math.max(ry,5), 0, 0, Math.PI*2);
       ctx.stroke();
+    } else if(editState.tool === 'rect') {
+      ctx.strokeRect(editState.startX, editState.startY, x-editState.startX, y-editState.startY);
     }
   }
 }
 
-function endDraw(ctx) {
-  if(!annotState.drawing) return;
-  annotState.drawing = false;
+function editEndDraw(ctx) {
+  if(!editState.drawing) return;
+  editState.drawing = false;
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
   ctx.beginPath();
-  annotState.history.push(ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height));
+  editState.history.push(ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height));
 }
 
-function drawArrow(ctx, x1, y1, x2, y2) {
-  const headLen = 15;
-  const angle = Math.atan2(y2 - y1, x2 - x1);
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
-  ctx.stroke();
+function drawEditArrow(ctx, x1, y1, x2, y2) {
+  const headLen = 15 * editState.size / 4;
+  const angle = Math.atan2(y2-y1, x2-x1);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x2, y2);
-  ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI/6), y2 - headLen * Math.sin(angle - Math.PI/6));
-  ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI/6), y2 - headLen * Math.sin(angle + Math.PI/6));
-  ctx.closePath();
-  ctx.fill();
+  ctx.lineTo(x2 - headLen*Math.cos(angle-Math.PI/6), y2 - headLen*Math.sin(angle-Math.PI/6));
+  ctx.lineTo(x2 - headLen*Math.cos(angle+Math.PI/6), y2 - headLen*Math.sin(angle+Math.PI/6));
+  ctx.closePath(); ctx.fill();
 }
 
-function setTool(tool, btn) {
-  // Toggle off if same tool clicked again
-  if(annotState.tool === tool) {
-    annotState.tool = null;
-    document.querySelectorAll('.annot-tool').forEach(b => {
-      b.style.background = 'white';
-      b.style.color = 'var(--text-mid)';
-      b.style.borderColor = 'var(--blush)';
-    });
+function setEditTool(tool, btn) {
+  if(editState.tool === tool) {
+    editState.tool = null;
+    document.querySelectorAll('.edit-tool').forEach(b => b.style.background = 'rgba(255,255,255,0.1)');
     return;
   }
-  annotState.tool = tool;
-  document.querySelectorAll('.annot-tool').forEach(b => {
-    b.style.background = 'white';
-    b.style.color = 'var(--text-mid)';
-    b.style.borderColor = 'var(--blush)';
-  });
-  btn.style.background = 'var(--mauve)';
-  btn.style.color = 'white';
-  btn.style.borderColor = 'var(--mauve)';
+  editState.tool = tool;
+  document.querySelectorAll('.edit-tool').forEach(b => b.style.background = 'rgba(255,255,255,0.1)');
+  btn.style.background = editState.color;
 }
 
-function setColor(color, el) {
-  annotState.color = color;
-  document.querySelectorAll('[id^="color-"]').forEach(e => e.style.border = '2px solid transparent');
+function setEditColor(color, el) {
+  editState.color = color;
+  document.querySelectorAll('.edit-color').forEach(e => e.style.border = '2px solid transparent');
   el.style.border = '3px solid ' + color;
-  if(color === '#FFFFFF') el.style.border = '3px solid #999';
+  // Update active tool button color
+  if(editState.tool) {
+    const activeBtn = document.querySelector('.edit-tool[style*="background: ' + editState.color + '"]');
+  }
 }
 
-function updateBrushSize(val) {
-  annotState.size = parseInt(val);
-  document.getElementById('brushSizeLabel').textContent = val;
-}
-
-function undoAnnotation() {
-  const canvas = document.getElementById('annotCanvas');
+function addTextAnnot() {
+  const text = prompt('Entrez votre texte:');
+  if(!text) return;
+  const canvas = document.getElementById('editCanvas');
   const ctx = canvas.getContext('2d');
-  if(annotState.history.length > 1) {
-    annotState.history.pop();
-    ctx.putImageData(annotState.history[annotState.history.length - 1], 0, 0);
-  }
+  const size = Math.max(20, editState.size * 6);
+  ctx.font = 'bold ' + size + 'px DM Sans, Arial';
+  ctx.fillStyle = editState.color;
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  ctx.lineWidth = 2;
+  const x = canvas.width / 2 - ctx.measureText(text).width / 2;
+  const y = canvas.height / 2;
+  ctx.strokeText(text, x, y);
+  ctx.fillText(text, x, y);
+  editState.history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
 }
 
-function clearAnnotations() {
-  const canvas = document.getElementById('annotCanvas');
+function undoEdit() {
+  if(editState.history.length <= 1) return;
+  editState.history.pop();
+  const ctx = document.getElementById('editCanvas').getContext('2d');
+  ctx.putImageData(editState.history[editState.history.length-1], 0, 0);
+}
+
+function redoEdit() { showToast('Rétablir non disponible'); }
+
+function showAnnotMode() {
+  document.getElementById('annotToolbar').style.display = 'block';
+  document.getElementById('adjustToolbar').style.display = 'none';
+  document.getElementById('cropToolbar').style.display = 'none';
+  highlightEditorBtn('btnAnnot');
+}
+
+function showAdjust() {
+  document.getElementById('annotToolbar').style.display = 'none';
+  document.getElementById('adjustToolbar').style.display = 'block';
+  document.getElementById('cropToolbar').style.display = 'none';
+  highlightEditorBtn('btnAdjust');
+}
+
+function showCropMode() {
+  document.getElementById('annotToolbar').style.display = 'none';
+  document.getElementById('adjustToolbar').style.display = 'none';
+  document.getElementById('cropToolbar').style.display = 'block';
+  highlightEditorBtn('btnCrop');
+}
+
+function highlightEditorBtn(id) {
+  ['btnAdjust','btnCrop','btnAnnot'].forEach(b => {
+    document.getElementById(b).style.color = b === id ? '#0A84FF' : 'rgba(255,255,255,0.6)';
+  });
+}
+
+function applyAdjust(type, val) {
+  editState[type] = parseInt(val);
+  const canvas = document.getElementById('editCanvas');
   const ctx = canvas.getContext('2d');
-  if(annotState.baseImage) {
-    ctx.putImageData(annotState.baseImage, 0, 0);
-    annotState.history = [annotState.baseImage];
-  }
+  if(editState.baseImage) ctx.putImageData(editState.baseImage, 0, 0);
+  let f = '';
+  if(editState.brightness !== 0) f += 'brightness(' + (1 + editState.brightness/100) + ') ';
+  if(editState.contrast !== 0) f += 'contrast(' + (1 + editState.contrast/100) + ') ';
+  if(editState.saturation !== 0) f += 'saturate(' + (1 + editState.saturation/100) + ') ';
+  canvas.style.filter = f;
 }
 
-// ===== ZOOM =====
-let currentZoom = 1.0;
-
-function zoomAnnot(delta) {
-  currentZoom = Math.min(3.0, Math.max(0.5, currentZoom + delta));
-  applyZoom();
+function applyCropRatio(ratio) {
+  showToast('Recadrage ' + (ratio ? ratio.toFixed(2) : 'libre') + ' — fonctionnalité avancée');
 }
 
-function resetZoom() {
-  currentZoom = 1.0;
-  applyZoom();
+function rotateCrop() {
+  const canvas = document.getElementById('editCanvas');
+  const ctx = canvas.getContext('2d');
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = canvas.height;
+  tempCanvas.height = canvas.width;
+  const tCtx = tempCanvas.getContext('2d');
+  tCtx.translate(tempCanvas.width/2, tempCanvas.height/2);
+  tCtx.rotate(Math.PI/2);
+  tCtx.drawImage(canvas, -canvas.width/2, -canvas.height/2);
+  canvas.width = tempCanvas.width;
+  canvas.height = tempCanvas.height;
+  ctx.drawImage(tempCanvas, 0, 0);
+  editState.history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
 }
 
-function applyZoom() {
-  const canvas = document.getElementById('annotCanvas');
-  canvas.style.transform = 'scale(' + currentZoom + ')';
-  canvas.style.transformOrigin = 'top left';
-  const container = canvas.parentElement;
-  if(currentZoom > 1) {
-    container.style.overflow = 'hidden';
-    container.style.height = Math.round(canvas.offsetHeight * currentZoom) + 'px';
-  } else {
-    container.style.overflow = 'hidden';
-    container.style.height = 'auto';
-    canvas.style.marginLeft = '0px';
-  }
-  document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
+function cancelEdit() {
+  document.getElementById('photoEditor').style.display = 'none';
+  document.getElementById('cameraFullscreen').style.display = 'flex';
+  startCamera();
 }
 
-async function saveAnnotatedPhoto() {
-  const canvas = document.getElementById('annotCanvas');
-  // Reset zoom before saving
-  const prevTransform = canvas.style.transform;
-  canvas.style.transform = 'none';
-  // Save annotated version as current photo
+function confirmEdit() {
+  // Save current state as current photo
+  const canvas = document.getElementById('editCanvas');
+  canvas.style.filter = '';
   state.currentPhotoData = canvas.toDataURL('image/jpeg', 0.92);
-  canvas.style.transform = prevTransform;
-  await saveCurrentPhoto();
+  updateThumb(state.currentPhotoData);
+  document.getElementById('photoEditor').style.display = 'none';
+  document.getElementById('cameraFullscreen').style.display = 'flex';
+  startCamera();
+  showToast('Photo confirmée — appuyez sur la miniature pour sauvegarder');
 }
 
-async function saveCurrentPhoto() {
-  if(!state.currentPhotoData) { showToast('Aucune photo a sauvegarder'); return; }
-  if(!state.currentClient) { showToast('Selectionnez un client dabord'); return; }
-  
-  const clientName = state.currentClient.Title;
-  const ts = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 16);
-  const fileName = clientName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + ts + '.jpg';
-  
-  showToast('Sauvegarde en cours...');
+async function saveFromEditor() {
+  const canvas = document.getElementById('editCanvas');
+  canvas.style.filter = '';
+  state.currentPhotoData = canvas.toDataURL('image/jpeg', 0.92);
+  await saveCurrentPhoto();
+  if(state.currentPhotoData === null) {
+    document.getElementById('photoEditor').style.display = 'none';
+    document.getElementById('cameraFullscreen').style.display = 'flex';
+    updatePhotosGallery();
+    startCamera();
+  }
+}
 
+// ===== VIDEO EDITOR =====
+function openVideoEditor(blob) {
+  document.getElementById('videoEditor').style.display = 'flex';
+  document.getElementById('cameraFullscreen').style.display = 'none';
+  const videoEl = document.getElementById('previewVideo');
+  videoEl.src = URL.createObjectURL(blob);
+}
+
+function cancelVideoEdit() {
+  document.getElementById('videoEditor').style.display = 'none';
+  document.getElementById('cameraFullscreen').style.display = 'flex';
+  startCamera();
+}
+
+async function saveVideoToOneDrive() {
+  if(!currentVideoBlob || !state.currentClient) { showToast('Aucune vidéo ou client'); return; }
+  showToast('Sauvegarde vidéo en cours...');
+  const clientName = state.currentClient.Title;
+  const ts = new Date().toISOString().replace(/[:.]/g,'-').substring(0,16);
+  const fileName = clientName.replace(/[^a-zA-Z0-9]/g,'_') + '_video_' + ts + '.webm';
+  
   if(state.accessToken) {
     try {
-      const dataUrl = state.currentPhotoData;
-      const base64 = dataUrl.split(',')[1];
-      const binaryStr = atob(base64);
-      const bytes = new Uint8Array(binaryStr.length);
-      for(let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
-      
       const path = '/me/drive/root:/' + CONFIG.oneDriveRoot + '/' + clientName + '/10_Photos/Chantier/' + fileName + ':/content';
       const resp = await fetch('https://graph.microsoft.com/v1.0' + path, {
         method: 'PUT',
-        headers: {
-          'Authorization': 'Bearer ' + state.accessToken,
-          'Content-Type': 'image/jpeg'
-        },
-        body: bytes.buffer
+        headers: { 'Authorization': 'Bearer ' + state.accessToken, 'Content-Type': 'video/webm' },
+        body: currentVideoBlob
       });
-      
       if(resp.ok) {
-        showToast('Photo sauvegardee dans OneDrive !');
-        addPhotoToGallery(clientName, state.currentPhotoData, fileName);
-        resetAfterSave();
+        showToast('Vidéo sauvegardée dans OneDrive !');
+        cancelVideoEdit();
         return;
-      } else {
-        const err = await resp.text().catch(() => '');
-        console.error('OneDrive error:', resp.status, err);
-        showToast('Erreur ' + resp.status + ' - sauvegarde locale');
       }
-    } catch(e) {
-      console.error('Save error:', e);
-      showToast('Erreur reseau - sauvegarde locale');
-    }
-  } else {
-    showToast('Connectez Microsoft 365 pour OneDrive');
+    } catch(e) {}
   }
-  
-  // Local fallback
-  addPhotoToGallery(clientName, state.currentPhotoData, fileName);
-  resetAfterSave();
+  showToast('Sauvegarde locale — connectez Microsoft 365');
+  cancelVideoEdit();
+}
+
+// ===== PHOTOS GALLERY =====
+function openGallerySheet() {
+  updatePhotosGallery();
+  document.getElementById('photosGallerySheet').style.display = 'block';
+}
+
+function closeGallerySheet(e) {
+  if(e.target === document.getElementById('photosGallerySheet')) {
+    document.getElementById('photosGallerySheet').style.display = 'none';
+  }
+}
+
+function viewPhotoFull(url) {
+  const w = window.open('');
+  w.document.write('<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="' + url + '" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>');
+}
+
+
+
+async function saveCurrentPhotoNow() {
+  if(!state.currentPhotoData) { showToast('Prenez ou choisissez une photo dabord'); return; }
+  await saveCurrentPhoto();
 }
 
 function resetAfterSave() {
   state.currentPhotoData = null;
-  document.getElementById('capturedPhoto').style.display = 'none';
-  document.getElementById('cameraPlaceholder').style.display = 'flex';
-  document.getElementById('annotEditor').style.display = 'none';
-  annotState.tool = null;
-  currentZoom = 1.0;
-  document.querySelectorAll('.annot-tool').forEach(b => {
-    b.style.background = 'white';
-    b.style.color = 'var(--text-mid)';
-    b.style.borderColor = 'var(--blush)';
-  });
   if(state.currentClient) {
     const count = (state.photos[state.currentClient.Title] || []).length;
     document.getElementById('statPhotos').textContent = count;
   }
 }
-
-
-async function saveNote() {
-  const type = document.getElementById('noteType').value;
-  const obs = document.getElementById('noteObs').value;
-  const actions = document.getElementById('noteActions').value;
-  const next = document.getElementById('noteNext').value;
-  const date = document.getElementById('noteDate').value;
-  
-  if(!obs) { showToast('⚠️ Ajoutez vos observations'); return; }
-  if(!state.currentClient) { showToast('⚠️ Aucun client sélectionné'); return; }
-  
-  const clientName = state.currentClient.Title;
-  const now = new Date();
-  const noteTitle = `${type} — ${clientName} — ${now.toLocaleDateString('fr-CA')}`;
-  
-  if(state.accessToken) {
-    showToast('💾 Sauvegarde dans OneNote...');
-    try {
-      // Get notebooks
-      const nbData = await graphGet('/me/onenote/notebooks');
-      if(nbData && nbData.value && nbData.value.length > 0) {
-        // Find our notebook
-        const nb = nbData.value.find(n => n.displayName.includes('Émilie') || n.displayName.includes('Emilie')) || nbData.value[0];
-        
-        // Get sections
-        const secData = await graphGet(`/me/onenote/notebooks/${nb.id}/sections`);
-        if(secData && secData.value) {
-          const section = secData.value.find(s => s.displayName === 'Clients actifs') || secData.value[0];
-          
-          // Create page content
-          const html = `<!DOCTYPE html><html><head><title>${noteTitle}</title></head><body>
-            <h1>${noteTitle}</h1>
-            <h2>📋 Type : ${type}</h2>
-            <h2>👁️ Observations</h2><p>${obs.replace(/\n/g,'<br>')}</p>
-            ${actions ? `<h2>⚡ Actions requises</h2><p>${actions.replace(/\n/g,'<br>')}</p>` : ''}
-            ${next ? `<h2>➡️ Prochaine étape</h2><p>${next}</p>` : ''}
-            ${date ? `<h2>📅 Suivi le</h2><p>${date}</p>` : ''}
-            <p><em>Note créée depuis l'app Studio Émilie Pépin</em></p>
-          </body></html>`;
-          
-          const resp = await fetch(`https://graph.microsoft.com/v1.0/me/onenote/sections/${section.id}/pages`, {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${state.accessToken}`,
-              'Content-Type': 'application/xhtml+xml'
-            },
-            body: html
-          });
-          
-          if(resp.ok) {
-            showToast('✅ Note sauvegardée dans OneNote !');
-            document.getElementById('noteObs').value = '';
-            document.getElementById('noteActions').value = '';
-            document.getElementById('noteNext').value = '';
-            setTimeout(() => showScreen('screenClient'), 1200);
-            return;
-          }
-        }
-      }
-    } catch(e) {}
-    showToast('⚠️ Erreur OneNote — vérifiez la connexion');
-  } else {
-    showToast('✅ Note sauvegardée localement');
-    setTimeout(() => showScreen('screenClient'), 1000);
-  }
-}
-
-function sendNoteToClient() {
-  showToast('📧 Préparation du courriel...');
-}
-
-// ===== TIMER =====
-function toggleTimer() {
-  if(state.timerRunning) {
-    clearInterval(state.timerInterval);
-    state.timerRunning = false;
-    document.getElementById('timerStartBtn').textContent = '▶ Reprendre';
-  } else {
-    state.timerRunning = true;
-    document.getElementById('timerStartBtn').textContent = '⏸ Pause';
-    if(state.currentClient) document.getElementById('timerClientName').textContent = state.currentClient.Title;
-    state.timerInterval = setInterval(() => {
-      state.timerSeconds++;
-      const h = Math.floor(state.timerSeconds/3600).toString().padStart(2,'0');
-      const m = Math.floor((state.timerSeconds%3600)/60).toString().padStart(2,'0');
-      const s = (state.timerSeconds%60).toString().padStart(2,'0');
-      document.getElementById('timerDisplay').textContent = `${h}:${m}:${s}`;
-    }, 1000);
-  }
-}
-
-function stopAndSaveTimer() {
-  clearInterval(state.timerInterval);
-  state.timerRunning = false;
-  const hrs = Math.floor(state.timerSeconds/3600);
-  const mins = Math.floor((state.timerSeconds%3600)/60);
-  const entry = {
-    client: state.currentClient?.Title || 'Client',
-    duration: `${hrs}h${mins.toString().padStart(2,'0')}`,
-    desc: 'Travail en studio',
-    seconds: state.timerSeconds
-  };
-  if(state.timerSeconds > 0) {
-    state.timeEntries.push(entry);
-    renderTimeEntries();
-    showToast(`✅ ${entry.duration} enregistré pour ${entry.client}`);
-  }
-  state.timerSeconds = 0;
-  document.getElementById('timerDisplay').textContent = '00:00:00';
-  document.getElementById('timerStartBtn').textContent = '▶ Démarrer';
-  document.getElementById('timerClientName').textContent = 'Aucun chrono actif';
-}
-
-function renderTimeEntries() {
-  const c = document.getElementById('timeEntries');
-  if(!state.timeEntries.length) {
-    c.innerHTML = '<div style="text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune entrée aujourd\'hui</div>';
-    return;
-  }
-  c.innerHTML = [...state.timeEntries].reverse().map(e => `
-    <div class="time-entry">
-      <div class="entry-dot"></div>
-      <div class="entry-info"><div class="entry-client">${escHtml(e.client)}</div><div class="entry-desc">${e.desc}</div></div>
-      <div class="entry-time">${e.duration}</div>
-    </div>
-  `).join('');
-}
-
-// ===== ANNA =====
-function askAnna() {
-  showScreen('screenAnna');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('nav-anna').classList.add('active');
-  if(state.currentClient) {
-    document.getElementById('annaInput').placeholder = `Demander à Anna — ${state.currentClient.Title}...`;
-  }
-}
-
-async function sendToAnna(preset) {
-  const input = document.getElementById('annaInput');
-  const msg = preset || input.value.trim();
-  if(!msg) return;
-  input.value = '';
-  
-  const chat = document.getElementById('annaChat');
-  const userBubble = document.createElement('div');
-  userBubble.className = 'chat-bubble bubble-user';
-  userBubble.textContent = msg;
-  chat.appendChild(userBubble);
-  
-  const typing = document.createElement('div');
-  typing.className = 'anna-typing';
-  typing.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
-  chat.appendChild(typing);
-  
-  const scroll = document.getElementById('annaScrollContent');
-  scroll.scrollTop = scroll.scrollHeight;
-  
-  try {
-    const clientCtx = state.currentClient
-      ? `Client actuel : ${state.currentClient.Title} (${state.currentClient.project}).`
-      : `Clients actifs : ${state.clients.map(c=>c.Title).join(', ') || 'Aucun client chargé'}.`;
-    
-    const msCtx = state.accessToken ? 'Microsoft 365 connecté.' : 'Microsoft 365 non connecté.';
-    
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: `Tu es Anna, l'assistante IA personnalisée d'Émilie Pépin, designer d'intérieur québécoise spécialisée en styles classique et campagnard chic.
-Tu parles à Émilie en français québécois, de façon informelle et chaleureuse (tutoiement).
-Tu connais son système : Microsoft 365 (OneDrive, OneNote, SharePoint, Teams, Planner, Outlook), Power Automate, Wave, TripLog.
-${clientCtx} ${msCtx}
-Sois concise, pratique et amicale. 3-4 phrases max sauf si on demande plus.`,
-        messages: [{ role: 'user', content: msg }]
-      })
-    });
-    
-    typing.remove();
-    const data = await resp.json();
-    const annaBubble = document.createElement('div');
-    annaBubble.className = 'chat-bubble bubble-anna';
-    annaBubble.textContent = data.content?.[0]?.text || 'Je suis là ! 🌸';
-    chat.appendChild(annaBubble);
-  } catch(e) {
-    typing.remove();
-    const annaBubble = document.createElement('div');
-    annaBubble.className = 'chat-bubble bubble-anna';
-    annaBubble.innerHTML = `Connexion interrompue. <a href="${CONFIG.annaProjectUrl}" target="_blank" style="color:var(--mauve)">Ouvrir Anna dans Claude →</a>`;
-    chat.appendChild(annaBubble);
-  }
-  
-  scroll.scrollTop = scroll.scrollHeight;
-}
-
-// ===== MOODBOARD =====
-function toggleSwatch(el) { el.classList.toggle('selected'); }
-
-function addMoodImage() { document.getElementById('moodInput').click(); }
-
-function handleMoodImage(e) {
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    state.moodImages.push({ url: ev.target.result, name: file.name });
-    renderMoodboard();
-  };
-  reader.readAsDataURL(file);
-  e.target.value = '';
-}
-
-function renderMoodboard() {
-  const grid = document.getElementById('moodGrid');
-  if(!state.moodImages.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Ajoutez des images 🎨</div>';
-    return;
-  }
-  grid.innerHTML = state.moodImages.map((img, i) => `
-    <div class="mood-item">
-      <img src="${img.url}" alt="${img.name}">
-      <div class="mood-label">${img.name.substring(0, 20)}</div>
-    </div>
-  `).join('');
-}
-
-function exportMoodboard() { showToast('📤 Moodboard partagé avec le client !'); }
-
-// ===== DIVERS =====
-function callClient() {
-  if(state.currentClient?.phone) {
-    window.location.href = 'tel:' + state.currentClient.phone.replace(/\s/g, '');
-  } else {
-    showToast('Numero non disponible — ajoutez-le dans SharePoint');
-  }
-}
-
-function openNavigation() {
-  if(!state.currentClient || !state.currentClient.address) { 
-    showToast('Adresse non disponible'); 
-    return; 
-  }
-  const addr = encodeURIComponent(state.currentClient.address);
-  const addrDisplay = state.currentClient.address;
-  
-  const overlay = document.createElement('div');
-  overlay.id = 'navPicker';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:flex;align-items:flex-end;';
-  overlay.addEventListener('click', function(e) { if(e.target === overlay) overlay.remove(); });
-  
-  const appleUrl = 'maps://?daddr=' + addr;
-  const googleUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + addr;
-  
-  const div = document.createElement('div');
-  div.style.cssText = 'background:white;width:100%;border-radius:20px 20px 0 0;padding:20px;';
-  div.innerHTML = 
-    '<div style="text-align:center;font-family:Cormorant Garamond,serif;font-size:18px;color:#6B2D45;margin-bottom:6px;">Navigation</div>' +
-    '<div style="text-align:center;font-size:12px;color:#A88090;margin-bottom:16px;">📍 ' + addrDisplay + '</div>' +
-    '<button id="appleMapBtn" style="width:100%;padding:14px;border-radius:12px;border:none;background:#F2D7E0;color:#6B2D45;font-family:DM Sans,sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:10px;">🗺️ Plans Apple</button>' +
-    '<button id="googleMapBtn" style="width:100%;padding:14px;border-radius:12px;border:none;background:#F2D7E0;color:#6B2D45;font-family:DM Sans,sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:10px;">🌍 Google Maps</button>' +
-    '<button id="cancelNavBtn" style="width:100%;padding:14px;border-radius:12px;border:1.5px solid #F2D7E0;background:white;color:#A88090;font-family:DM Sans,sans-serif;font-size:15px;cursor:pointer;">Annuler</button>';
-  
-  overlay.appendChild(div);
-  document.body.appendChild(overlay);
-  
-  document.getElementById('appleMapBtn').addEventListener('click', function() {
-    window.open(appleUrl); overlay.remove();
-  });
-  document.getElementById('googleMapBtn').addEventListener('click', function() {
-    window.open(googleUrl); overlay.remove();
-  });
-  document.getElementById('cancelNavBtn').addEventListener('click', function() {
-    overlay.remove();
-  });
-}
-
-function showAddClient() {
-  showToast('➕ Ouverture du formulaire...');
-  setTimeout(() => window.open('https://forms.microsoft.com/r/dfPQU71x5v', '_blank'), 500);
-}
-
-function updatePhotosGallery() {
-  if(!state.currentClient) return;
-  const photos = state.photos[state.currentClient.Title] || [];
-  const gallery = document.getElementById('photosGallery');
-  if(!gallery) return;
-  if(photos.length === 0) {
-    gallery.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune photo pour ce client</div>';
-    return;
-  }
-  gallery.innerHTML = photos.map((p, i) => `
-    <div class="gallery-thumb" onclick="viewPhoto(${i})">
-      <img src="${p.url}" alt="${p.name}">
-    </div>
-  `).join('');
-}
-
-function addPhotoToGallery(clientName, dataUrl, fileName) {
-  if(!state.photos[clientName]) state.photos[clientName] = [];
-  state.photos[clientName].push({ url: dataUrl, name: fileName });
-  updatePhotosGallery();
-}
-
-function viewPhoto(i) {
-  const photos = state.photos[state.currentClient?.Title] || [];
-  if(photos[i]) {
-    const w = window.open('');
-    w.document.write('<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="' + photos[i].url + '" style="max-width:100%;max-height:100vh;object-fit:contain"><p style="position:fixed;bottom:10px;left:0;right:0;text-align:center;color:white;font-family:sans-serif;font-size:12px">' + photos[i].name + '</p></body></html>');
-  }
-}
-
-function goToPhotos() {
-  if(state.currentClient) {
-    document.getElementById('photosClientName').textContent = state.currentClient.Title;
-    updatePhotosGallery();
-  }
-  showScreen('screenPhotos');
-}
-
-function showSuiviProjet() { showToast('📊 Suivi de projet — bientôt disponible'); }
-function showFacturer() { showToast('💰 Facturation — bientôt disponible'); }
-function startVoiceNote() { showToast('🎤 Note vocale — bientôt disponible'); }
-function logDeplacement() { showToast('🚗 Déplacement enregistré !'); }
 
 // ===== TOAST =====
 function showToast(msg) {
