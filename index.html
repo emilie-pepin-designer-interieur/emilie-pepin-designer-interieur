@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Émilie Pépin">
@@ -12,7 +13,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.0/lib/msal-browser.min.js"></script>
 <style>
 :root {
@@ -34,97 +34,44 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--rose-cream);
-  color: var(--text-dark);
-  min-height: 100vh;
-  overflow-x: hidden;
-  max-width: 100vw;
-  -webkit-font-smoothing: antialiased;
-}
+body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; max-width: 100vw; -webkit-font-smoothing: antialiased; }
 .screen { display: none; min-height: 100vh; flex-direction: column; animation: fadeIn 0.3s ease; }
 .screen.active { display: flex; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
 /* HEADER */
-.app-header {
-  background: var(--mauve);
-  padding: calc(var(--safe-top) + 14px) 16px 14px;
-  display: flex; align-items: center; gap: 10px;
-  position: sticky; top: 0; z-index: 100;
-}
-.header-back {
-  width: 34px; height: 34px; border-radius: 50%;
-  background: rgba(255,255,255,0.15); border: none; color: white;
-  font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-}
+.app-header { background: var(--mauve); padding: calc(var(--safe-top) + 14px) 16px 14px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 100; }
+.header-back { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.15); border: none; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .header-titles { flex: 1; }
 .header-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; color: white; letter-spacing: 0.02em; }
 .header-subtitle { font-size: 10px; color: var(--rose-powder); margin-top: 1px; }
-.header-action {
-  width: 34px; height: 34px; border-radius: 50%;
-  background: rgba(255,255,255,0.15); border: none; color: white;
-  font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-}
-.login-btn {
-  padding: 5px 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.1); color: white; font-size: 11px;
-  font-family: 'DM Sans', sans-serif; cursor: pointer; white-space: nowrap;
-}
+.header-action { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.15); border: none; color: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.login-btn { padding: 5px 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.1); color: white; font-size: 11px; font-family: 'DM Sans', sans-serif; cursor: pointer; white-space: nowrap; }
 .login-btn.connected { background: rgba(58,125,41,0.3); border-color: rgba(58,125,41,0.6); }
 
 /* BOTTOM NAV */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: white; border-top: 1px solid var(--blush);
-  display: flex; padding-bottom: var(--safe-bottom); z-index: 100;
-}
-.nav-item {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 10px 0; border: none; background: none; cursor: pointer;
-  color: var(--text-light); font-family: 'DM Sans', sans-serif; font-size: 10px;
-}
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--blush); display: flex; padding-bottom: var(--safe-bottom); z-index: 100; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; border: none; background: none; cursor: pointer; color: var(--text-light); font-family: 'DM Sans', sans-serif; font-size: 10px; }
 .nav-item.active { color: var(--mauve); }
 .nav-item svg { width: 22px; height: 22px; }
 
 /* SCROLL */
-.scroll-content {
-  flex: 1; overflow-y: auto;
-  padding-bottom: calc(70px + var(--safe-bottom));
-  -webkit-overflow-scrolling: touch;
-}
+.scroll-content { flex: 1; overflow-y: auto; padding-bottom: calc(70px + var(--safe-bottom)); -webkit-overflow-scrolling: touch; }
 
 /* SEARCH */
 .search-bar { margin: 14px 14px 10px; position: relative; }
-.search-bar input {
-  width: 100%; padding: 11px 14px 11px 42px;
-  background: white; border: 1.5px solid var(--blush); border-radius: 50px;
-  font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text-dark); outline: none;
-}
+.search-bar input { width: 100%; padding: 11px 14px 11px 42px; background: white; border: 1.5px solid var(--blush); border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text-dark); outline: none; }
 .search-bar input:focus { border-color: var(--mauve-light); }
 .search-bar input::placeholder { color: var(--text-light); }
 .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--text-light); }
-.section-label {
-  padding: 6px 18px 5px; font-size: 11px; font-weight: 500;
-  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light);
-}
+.section-label { padding: 6px 18px 5px; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); }
 
 /* CLIENT LIST */
 .client-list { padding: 0 14px; display: flex; flex-direction: column; gap: 10px; }
-.client-card {
-  background: white; border-radius: var(--radius); padding: 14px;
-  display: flex; align-items: center; gap: 12px;
-  box-shadow: var(--shadow-card); cursor: pointer;
-  transition: transform 0.15s; border: 1px solid transparent;
-}
+.client-card { background: white; border-radius: var(--radius); padding: 14px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-card); cursor: pointer; transition: transform 0.15s; border: 1px solid transparent; }
 .client-card:active { transform: scale(0.98); border-color: var(--blush); }
-.client-avatar {
-  width: 46px; height: 46px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--mauve) 0%, var(--mauve-light) 100%);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Cormorant Garamond', serif; font-size: 17px; color: white; flex-shrink: 0;
-}
+.client-avatar { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, var(--mauve) 0%, var(--mauve-light) 100%); display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 17px; color: white; flex-shrink: 0; }
 .client-info { flex: 1; min-width: 0; }
 .client-name { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 500; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .client-project { font-size: 12px; color: var(--text-light); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -133,35 +80,15 @@ body {
 .status-pending { background: #FFF3E0; color: #E07B00; }
 .status-completed { background: #F3F0FF; color: #6B4AB5; }
 .client-chevron { color: var(--mauve-light); flex-shrink: 0; }
-.fab {
-  position: fixed; bottom: calc(80px + var(--safe-bottom)); right: 18px;
-  width: 54px; height: 54px; background: var(--mauve); border-radius: 50%;
-  border: none; color: white; font-size: 24px; cursor: pointer;
-  box-shadow: 0 4px 20px rgba(107,45,69,0.35);
-  display: flex; align-items: center; justify-content: center; z-index: 50;
-}
+.fab { position: fixed; bottom: calc(80px + var(--safe-bottom)); right: 18px; width: 54px; height: 54px; background: var(--mauve); border-radius: 50%; border: none; color: white; font-size: 24px; cursor: pointer; box-shadow: 0 4px 20px rgba(107,45,69,0.35); display: flex; align-items: center; justify-content: center; z-index: 50; }
 
 /* CLIENT HERO */
-.client-hero {
-  background: var(--mauve); padding: 18px 18px 24px;
-  position: relative; overflow: hidden;
-}
-.client-hero::before {
-  content: ''; position: absolute; top: -40px; right: -40px;
-  width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.04);
-}
-.hero-avatar {
-  width: 60px; height: 60px; border-radius: 50%;
-  background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;
-  font-family: 'Cormorant Garamond', serif; font-size: 24px; color: white;
-  margin-bottom: 10px; border: 2px solid rgba(255,255,255,0.3);
-}
+.client-hero { background: var(--mauve); padding: 18px 18px 24px; position: relative; overflow: hidden; }
+.client-hero::before { content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.04); }
+.hero-avatar { width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 24px; color: white; margin-bottom: 10px; border: 2px solid rgba(255,255,255,0.3); }
 .hero-name { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 500; color: white; }
 .hero-project { font-size: 12px; color: var(--rose-powder); margin-top: 3px; }
-.hero-stats {
-  display: flex; margin-top: 14px; background: rgba(255,255,255,0.1);
-  border-radius: var(--radius-sm); overflow: hidden;
-}
+.hero-stats { display: flex; margin-top: 14px; background: rgba(255,255,255,0.1); border-radius: var(--radius-sm); overflow: hidden; }
 .hero-stat { flex: 1; padding: 9px 6px; text-align: center; border-right: 1px solid rgba(255,255,255,0.1); }
 .hero-stat:last-child { border-right: none; }
 .stat-value { font-size: 17px; font-weight: 500; color: white; font-family: 'Cormorant Garamond', serif; }
@@ -169,82 +96,27 @@ body {
 
 /* ACTIONS */
 .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; }
-.action-btn {
-  background: white; border: none; border-radius: var(--radius);
-  padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 7px;
-  cursor: pointer; box-shadow: var(--shadow-card); transition: transform 0.15s;
-}
+.action-btn { background: white; border: none; border-radius: var(--radius); padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 7px; cursor: pointer; box-shadow: var(--shadow-card); transition: transform 0.15s; }
 .action-btn:active { transform: scale(0.96); }
 .action-icon { width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 21px; }
 .icon-photos { background: #FFF0F4; } .icon-voice { background: #F0F4FF; } .icon-note { background: #F0FFF4; }
 .icon-time { background: #FFFBF0; } .icon-project { background: #F8F0FF; } .icon-move { background: #F0F8FF; }
 .icon-anna { background: linear-gradient(135deg, #FDF0F5, #F5E8F8); }
 .action-label { font-size: 12px; font-weight: 500; color: var(--text-dark); text-align: center; line-height: 1.3; }
-.bill-btn {
-  margin: 4px 14px 14px; background: var(--mauve); border: none; border-radius: var(--radius);
-  padding: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;
-  cursor: pointer; width: calc(100% - 28px); color: white;
-  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
-  box-shadow: 0 4px 20px rgba(107,45,69,0.25);
-}
-
-/* PHOTOS */
-.photo-zone { margin: 14px; background: white; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-card); }
-.camera-preview {
-  width: 100%; aspect-ratio: 4/3; background: #1a0a10;
-  position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;
-}
-#cameraVideo { width: 100%; height: 100%; object-fit: cover; display: none; }
-#photoCanvas { display: none; }
-#capturedPhoto { width: 100%; height: 100%; object-fit: cover; display: none; }
-.camera-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: rgba(255,255,255,0.5); }
-.camera-placeholder svg { width: 44px; height: 44px; }
-.camera-placeholder span { font-size: 13px; }
-.camera-controls { padding: 14px; display: flex; gap: 10px; }
-.cam-btn {
-  flex: 1; padding: 13px; border-radius: var(--radius-sm); border: none;
-  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-}
-.cam-btn-primary { background: var(--mauve); color: white; }
-.cam-btn-secondary { background: var(--blush); color: var(--mauve); }
-.annotation-bar {
-  display: flex; gap: 8px; padding: 10px 14px; background: white;
-  border-radius: var(--radius); margin: 0 14px; box-shadow: var(--shadow-card); overflow-x: auto;
-}
-.annot-btn {
-  flex-shrink: 0; padding: 7px 13px; border-radius: 20px;
-  border: 1.5px solid var(--blush); background: white; font-size: 12px; font-weight: 500;
-  color: var(--text-mid); cursor: pointer; white-space: nowrap;
-}
-.annot-btn.active { background: var(--mauve); border-color: var(--mauve); color: white; }
-.photos-gallery { padding: 14px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-.gallery-thumb { aspect-ratio: 1; border-radius: var(--radius-sm); overflow: hidden; background: var(--blush); cursor: pointer; }
-.gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.bill-btn { margin: 4px 14px 14px; background: var(--mauve); border: none; border-radius: var(--radius); padding: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; width: calc(100% - 28px); color: white; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; box-shadow: 0 4px 20px rgba(107,45,69,0.25); }
 
 /* FORMS */
 .note-form { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
 .form-group { display: flex; flex-direction: column; gap: 5px; }
 .form-label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light); }
-.form-input, .form-textarea, .form-select {
-  width: 100%; padding: 12px 15px; background: white; border: 1.5px solid var(--blush);
-  border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px;
-  color: var(--text-dark); outline: none; -webkit-appearance: none;
-}
+.form-input, .form-textarea, .form-select { width: 100%; padding: 12px 15px; background: white; border: 1.5px solid var(--blush); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text-dark); outline: none; -webkit-appearance: none; }
 .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--mauve-light); }
 .form-textarea { min-height: 110px; resize: none; line-height: 1.6; }
-.submit-btn {
-  background: var(--mauve); color: white; border: none; border-radius: var(--radius);
-  padding: 15px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
-  cursor: pointer; width: 100%; box-shadow: 0 4px 20px rgba(107,45,69,0.25);
-}
+.submit-btn { background: var(--mauve); color: white; border: none; border-radius: var(--radius); padding: 15px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; width: 100%; box-shadow: 0 4px 20px rgba(107,45,69,0.25); }
 .submit-btn.secondary { background: var(--mauve-deep); }
 
 /* TIMER */
-.timer-display {
-  margin: 14px; background: var(--mauve); border-radius: var(--radius);
-  padding: 22px; text-align: center; box-shadow: 0 4px 24px rgba(107,45,69,0.25);
-}
+.timer-display { margin: 14px; background: var(--mauve); border-radius: var(--radius); padding: 22px; text-align: center; box-shadow: 0 4px 24px rgba(107,45,69,0.25); }
 .timer-time { font-family: 'Cormorant Garamond', serif; font-size: 54px; color: white; letter-spacing: 0.05em; font-weight: 300; }
 .timer-client { font-size: 12px; color: var(--rose-powder); margin-top: 4px; }
 .timer-controls { display: flex; gap: 10px; margin-top: 14px; justify-content: center; }
@@ -252,10 +124,7 @@ body {
 .timer-start { background: white; color: var(--mauve); }
 .timer-stop { background: rgba(255,255,255,0.2); color: white; }
 .time-entries { padding: 0 14px; }
-.time-entry {
-  background: white; border-radius: var(--radius-sm); padding: 13px 14px;
-  margin-bottom: 10px; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-card);
-}
+.time-entry { background: white; border-radius: var(--radius-sm); padding: 13px 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-card); }
 .entry-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mauve-light); flex-shrink: 0; }
 .entry-info { flex: 1; }
 .entry-client { font-size: 14px; font-weight: 500; color: var(--text-dark); }
@@ -264,12 +133,7 @@ body {
 
 /* ANNA */
 .anna-header { padding: 18px 14px 14px; text-align: center; }
-.anna-avatar {
-  width: 68px; height: 68px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--mauve), var(--mauve-deep));
-  margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;
-  font-size: 26px; box-shadow: 0 4px 20px rgba(107,45,69,0.3);
-}
+.anna-avatar { width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, var(--mauve), var(--mauve-deep)); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 4px 20px rgba(107,45,69,0.3); }
 .anna-name { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 500; color: var(--text-dark); }
 .anna-desc { font-size: 13px; color: var(--text-light); margin-top: 3px; }
 .chat-container { padding: 0 14px; display: flex; flex-direction: column; gap: 10px; min-height: 250px; }
@@ -281,24 +145,10 @@ body {
 .dot:nth-child(2) { animation-delay: 0.2s; } .dot:nth-child(3) { animation-delay: 0.4s; }
 @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
 .anna-suggestions { padding: 10px 14px; display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.suggestion-chip {
-  flex-shrink: 0; padding: 7px 13px; background: white; border: 1.5px solid var(--blush);
-  border-radius: 20px; font-size: 12px; color: var(--mauve); cursor: pointer; white-space: nowrap; font-weight: 500;
-}
-.suggestion-chip:active { background: var(--mauve); color: white; border-color: var(--mauve); }
-.anna-input-bar {
-  position: fixed; bottom: calc(60px + var(--safe-bottom)); left: 0; right: 0;
-  background: white; border-top: 1px solid var(--blush); padding: 9px 14px;
-  display: flex; gap: 9px; align-items: center;
-}
-.anna-input {
-  flex: 1; padding: 9px 15px; background: var(--rose-cream); border: 1.5px solid var(--blush);
-  border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-dark); outline: none;
-}
-.anna-send {
-  width: 38px; height: 38px; background: var(--mauve); border: none; border-radius: 50%;
-  color: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
+.suggestion-chip { flex-shrink: 0; padding: 7px 13px; background: white; border: 1.5px solid var(--blush); border-radius: 20px; font-size: 12px; color: var(--mauve); cursor: pointer; white-space: nowrap; font-weight: 500; }
+.anna-input-bar { position: fixed; bottom: calc(60px + var(--safe-bottom)); left: 0; right: 0; background: white; border-top: 1px solid var(--blush); padding: 9px 14px; display: flex; gap: 9px; align-items: center; }
+.anna-input { flex: 1; padding: 9px 15px; background: var(--rose-cream); border: 1.5px solid var(--blush); border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-dark); outline: none; }
+.anna-send { width: 38px; height: 38px; background: var(--mauve); border: none; border-radius: 50%; color: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
 /* DASHBOARD */
 .dashboard-greeting { padding: 18px 18px 14px; background: var(--mauve); }
@@ -322,28 +172,17 @@ body {
 .color-palette { display: flex; gap: 8px; padding: 10px 14px; overflow-x: auto; }
 .color-swatch { width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0; cursor: pointer; position: relative; transition: transform 0.2s; border: 2px solid transparent; }
 .color-swatch.selected { border-color: var(--mauve); transform: scale(1.1); }
-.color-swatch.selected::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 .mood-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 14px; }
 .mood-item { border-radius: var(--radius-sm); overflow: hidden; background: white; box-shadow: var(--shadow-card); cursor: pointer; }
 .mood-item img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
 .mood-label { padding: 7px 9px; font-size: 11px; color: var(--text-mid); font-weight: 500; }
 
 /* TOAST */
-.toast {
-  position: fixed; top: calc(var(--safe-top) + 75px); left: 50%;
-  transform: translateX(-50%) translateY(-20px);
-  background: var(--text-dark); color: white; padding: 9px 18px;
-  border-radius: 50px; font-size: 13px; font-weight: 500;
-  opacity: 0; transition: all 0.3s; z-index: 1000; white-space: nowrap; max-width: 90vw;
-}
+.toast { position: fixed; top: calc(var(--safe-top) + 75px); left: 50%; transform: translateX(-50%) translateY(-20px); background: var(--text-dark); color: white; padding: 9px 18px; border-radius: 50px; font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.3s; z-index: 9999; white-space: nowrap; max-width: 90vw; pointer-events: none; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* LOADING */
-.loading-screen {
-  position: fixed; inset: 0; background: var(--mauve);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 14px; z-index: 9999; transition: opacity 0.5s;
-}
+.loading-screen { position: fixed; inset: 0; background: var(--mauve); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 9999; transition: opacity 0.5s; }
 .loading-logo { font-family: 'Cormorant Garamond', serif; font-size: 34px; color: white; letter-spacing: 0.04em; text-align: center; }
 .loading-sub { font-size: 12px; color: var(--rose-powder); letter-spacing: 0.1em; text-transform: uppercase; }
 .loading-dots { display: flex; gap: 6px; }
@@ -354,17 +193,25 @@ body {
 .empty-desc { font-size: 13px; color: var(--text-light); line-height: 1.6; }
 
 /* CONNECTION BANNER */
-.connect-banner {
-  margin: 14px; background: white; border-radius: var(--radius);
-  padding: 16px; box-shadow: var(--shadow-card); text-align: center;
-  border: 1.5px solid var(--blush);
-}
+.connect-banner { margin: 14px; background: white; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-card); text-align: center; border: 1.5px solid var(--blush); }
 .connect-banner p { font-size: 13px; color: var(--text-mid); margin-bottom: 12px; line-height: 1.5; }
-.connect-ms-btn {
-  background: var(--mauve); color: white; border: none; border-radius: var(--radius-sm);
-  padding: 12px 20px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
-  cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
-}
+.connect-ms-btn { background: var(--mauve); color: white; border: none; border-radius: var(--radius-sm); padding: 12px 20px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+/* ===== CAMÉRA APPLE-STYLE ===== */
+.zoom-pill { background: rgba(0,0,0,0.5); border: 1.5px solid rgba(255,255,255,0.35); color: white; padding: 6px 13px; border-radius: 20px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.zoom-pill-active { background: rgba(255,214,10,0.9) !important; border-color: rgba(255,214,10,0.8) !important; color: #000 !important; }
+.annot-tool { flex-shrink: 0; width: 46px; height: 46px; border-radius: 12px; background: rgba(255,255,255,0.12); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+.annot-tool.active { background: var(--mauve) !important; }
+.color-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.15s; flex-shrink: 0; }
+.color-dot.active { transform: scale(1.3); border-color: white !important; }
+.editor-mode-btn { background: none; border: none; color: rgba(255,255,255,0.55); font-family: 'DM Sans', sans-serif; font-size: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 6px; border-radius: 8px; transition: color 0.15s; }
+.editor-mode-btn.active { color: #0A84FF; }
+.crop-ratio-btn { padding: 8px 14px; border-radius: 8px; background: rgba(255,255,255,0.12); border: none; color: white; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; }
+.crop-ratio-btn.active { background: rgba(10,132,255,0.5); border: 1px solid #0A84FF; }
+.filmstrip-item { aspect-ratio: 1; position: relative; cursor: pointer; overflow: hidden; background: #333; }
+.filmstrip-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.filmstrip-item .saved-badge { position: absolute; top: 4px; right: 4px; background: #30D158; color: white; font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 5px; font-family: 'DM Sans', sans-serif; }
+.filmstrip-item .delete-btn { position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; background: rgba(255,69,58,0.85); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -373,11 +220,7 @@ body {
 <div class="loading-screen" id="loadingScreen">
   <div class="loading-logo">Émilie Pépin<br><small style="font-size:17px;opacity:0.7">Designer d'intérieur</small></div>
   <div class="loading-sub">Studio</div>
-  <div class="loading-dots">
-    <div class="dot" style="animation-delay:0s"></div>
-    <div class="dot" style="animation-delay:0.2s"></div>
-    <div class="dot" style="animation-delay:0.4s"></div>
-  </div>
+  <div class="loading-dots"><div class="dot" style="animation-delay:0s"></div><div class="dot" style="animation-delay:0.2s"></div><div class="dot" style="animation-delay:0.4s"></div></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -385,35 +228,15 @@ body {
 <!-- ===== SCREEN CLIENTS ===== -->
 <div class="screen active" id="screenClients">
   <div class="app-header">
-    <div class="header-titles">
-      <div class="header-title">🌸 Émilie Pépin</div>
-      <div class="header-subtitle">Designer d'intérieur</div>
-    </div>
+    <div class="header-titles"><div class="header-title">🌸 Émilie Pépin</div><div class="header-subtitle">Designer d'intérieur</div></div>
     <button id="loginBtn" class="login-btn" onclick="handleLoginBtn()">🔐 Connexion</button>
-    <button class="header-action" onclick="navTo('screenDashboard','nav-dashboard')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    </button>
+    <button class="header-action" onclick="navTo('screenDashboard','nav-dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
   </div>
   <div class="scroll-content">
-    <div id="connectBanner" style="display:none">
-      <div class="connect-banner">
-        <p>🌸 Connectez-vous à Microsoft 365 pour voir vos vrais clients et synchroniser toutes vos données.</p>
-        <button class="connect-ms-btn" onclick="loginToMicrosoft()">
-          <span>🔐</span> Se connecter avec info@emiliepepin.ca
-        </button>
-      </div>
-    </div>
-    <div class="search-bar">
-      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="searchInput" placeholder="Rechercher un client..." oninput="filterClients(this.value)">
-    </div>
+    <div id="connectBanner" style="display:none"><div class="connect-banner"><p>🌸 Connectez-vous à Microsoft 365 pour voir vos vrais clients.</p><button class="connect-ms-btn" onclick="loginToMicrosoft()"><span>🔐</span> Se connecter avec info@emiliepepin.ca</button></div></div>
+    <div class="search-bar"><svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" id="searchInput" placeholder="Rechercher un client..." oninput="filterClients(this.value)"></div>
     <div class="section-label" id="clientsLabel">Clients</div>
-    <div class="client-list" id="clientList">
-      <div class="empty-state">
-        <div class="empty-icon">🌸</div>
-        <div class="empty-title">Chargement...</div>
-      </div>
-    </div>
+    <div class="client-list" id="clientList"><div class="empty-state"><div class="empty-icon">🌸</div><div class="empty-title">Chargement...</div></div></div>
   </div>
   <button class="fab" onclick="showAddClient()">+</button>
 </div>
@@ -422,10 +245,7 @@ body {
 <div class="screen" id="screenClient">
   <div class="app-header">
     <button class="header-back" onclick="showScreen('screenClients')">←</button>
-    <div class="header-titles">
-      <div class="header-title" id="clientHeaderName">Client</div>
-      <div class="header-subtitle" id="clientHeaderProject">Projet en cours</div>
-    </div>
+    <div class="header-titles"><div class="header-title" id="clientHeaderName">Client</div><div class="header-subtitle" id="clientHeaderProject">Projet en cours</div></div>
     <button onclick="callClient()" style="padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:white;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:5px;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.06 6.06l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
       Appeler
@@ -436,8 +256,7 @@ body {
       <div class="hero-avatar" id="heroAvatar">EP</div>
       <div class="hero-name" id="heroName">Nom Client</div>
       <div class="hero-project" id="heroProject">Projet</div>
-      <!-- Address with navigation -->
-      <button id="clientAddress" onclick="openNavigation()" style="display:none;margin-top:10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:50px;padding:7px 14px;color:rgba(255,255,255,0.85);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;align-items:center;gap:6px;width:100%;justify-content:center;text-align:center;"></button>
+      <button id="clientAddress" onclick="openNavigation()" style="display:none;margin-top:10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:50px;padding:7px 14px;color:rgba(255,255,255,0.85);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;width:100%;text-align:center;"></button>
       <div class="hero-stats">
         <div class="hero-stat"><div class="stat-value" id="statHeures">0h</div><div class="stat-label">Heures</div></div>
         <div class="hero-stat"><div class="stat-value" id="statFacture">0$</div><div class="stat-label">Facturé</div></div>
@@ -459,249 +278,208 @@ body {
   </div>
 </div>
 
-<!-- ===== SCREEN PHOTOS ===== -->
+<!-- ===== SCREEN PHOTOS - CAMÉRA APPLE-STYLE ===== -->
 <div class="screen" id="screenPhotos">
-  <!-- FULLSCREEN CAMERA STYLE APPLE -->
-  <div id="cameraFullscreen" style="position:relative;width:100%;background:#000;flex:1;display:flex;flex-direction:column;min-height:100vh;">
-    
+
+  <!-- CAMÉRA FULLSCREEN -->
+  <div id="cameraFullscreen" style="position:relative;width:100%;background:#000;flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;">
+
     <!-- Header overlay -->
-    <div style="position:absolute;top:0;left:0;right:0;z-index:10;padding:calc(var(--safe-top)+12px) 16px 12px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(0,0,0,0.6),transparent);">
-      <button onclick="exitCameraMode()" style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.4);border:none;color:white;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    <div style="position:absolute;top:0;left:0;right:0;z-index:20;padding:calc(var(--safe-top)+12px) 16px 12px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(0,0,0,0.7),transparent);">
+      <button onclick="exitCameraMode()" style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.5);border:none;color:white;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
       <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:white;font-weight:500;" id="photosClientNameCam">Client</div>
-      <button onclick="toggleFlash()" id="flashBtn" style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.4);border:none;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">⚡</button>
+      <button onclick="toggleFlash()" id="flashBtn" style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.5);border:none;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">⚡</button>
     </div>
 
-    <!-- Camera/Video preview -->
-    <video id="cameraVideo" autoplay playsinline muted style="width:100%;height:100vh;object-fit:cover;display:block;"></video>
+    <!-- Vidéo plein écran -->
+    <video id="cameraVideo" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transform-origin:center center;"></video>
     <canvas id="photoCanvas" style="display:none;"></canvas>
-    
-    <!-- Captured photo preview (full screen) -->
-    <img id="capturedPhoto" alt="Photo" style="display:none;width:100%;height:100vh;object-fit:contain;position:absolute;inset:0;background:#000;">
-    
-    <!-- Video recording indicator -->
-    <div id="recordingIndicator" style="display:none;position:absolute;top:calc(var(--safe-top)+60px);left:50%;transform:translateX(-50%);background:rgba(255,0,0,0.8);color:white;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;">
-      ● REC <span id="recordTimer">00:00</span>
+
+    <!-- Indicateur zoom -->
+    <div id="zoomIndicator" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.65);color:#FFD60A;padding:8px 18px;border-radius:20px;font-size:18px;font-weight:700;font-family:'DM Sans',sans-serif;z-index:25;pointer-events:none;"></div>
+
+    <!-- Indicateur enregistrement -->
+    <div id="recordingIndicator" style="display:none;position:absolute;top:calc(var(--safe-top)+65px);left:50%;transform:translateX(-50%);background:rgba(220,0,0,0.85);color:white;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;z-index:25;align-items:center;gap:6px;">
+      <div style="width:8px;height:8px;border-radius:50%;background:white;animation:blink 1s infinite;display:inline-block;margin-right:4px;"></div><span id="recordTimer">00:00</span>
     </div>
 
-    <!-- Bottom controls - Apple style -->
-    <div style="position:absolute;bottom:0;left:0;right:0;padding:0 0 calc(var(--safe-bottom)+20px) 0;background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);">
-      
-      <!-- Mode selector (Photo / Vidéo) -->
-      <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;">
+    <!-- CONTRÔLES BAS -->
+    <div style="position:absolute;bottom:0;left:0;right:0;padding:0 0 calc(var(--safe-bottom)+16px);background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.4) 65%,transparent 100%);">
+
+      <!-- Boutons zoom Apple style -->
+      <div style="display:flex;justify-content:center;gap:8px;margin-bottom:14px;">
+        <button onclick="setZoomLevel(1)" id="zoomBtn1" class="zoom-pill zoom-pill-active">.5x</button>
+        <button onclick="setZoomLevel(2)" id="zoomBtn2" class="zoom-pill">1x</button>
+        <button onclick="setZoomLevel(3)" id="zoomBtn3" class="zoom-pill">2x</button>
+      </div>
+
+      <!-- Sélecteur PHOTO / VIDÉO -->
+      <div style="display:flex;justify-content:center;gap:28px;margin-bottom:16px;">
         <button id="modePhoto" onclick="setMode('photo')" style="background:none;border:none;color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.08em;text-shadow:0 1px 3px rgba(0,0,0,0.5);">PHOTO</button>
         <button id="modeVideo" onclick="setMode('video')" style="background:none;border:none;color:rgba(255,255,255,0.5);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;letter-spacing:0.08em;">VIDÉO</button>
       </div>
 
-      <!-- Main controls row -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 28px;">
-        
-        <!-- Thumbnail (last photo) -->
-        <div id="lastPhotoThumb" onclick="openLastPhoto()" style="width:54px;height:54px;border-radius:10px;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <!-- Ligne principale: pellicule | déclencheur | flip -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 28px;margin-bottom:10px;">
+
+        <!-- Pellicule / galerie iPhone -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+          <div id="filmstripThumb" onclick="toggleFilmstrip()" style="width:56px;height:56px;border-radius:10px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.5);overflow:hidden;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <div id="filmstripCount" style="display:none;position:absolute;bottom:2px;right:3px;background:#0A84FF;color:white;font-size:9px;font-weight:700;font-family:'DM Sans',sans-serif;min-width:15px;height:15px;border-radius:8px;align-items:center;justify-content:center;padding:0 3px;"></div>
+          </div>
+          <span style="color:rgba(255,255,255,0.65);font-size:10px;font-family:'DM Sans',sans-serif;">Pellicule</span>
         </div>
 
-        <!-- Shutter button -->
-        <button id="shutterBtn" onclick="captureMedia()" style="width:76px;height:76px;border-radius:50%;background:white;border:4px solid rgba(255,255,255,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.1s;box-shadow:0 0 0 2px rgba(255,255,255,0.5);">
-          <div id="shutterInner" style="width:62px;height:62px;border-radius:50%;background:white;"></div>
+        <!-- Déclencheur Apple -->
+        <button id="shutterBtn" onclick="captureMedia()" style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.25);border:4px solid rgba(255,255,255,0.85);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.1s;flex-shrink:0;">
+          <div id="shutterInner" style="width:66px;height:66px;border-radius:50%;background:white;transition:all 0.15s;"></div>
         </button>
 
-        <!-- Flip camera -->
-        <button onclick="flipCamera()" style="width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,0.4);border:none;color:white;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-        </button>
+        <!-- Flip + Galerie -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+          <button onclick="flipCamera()" style="width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,0.45);border:none;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          </button>
+          <button onclick="openGallery()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);color:white;padding:5px 12px;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;">Galerie</button>
+        </div>
       </div>
 
-      <!-- Galerie button -->
-      <div style="display:flex;justify-content:center;margin-top:14px;">
-        <button onclick="openGallery()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:8px 20px;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="9" height="9" rx="1.5" fill="rgba(255,255,255,0.7)"/><rect x="13" y="2" width="9" height="9" rx="1.5" fill="rgba(255,255,255,0.5)"/><rect x="2" y="13" width="9" height="9" rx="1.5" fill="rgba(255,255,255,0.5)"/><rect x="13" y="13" width="9" height="9" rx="1.5" fill="rgba(255,255,255,0.3)"/></svg>
-          Galerie
+      <!-- Bouton SAUVEGARDER ONEDRIVE (visible quand photos en attente) -->
+      <div style="display:flex;justify-content:center;padding:0 28px;">
+        <button id="savePendingBtn" onclick="saveAllPendingPhotos()" style="display:none;background:#0A84FF;border:none;color:white;padding:10px 22px;border-radius:22px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(10,132,255,0.4);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Sauvegarder <span id="savePendingCount">0</span> photo<span id="savePendingPlural"></span> dans OneDrive
         </button>
       </div>
     </div>
   </div>
 
-  <!-- PHOTO EDITOR (Apple-style, shown after capture) -->
-  <div id="photoEditor" style="display:none;position:fixed;inset:0;background:#000;z-index:200;flex-direction:column;">
-    
-    <!-- Editor header -->
+  <!-- PANNEAU PELLICULE (bottom sheet) -->
+  <div id="filmstripPanel" style="display:none;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,0.65);" onclick="closeFilmstripOutside(event)">
+    <div style="position:absolute;bottom:0;left:0;right:0;background:#1c1c1e;border-radius:20px 20px 0 0;padding:14px 0 calc(var(--safe-bottom)+16px);">
+      <div style="width:40px;height:4px;background:rgba(255,255,255,0.25);border-radius:2px;margin:0 auto 12px;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px;">
+        <div style="color:white;font-family:'Cormorant Garamond',serif;font-size:18px;" id="filmstripTitle">Session photos</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="saveAllPendingPhotos()" style="background:#0A84FF;border:none;color:white;padding:8px 16px;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            OneDrive
+          </button>
+          <button onclick="closeFilmstrip()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+        </div>
+      </div>
+      <div id="filmstripGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:0 2px;max-height:55vh;overflow-y:auto;"></div>
+      <div id="filmstripEmpty" style="text-align:center;padding:30px;color:rgba(255,255,255,0.45);font-size:13px;font-family:'DM Sans',sans-serif;">Aucune photo — prenez des photos ou importez depuis la galerie</div>
+    </div>
+  </div>
+
+  <!-- ÉDITEUR PHOTO -->
+  <div id="photoEditor" style="display:none;position:fixed;inset:0;background:#000;z-index:100;flex-direction:column;">
     <div style="background:#1c1c1e;padding:calc(var(--safe-top)+10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;">
       <button onclick="cancelEdit()" style="background:none;border:none;color:#FF453A;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;">Annuler</button>
-      <div style="color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;" id="editorTitle">Modifier</div>
+      <div style="color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;">Modifier la photo</div>
       <button onclick="confirmEdit()" style="background:none;border:none;color:#0A84FF;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;">OK</button>
     </div>
-
-    <!-- Image area -->
     <div style="flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden;" id="editorImageArea">
       <canvas id="editCanvas" style="max-width:100%;max-height:100%;touch-action:none;cursor:crosshair;"></canvas>
-      <!-- Text input overlay -->
-      <div id="textOverlay" style="display:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
-        <input type="text" id="textInput" placeholder="Votre texte..." style="background:rgba(0,0,0,0.7);color:white;border:2px solid white;border-radius:8px;padding:8px 14px;font-size:18px;font-family:'DM Sans',sans-serif;text-align:center;width:80%;outline:none;" onkeypress="if(event.key==='Enter')placeText()">
-      </div>
     </div>
-
-    <!-- Undo/Redo bar -->
-    <div style="background:#1c1c1e;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;">
-      <div style="display:flex;gap:16px;">
-        <button onclick="undoEdit()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:20px;cursor:pointer;">↩</button>
-        <button onclick="redoEdit()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:20px;cursor:pointer;">↪</button>
+    <!-- Barre undo + modes + sauvegarder -->
+    <div style="background:#1c1c1e;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;gap:14px;">
+        <button onclick="undoEdit()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:22px;cursor:pointer;">↩</button>
       </div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="showAdjust()" id="btnAdjust" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-          Ajuster
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button onclick="showAdjust()" id="btnAdjust" class="editor-mode-btn">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          <span>Ajuster</span>
         </button>
-        <button onclick="showCropMode()" id="btnCrop" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>
-          Recadrer
+        <button onclick="showCropMode()" id="btnCrop" class="editor-mode-btn">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>
+          <span>Recadrer</span>
         </button>
-        <button onclick="showAnnotMode()" id="btnAnnot" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-          Annoter
+        <button onclick="showAnnotMode()" id="btnAnnot" class="editor-mode-btn">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          <span>Annoter</span>
         </button>
-        <button onclick="saveFromEditor()" style="background:#0A84FF;border:none;color:white;padding:8px 14px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <button onclick="saveCurrentPhotoToOneDrive()" style="background:#0A84FF;border:none;color:white;padding:8px 12px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           OneDrive
         </button>
       </div>
     </div>
-
-    <!-- Annotation toolbar (shown when annot mode) -->
-    <div id="annotToolbar" style="display:none;background:#1c1c1e;padding:10px 12px;">
-      <!-- Tools -->
-      <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:10px;padding-bottom:4px;">
-        <button class="edit-tool" onclick="setEditTool('pen',this)" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Crayon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-        </button>
-        <button class="edit-tool" onclick="setEditTool('marker',this)" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Marqueur">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/><path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-        </button>
-        <button class="edit-tool" onclick="setEditTool('arrow',this)" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Flèche">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="8 5 19 5 19 16"/></svg>
-        </button>
-        <button class="edit-tool" onclick="setEditTool('circle',this)" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Cercle">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
-        </button>
-        <button class="edit-tool" onclick="setEditTool('rect',this)" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Rectangle">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
-        </button>
-        <button class="edit-tool" onclick="addTextAnnot()" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Texte">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-        </button>
-        <button class="edit-tool" onclick="setEditTool('erase',this)" style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Effacer">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/></svg>
-        </button>
+    <!-- Barre annotation -->
+    <div id="annotToolbar" style="display:none;background:#2c2c2e;padding:10px 12px;">
+      <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:10px;-webkit-overflow-scrolling:touch;">
+        <button class="annot-tool" onclick="setEditTool('pen',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+        <button class="annot-tool" onclick="setEditTool('marker',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/><path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+        <button class="annot-tool" onclick="setEditTool('arrow',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="8 5 19 5 19 16"/></svg></button>
+        <button class="annot-tool" onclick="setEditTool('circle',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></button>
+        <button class="annot-tool" onclick="setEditTool('rect',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></button>
+        <button class="annot-tool" onclick="addTextAnnot()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
+        <button class="annot-tool" onclick="setEditTool('erase',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/></svg></button>
       </div>
-      <!-- Colors Apple-style -->
-      <div style="display:flex;gap:10px;align-items:center;justify-content:center;">
-        <div onclick="setEditColor('#FF453A',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#FF453A;cursor:pointer;border:3px solid #FF453A;"></div>
-        <div onclick="setEditColor('#FF9F0A',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#FF9F0A;cursor:pointer;border:2px solid transparent;"></div>
-        <div onclick="setEditColor('#FFD60A',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#FFD60A;cursor:pointer;border:2px solid transparent;"></div>
-        <div onclick="setEditColor('#30D158',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#30D158;cursor:pointer;border:2px solid transparent;"></div>
-        <div onclick="setEditColor('#0A84FF',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#0A84FF;cursor:pointer;border:2px solid transparent;"></div>
-        <div onclick="setEditColor('#BF5AF2',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#BF5AF2;cursor:pointer;border:2px solid transparent;"></div>
-        <div onclick="setEditColor('#FFFFFF',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:white;cursor:pointer;border:2px solid rgba(255,255,255,0.3);"></div>
-        <div onclick="setEditColor('#6B2D45',this)" class="edit-color" style="width:28px;height:28px;border-radius:50%;background:#6B2D45;cursor:pointer;border:2px solid transparent;"></div>
-        <!-- Size -->
-        <input type="range" id="editBrushSize" min="1" max="20" value="4" style="width:80px;" oninput="editState.size=parseInt(this.value)">
+      <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;">
+        <div onclick="setEditColor('#FF453A',this)" class="color-dot active" style="background:#FF453A;border-color:white;"></div>
+        <div onclick="setEditColor('#FF9F0A',this)" class="color-dot" style="background:#FF9F0A;"></div>
+        <div onclick="setEditColor('#FFD60A',this)" class="color-dot" style="background:#FFD60A;"></div>
+        <div onclick="setEditColor('#30D158',this)" class="color-dot" style="background:#30D158;"></div>
+        <div onclick="setEditColor('#0A84FF',this)" class="color-dot" style="background:#0A84FF;"></div>
+        <div onclick="setEditColor('#BF5AF2',this)" class="color-dot" style="background:#BF5AF2;"></div>
+        <div onclick="setEditColor('#FFFFFF',this)" class="color-dot" style="background:white;border:2px solid rgba(255,255,255,0.5);"></div>
+        <div onclick="setEditColor('#6B2D45',this)" class="color-dot" style="background:#6B2D45;"></div>
+        <input type="range" id="editBrushSize" min="1" max="24" value="4" style="width:80px;accent-color:#0A84FF;" oninput="editState.size=parseInt(this.value)">
       </div>
     </div>
-
-    <!-- Adjust toolbar -->
-    <div id="adjustToolbar" style="display:none;background:#1c1c1e;padding:12px 16px;">
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="color:rgba(255,255,255,0.6);font-size:12px;width:80px;">Luminosité</span>
-          <input type="range" min="-100" max="100" value="0" style="flex:1;" oninput="applyAdjust('brightness',this.value)" id="sliderBrightness">
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="color:rgba(255,255,255,0.6);font-size:12px;width:80px;">Contraste</span>
-          <input type="range" min="-100" max="100" value="0" style="flex:1;" oninput="applyAdjust('contrast',this.value)" id="sliderContrast">
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="color:rgba(255,255,255,0.6);font-size:12px;width:80px;">Saturation</span>
-          <input type="range" min="-100" max="100" value="0" style="flex:1;" oninput="applyAdjust('saturation',this.value)" id="sliderSaturation">
-        </div>
+    <!-- Barre ajustements -->
+    <div id="adjustToolbar" style="display:none;background:#2c2c2e;padding:14px 16px;">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;"><span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:'DM Sans',sans-serif;width:84px;">☀️ Luminosité</span><input type="range" min="-100" max="100" value="0" style="flex:1;accent-color:#FFD60A;" oninput="applyAdjust('brightness',this.value)" id="sliderBrightness"></div>
+        <div style="display:flex;align-items:center;gap:10px;"><span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:'DM Sans',sans-serif;width:84px;">◑ Contraste</span><input type="range" min="-100" max="100" value="0" style="flex:1;accent-color:#FFD60A;" oninput="applyAdjust('contrast',this.value)" id="sliderContrast"></div>
+        <div style="display:flex;align-items:center;gap:10px;"><span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:'DM Sans',sans-serif;width:84px;">🎨 Saturation</span><input type="range" min="-100" max="100" value="0" style="flex:1;accent-color:#FFD60A;" oninput="applyAdjust('saturation',this.value)" id="sliderSaturation"></div>
       </div>
     </div>
-
-    <!-- Crop toolbar -->
-    <div id="cropToolbar" style="display:none;background:#1c1c1e;padding:12px 16px;">
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-        <button onclick="applyCropRatio(null)" style="padding:8px 14px;border-radius:8px;background:rgba(255,255,255,0.15);border:none;color:white;font-size:12px;cursor:pointer;">Libre</button>
-        <button onclick="applyCropRatio(1)" style="padding:8px 14px;border-radius:8px;background:rgba(255,255,255,0.1);border:none;color:white;font-size:12px;cursor:pointer;">1:1</button>
-        <button onclick="applyCropRatio(4/3)" style="padding:8px 14px;border-radius:8px;background:rgba(255,255,255,0.1);border:none;color:white;font-size:12px;cursor:pointer;">4:3</button>
-        <button onclick="applyCropRatio(16/9)" style="padding:8px 14px;border-radius:8px;background:rgba(255,255,255,0.1);border:none;color:white;font-size:12px;cursor:pointer;">16:9</button>
-        <button onclick="rotateCrop()" style="padding:8px 14px;border-radius:8px;background:rgba(255,255,255,0.1);border:none;color:white;font-size:12px;cursor:pointer;">↺ Rotation</button>
+    <!-- Barre recadrage -->
+    <div id="cropToolbar" style="display:none;background:#2c2c2e;padding:12px 16px;">
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px;">
+        <button onclick="setCropRatioBtn(null,this)" class="crop-ratio-btn active">Libre</button>
+        <button onclick="setCropRatioBtn(1,this)" class="crop-ratio-btn">1:1</button>
+        <button onclick="setCropRatioBtn(4/3,this)" class="crop-ratio-btn">4:3</button>
+        <button onclick="setCropRatioBtn(16/9,this)" class="crop-ratio-btn">16:9</button>
+        <button onclick="setCropRatioBtn(3/4,this)" class="crop-ratio-btn">3:4</button>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button onclick="rotateCrop()" class="crop-ratio-btn">↺ 90°</button>
+        <button onclick="applyCrop()" style="background:#0A84FF;border:none;color:white;padding:9px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">✂️ Recadrer maintenant</button>
       </div>
     </div>
   </div>
 
-  <!-- VIDEO EDITOR (trim) -->
-  <div id="videoEditor" style="display:none;position:fixed;inset:0;background:#000;z-index:200;flex-direction:column;">
+  <!-- ÉDITEUR VIDÉO -->
+  <div id="videoEditor" style="display:none;position:fixed;inset:0;background:#000;z-index:100;flex-direction:column;">
     <div style="background:#1c1c1e;padding:calc(var(--safe-top)+10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;">
       <button onclick="cancelVideoEdit()" style="background:none;border:none;color:#FF453A;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;">Annuler</button>
       <div style="color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;">Vidéo</div>
-      <button onclick="saveVideoToOneDrive()" style="background:none;border:none;color:#0A84FF;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;">Sauvegarder</button>
+      <button onclick="saveVideoToOneDrive()" style="background:none;border:none;color:#0A84FF;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;">⬆ OneDrive</button>
     </div>
-    <video id="previewVideo" controls style="flex:1;width:100%;background:#000;"></video>
-    <div style="background:#1c1c1e;padding:16px;text-align:center;">
-      <p style="color:rgba(255,255,255,0.6);font-size:13px;font-family:'DM Sans',sans-serif;">Vidéo prête à sauvegarder dans OneDrive</p>
-    </div>
+    <video id="previewVideo" controls style="flex:1;width:100%;background:#000;object-fit:contain;"></video>
+    <div style="background:#1c1c1e;padding:14px;text-align:center;color:rgba(255,255,255,0.5);font-size:12px;font-family:'DM Sans',sans-serif;">Vidéo prête — appuyez sur OneDrive pour sauvegarder</div>
   </div>
 
-  <!-- Gallery -->
-  <input type="file" id="galleryInput" accept="image/*,video/*" style="display:none" onchange="handleGalleryPhoto(event)">
-  <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleGalleryPhoto(event)">
-
-  <!-- Photos gallery (bottom sheet) -->
-  <div id="photosGallerySheet" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:150;" onclick="closeGallerySheet(event)">
-    <div style="position:absolute;bottom:0;left:0;right:0;background:var(--rose-cream);border-radius:20px 20px 0 0;padding:16px;max-height:70vh;overflow-y:auto;">
-      <div style="text-align:center;margin-bottom:12px;">
-        <div style="width:40px;height:4px;background:#ccc;border-radius:2px;margin:0 auto 10px;"></div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--mauve);" id="gallerySheetTitle">Photos du client</div>
-      </div>
-      <div class="photos-gallery" id="photosGallery" style="padding:0;">
-        <div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune photo</div>
-      </div>
-    </div>
-  </div>
+  <!-- Input fichier caché -->
+  <input type="file" id="galleryInput" accept="image/*,video/*" multiple style="display:none" onchange="handleGalleryFiles(event)">
 </div>
 
 <!-- ===== SCREEN NOTE DE CHANTIER ===== -->
 <div class="screen" id="screenNote">
-  <div class="app-header">
-    <button class="header-back" onclick="showScreen('screenClient')">←</button>
-    <div class="header-title">📋 Note de chantier</div>
-  </div>
+  <div class="app-header"><button class="header-back" onclick="showScreen('screenClient')">←</button><div class="header-title">📋 Note de chantier</div></div>
   <div class="scroll-content">
     <div class="note-form">
-      <div class="form-group">
-        <label class="form-label">Type de visite</label>
-        <select class="form-select" id="noteType">
-          <option>Visite de chantier</option>
-          <option>Réunion client</option>
-          <option>Inspection finale</option>
-          <option>Suivi fournisseur</option>
-          <option>Autre</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Observations</label>
-        <textarea class="form-textarea" id="noteObs" placeholder="Décrivez ce que vous avez observé..."></textarea>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Actions requises</label>
-        <textarea class="form-textarea" id="noteActions" placeholder="Quelles actions doivent être faites?" style="min-height:80px"></textarea>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Prochaine étape</label>
-        <input type="text" class="form-input" id="noteNext" placeholder="Ex: Commander les tuiles...">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Date de suivi</label>
-        <input type="date" class="form-input" id="noteDate">
-      </div>
+      <div class="form-group"><label class="form-label">Type de visite</label><select class="form-select" id="noteType"><option>Visite de chantier</option><option>Réunion client</option><option>Inspection finale</option><option>Suivi fournisseur</option><option>Autre</option></select></div>
+      <div class="form-group"><label class="form-label">Observations</label><textarea class="form-textarea" id="noteObs" placeholder="Décrivez ce que vous avez observé..."></textarea></div>
+      <div class="form-group"><label class="form-label">Actions requises</label><textarea class="form-textarea" id="noteActions" placeholder="Quelles actions doivent être faites?" style="min-height:80px"></textarea></div>
+      <div class="form-group"><label class="form-label">Prochaine étape</label><input type="text" class="form-input" id="noteNext" placeholder="Ex: Commander les tuiles..."></div>
+      <div class="form-group"><label class="form-label">Date de suivi</label><input type="date" class="form-input" id="noteDate"></div>
       <button class="submit-btn" onclick="saveNote()">💾 Sauvegarder dans OneNote</button>
       <button class="submit-btn secondary" style="margin-top:8px" onclick="sendNoteToClient()">📧 Envoyer au client</button>
     </div>
@@ -710,10 +488,7 @@ body {
 
 <!-- ===== SCREEN FEUILLE DE TEMPS ===== -->
 <div class="screen" id="screenTemps">
-  <div class="app-header">
-    <button class="header-back" onclick="showScreen('screenClient')">←</button>
-    <div class="header-title">⏱️ Feuille de temps</div>
-  </div>
+  <div class="app-header"><button class="header-back" onclick="showScreen('screenClient')">←</button><div class="header-title">⏱️ Feuille de temps</div></div>
   <div class="scroll-content">
     <div class="timer-display">
       <div class="timer-time" id="timerDisplay">00:00:00</div>
@@ -724,19 +499,13 @@ body {
       </div>
     </div>
     <div style="padding:14px 14px 6px"><div class="section-label" style="padding:0">Entrées aujourd'hui</div></div>
-    <div class="time-entries" id="timeEntries">
-      <div style="text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune entrée aujourd'hui</div>
-    </div>
+    <div class="time-entries" id="timeEntries"><div style="text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune entrée aujourd'hui</div></div>
   </div>
 </div>
 
 <!-- ===== SCREEN MOODBOARD ===== -->
 <div class="screen" id="screenMoodboard">
-  <div class="app-header">
-    <button class="header-back" onclick="showScreen('screenClient')">←</button>
-    <div class="header-title">🎨 Moodboard</div>
-    <button class="header-action" onclick="addMoodImage()">+</button>
-  </div>
+  <div class="app-header"><button class="header-back" onclick="showScreen('screenClient')">←</button><div class="header-title">🎨 Moodboard</div><button class="header-action" onclick="addMoodImage()">+</button></div>
   <div class="scroll-content">
     <div class="section-label">Palette de couleurs</div>
     <div class="color-palette">
@@ -746,17 +515,11 @@ body {
       <div class="color-swatch" style="background:#D4B896" onclick="toggleSwatch(this)"></div>
       <div class="color-swatch" style="background:#8B7355" onclick="toggleSwatch(this)"></div>
       <div class="color-swatch" style="background:#2C3E50" onclick="toggleSwatch(this)"></div>
-      <div class="color-swatch" style="background:#C8A96E" onclick="toggleSwatch(this)"></div>
-      <div class="color-swatch" style="background:#E8E4D9" onclick="toggleSwatch(this)"></div>
     </div>
     <div class="section-label">Inspirations</div>
-    <div class="mood-grid" id="moodGrid">
-      <div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Ajoutez des images 🎨</div>
-    </div>
+    <div class="mood-grid" id="moodGrid"><div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Ajoutez des images 🎨</div></div>
     <input type="file" id="moodInput" accept="image/*" style="display:none" onchange="handleMoodImage(event)">
-    <div style="padding:0 14px 14px">
-      <button class="submit-btn" onclick="exportMoodboard()">📤 Partager avec le client</button>
-    </div>
+    <div style="padding:0 14px 14px"><button class="submit-btn" onclick="exportMoodboard()">📤 Partager avec le client</button></div>
   </div>
 </div>
 
@@ -764,24 +527,15 @@ body {
 <div class="screen" id="screenAnna">
   <div class="app-header">
     <button class="header-back" onclick="showScreen('screenClients')">←</button>
-    <div class="header-titles">
-      <div class="header-title">✨ Anna</div>
-      <div class="header-subtitle">Assistante IA</div>
-    </div>
+    <div class="header-titles"><div class="header-title">✨ Anna</div><div class="header-subtitle">Assistante IA</div></div>
   </div>
   <div class="scroll-content" id="annaScrollContent" style="padding-bottom:125px">
-    <div class="anna-header">
-      <div class="anna-avatar">✨</div>
-      <div class="anna-name">Anna</div>
-      <div class="anna-desc">Votre assistante IA personnalisée</div>
-    </div>
+    <div class="anna-header"><div class="anna-avatar">✨</div><div class="anna-name">Anna</div><div class="anna-desc">Votre assistante IA personnalisée</div></div>
     <div class="anna-suggestions">
       <div class="suggestion-chip" onclick="sendToAnna('Résume mes tâches du jour')">📋 Tâches du jour</div>
       <div class="suggestion-chip" onclick="sendToAnna('Quels clients ont des factures en attente?')">💰 Factures en attente</div>
       <div class="suggestion-chip" onclick="sendToAnna('Rédige un courriel de suivi pour mon dernier client')">📧 Courriel de suivi</div>
-      <div class="suggestion-chip" onclick="sendToAnna('Génère un rapport de chantier pour ce client')">📊 Rapport chantier</div>
-      <div class="suggestion-chip" onclick="sendToAnna('Recommande des matériaux pour un style classique')">🏠 Conseils design</div>
-      <div class="suggestion-chip" onclick="sendToAnna('Quelles sont mes réunions Teams cette semaine?')">📅 Réunions Teams</div>
+      <div class="suggestion-chip" onclick="sendToAnna('Génère un rapport de chantier')">📊 Rapport chantier</div>
     </div>
     <div class="chat-container" id="annaChat">
       <div class="chat-bubble bubble-anna">Bonjour Émilie ! 🌸 Je suis Anna, ta secrétaire IA. Comment puis-je t'aider aujourd'hui ?</div>
@@ -807,18 +561,9 @@ body {
       <div class="dash-card dash-card-wide">
         <div class="dash-label" style="margin-bottom:10px">Tâches prioritaires</div>
         <div class="task-list" id="dashTasks">
-          <div class="task-item">
-            <div class="task-check" onclick="this.classList.toggle('done')"></div>
-            <div><div class="task-text">Migrer les clients actifs</div><div class="task-client">OneDrive</div></div>
-          </div>
-          <div class="task-item">
-            <div class="task-check" onclick="this.classList.toggle('done')"></div>
-            <div><div class="task-text">Tester le formulaire d'intake</div><div class="task-client">Microsoft Forms</div></div>
-          </div>
-          <div class="task-item">
-            <div class="task-check" onclick="this.classList.toggle('done')"></div>
-            <div><div class="task-text">Template facture avec logo</div><div class="task-client">Phase 4</div></div>
-          </div>
+          <div class="task-item"><div class="task-check" onclick="this.classList.toggle('done')"></div><div><div class="task-text">Migrer les clients actifs</div><div class="task-client">OneDrive</div></div></div>
+          <div class="task-item"><div class="task-check" onclick="this.classList.toggle('done')"></div><div><div class="task-text">Tester le formulaire d'intake</div><div class="task-client">Microsoft Forms</div></div></div>
+          <div class="task-item"><div class="task-check" onclick="this.classList.toggle('done')"></div><div><div class="task-text">Template facture avec logo</div><div class="task-client">Phase 4</div></div></div>
         </div>
       </div>
     </div>
@@ -827,22 +572,10 @@ body {
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav" id="bottomNav">
-  <button class="nav-item active" id="nav-clients" onclick="navTo('screenClients','nav-clients')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    Clients
-  </button>
-  <button class="nav-item" id="nav-dashboard" onclick="navTo('screenDashboard','nav-dashboard')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    Tableau
-  </button>
-  <button class="nav-item" id="nav-temps" onclick="navTo('screenTemps','nav-temps')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    Temps
-  </button>
-  <button class="nav-item" id="nav-anna" onclick="navTo('screenAnna','nav-anna')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2"/><path d="M8 12s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-    Anna
-  </button>
+  <button class="nav-item active" id="nav-clients" onclick="navTo('screenClients','nav-clients')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clients</button>
+  <button class="nav-item" id="nav-dashboard" onclick="navTo('screenDashboard','nav-dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tableau</button>
+  <button class="nav-item" id="nav-temps" onclick="navTo('screenTemps','nav-temps')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Temps</button>
+  <button class="nav-item" id="nav-anna" onclick="navTo('screenAnna','nav-anna')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2"/><path d="M8 12s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>Anna</button>
 </nav>
 
 <script>
@@ -869,215 +602,117 @@ let state = {
   timerSeconds: 0,
   cameraStream: null,
   cameraActive: false,
-  currentPhotoData: null,
-  currentAnnotation: 'probleme',
-  photos: {},
   timeEntries: [],
   moodImages: []
 };
+
+// ===== CAMÉRA STATE =====
+let cameraFacing = 'environment';
+let currentMode = 'photo';
+let zoomCSS = 1.0;
+let pinchStartDist = 0;
+let pinchStartZoom = 1.0;
+let zoomIndicatorTimer = null;
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordTimer = null;
+let recordSeconds = 0;
+let flashEnabled = false;
+let currentVideoBlob = null;
+let sessionPhotos = []; // { dataUrl, saved, filename }
+let editingPhotoIndex = -1;
+let cropRatioValue = null;
+let editState = { tool:null, color:'#FF453A', size:4, drawing:false, startX:0, startY:0, history:[], baseImage:null, brightness:0, contrast:0, saturation:0 };
 
 // ===== INIT =====
 window.addEventListener('load', async () => {
   const now = new Date();
   const days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-  document.getElementById('dashDate').textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-  document.getElementById('noteDate').value = now.toISOString().split('T')[0];
-
+  const dd = document.getElementById('dashDate');
+  if(dd) dd.textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  const nd = document.getElementById('noteDate');
+  if(nd) nd.value = now.toISOString().split('T')[0];
   setTimeout(() => {
     const ls = document.getElementById('loadingScreen');
     ls.style.opacity = '0';
     setTimeout(() => ls.style.display = 'none', 500);
   }, 1600);
-
   await initAuth();
 });
 
 // ===== AUTH MSAL =====
 let msalInstance = null;
-
 function initMsal() {
   try {
     msalInstance = new msal.PublicClientApplication({
-      auth: {
-        clientId: CONFIG.clientId,
-        authority: `https://login.microsoftonline.com/${CONFIG.tenantId}`,
-        redirectUri: CONFIG.redirectUri,
-        navigateToLoginRequestUrl: true
-      },
-      cache: {
-        cacheLocation: 'localStorage',
-        storeAuthStateInCookie: true
-      }
+      auth: { clientId: CONFIG.clientId, authority: `https://login.microsoftonline.com/${CONFIG.tenantId}`, redirectUri: CONFIG.redirectUri, navigateToLoginRequestUrl: true },
+      cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
     });
     return true;
-  } catch(e) {
-    console.error('MSAL init error:', e);
-    return false;
-  }
+  } catch(e) { return false; }
 }
-
 async function initAuth() {
   const msalOk = initMsal();
-  
   if(msalOk) {
     try {
-      // MUST initialize before any other MSAL call
       await msalInstance.initialize();
-      
-      // Handle redirect response
       const resp = await msalInstance.handleRedirectPromise();
-      if(resp && resp.accessToken) {
-        state.accessToken = resp.accessToken;
-        showToast('✅ Connecté à Microsoft 365 !');
-      } else {
-        // Try silent token
+      if(resp && resp.accessToken) { state.accessToken = resp.accessToken; showToast('✅ Connecté à Microsoft 365 !'); }
+      else {
         const accounts = msalInstance.getAllAccounts();
         if(accounts.length > 0) {
-          try {
-            const silent = await msalInstance.acquireTokenSilent({
-              scopes: CONFIG.scopes.split(' '),
-              account: accounts[0]
-            });
-            state.accessToken = silent.accessToken;
-          } catch(e) {}
+          try { const s = await msalInstance.acquireTokenSilent({ scopes: CONFIG.scopes.split(' '), account: accounts[0] }); state.accessToken = s.accessToken; } catch(e) {}
         }
       }
-    } catch(e) {
-      console.error('MSAL auth error:', e);
-    }
+    } catch(e) { console.error('MSAL:', e); }
   }
-
   updateLoginButton();
   await loadClients();
 }
-
 async function loginToMicrosoft() {
-  if(msalInstance) {
-    try {
-      await msalInstance.loginRedirect({
-        scopes: CONFIG.scopes.split(' '),
-        loginHint: 'info@emiliepepin.ca',
-        prompt: 'select_account'
-      });
-    } catch(e) {
-      // Fallback to manual OAuth
-      manualLogin();
-    }
-  } else {
-    manualLogin();
-  }
+  if(msalInstance) { try { await msalInstance.loginRedirect({ scopes: CONFIG.scopes.split(' '), loginHint: 'info@emiliepepin.ca' }); } catch(e) { manualLogin(); } }
+  else manualLogin();
 }
-
 function manualLogin() {
-  const url = `https://login.microsoftonline.com/${CONFIG.tenantId}/oauth2/v2.0/authorize?` +
-    `client_id=${CONFIG.clientId}&response_type=token` +
-    `&redirect_uri=${encodeURIComponent(CONFIG.redirectUri)}` +
-    `&scope=${encodeURIComponent(CONFIG.scopes)}` +
-    `&login_hint=info%40emiliepepin.ca&response_mode=fragment`;
-  window.location.href = url;
+  window.location.href = `https://login.microsoftonline.com/${CONFIG.tenantId}/oauth2/v2.0/authorize?client_id=${CONFIG.clientId}&response_type=token&redirect_uri=${encodeURIComponent(CONFIG.redirectUri)}&scope=${encodeURIComponent(CONFIG.scopes)}&login_hint=info%40emiliepepin.ca&response_mode=fragment`;
 }
-
-// Fallback token storage
-function getStoredToken() {
-  try {
-    const token = localStorage.getItem('ep_token');
-    const expiry = localStorage.getItem('ep_expiry');
-    if(token && expiry && Date.now() < parseInt(expiry)) return token;
-  } catch(e) {}
-  return null;
-}
-
-function storeToken(token, expiresIn) {
-  try {
-    localStorage.setItem('ep_token', token);
-    localStorage.setItem('ep_expiry', Date.now() + (parseInt(expiresIn)*1000) - 120000);
-  } catch(e) {}
-}
-
 function logoutMicrosoft() {
-  try {
-    localStorage.removeItem('ep_token');
-    localStorage.removeItem('ep_expiry');
-    if(msalInstance) msalInstance.logoutRedirect({ postLogoutRedirectUri: CONFIG.redirectUri });
-  } catch(e) {}
-  state.accessToken = null;
-  state.clients = [];
-  state.siteId = null;
-  updateLoginButton();
-  showConnectBanner(true);
-  renderClients([]);
-  showToast('👋 Déconnecté');
+  try { localStorage.removeItem('ep_token'); localStorage.removeItem('ep_expiry'); if(msalInstance) msalInstance.logoutRedirect({ postLogoutRedirectUri: CONFIG.redirectUri }); } catch(e) {}
+  state.accessToken = null; state.clients = []; state.siteId = null;
+  updateLoginButton(); showConnectBanner(true); renderClients([]);
 }
-
 function updateLoginButton() {
   const btn = document.getElementById('loginBtn');
   if(!btn) return;
-  if(state.accessToken) {
-    btn.textContent = '✅ Connecté';
-    btn.classList.add('connected');
-  } else {
-    btn.textContent = '🔐 Connexion';
-    btn.classList.remove('connected');
-  }
+  if(state.accessToken) { btn.textContent = '✅ Connecté'; btn.classList.add('connected'); }
+  else { btn.textContent = '🔐 Connexion'; btn.classList.remove('connected'); }
 }
-
 function handleLoginBtn() {
-  if(state.accessToken) {
-    if(confirm('Se déconnecter de Microsoft 365?')) logoutMicrosoft();
-  } else {
-    loginToMicrosoft();
-  }
+  if(state.accessToken) { if(confirm('Se déconnecter de Microsoft 365?')) logoutMicrosoft(); }
+  else loginToMicrosoft();
 }
-
-function showConnectBanner(show) {
-  document.getElementById('connectBanner').style.display = show ? 'block' : 'none';
-}
+function showConnectBanner(show) { document.getElementById('connectBanner').style.display = show ? 'block' : 'none'; }
 
 // ===== GRAPH API =====
 async function graphGet(url) {
   if(!state.accessToken) return null;
   try {
-    const resp = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
-      headers: { Authorization: `Bearer ${state.accessToken}` }
-    });
-    if(resp.status === 401) {
-      state.accessToken = null;
-      updateLoginButton();
-      showToast('⚠️ Session expirée — reconnectez-vous');
-      return null;
-    }
+    const resp = await fetch(`https://graph.microsoft.com/v1.0${url}`, { headers: { Authorization: `Bearer ${state.accessToken}` } });
+    if(resp.status === 401) { state.accessToken = null; updateLoginButton(); showToast('⚠️ Session expirée'); return null; }
     if(!resp.ok) return null;
     return await resp.json();
   } catch(e) { return null; }
 }
-
-async function graphPut(url, body, contentType = 'application/json') {
-  if(!state.accessToken) return null;
-  try {
-    const headers = { Authorization: `Bearer ${state.accessToken}` };
-    if(contentType) headers['Content-Type'] = contentType;
-    const resp = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
-      method: 'PUT', headers,
-      body: contentType === 'application/json' ? JSON.stringify(body) : body
-    });
-    return resp.ok ? await resp.json() : null;
-  } catch(e) { return null; }
-}
-
 async function graphPost(url, body) {
   if(!state.accessToken) return null;
   try {
-    const resp = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${state.accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+    const resp = await fetch(`https://graph.microsoft.com/v1.0${url}`, { method:'POST', headers:{ Authorization:`Bearer ${state.accessToken}`, 'Content-Type':'application/json' }, body:JSON.stringify(body) });
     return resp.ok ? await resp.json() : null;
   } catch(e) { return null; }
 }
 
-// ===== GET SHAREPOINT SITE ID =====
+// ===== SHAREPOINT SITE =====
 async function getSiteId() {
   if(state.siteId) return state.siteId;
   const data = await graphGet(`/sites/${CONFIG.sharePointHost}:/sites/${CONFIG.sharePointSiteName}`);
@@ -1085,26 +720,17 @@ async function getSiteId() {
   return null;
 }
 
-// ===== LOAD CLIENTS =====
+// ===== CLIENTS =====
 async function loadClients() {
-  if(!state.accessToken) {
-    showConnectBanner(true);
-    renderClients([]);
-    return;
-  }
-  
+  if(!state.accessToken) { showConnectBanner(true); renderClients([]); return; }
   showConnectBanner(false);
   showToast('🔄 Chargement des clients...');
-  
   const siteId = await getSiteId();
   if(!siteId) { showToast('⚠️ Impossible de joindre SharePoint'); return; }
-
   const data = await graphGet(`/sites/${siteId}/lists/Clients/items?$expand=fields&$top=200`);
-  
   if(data && data.value && data.value.length > 0) {
-    state.clients = data.value.map((item, i) => ({
-      id: item.id,
-      numId: i,
+    state.clients = data.value.map((item,i) => ({
+      id: item.id, numId: i,
       Title: item.fields.Title || 'Client sans nom',
       project: item.fields.Projet || item.fields.TypeProjet || 'Projet en cours',
       status: item.fields.Statut || 'active',
@@ -1113,20 +739,15 @@ async function loadClients() {
       address: item.fields.Adresse || item.fields.Adresse_x0020_chantier || '',
       heures: '0h', facture: '0$', photos: 0
     }));
-    showToast(`✅ ${state.clients.length} client${state.clients.length > 1 ? 's' : ''} chargé${state.clients.length > 1 ? 's' : ''} !`);
-  } else {
-    showToast('ℹ️ Aucun client dans SharePoint');
-    state.clients = [];
-  }
-
+    showToast(`✅ ${state.clients.length} client${state.clients.length>1?'s':''} chargé${state.clients.length>1?'s':''}!`);
+  } else { showToast('ℹ️ Aucun client dans SharePoint'); state.clients = []; }
   renderClients(state.clients);
-  const active = state.clients.filter(c => c.status === 'active').length;
-  document.getElementById('dashClients').textContent = active || state.clients.length;
-  document.getElementById('dashSub').textContent = `${state.clients.length} clients · Microsoft 365 ✅`;
-  document.getElementById('clientsLabel').textContent = `Clients (${state.clients.length})`;
+  const active = state.clients.filter(c=>c.status==='active').length;
+  setEl('dashClients', active || state.clients.length);
+  setEl('dashSub', `${state.clients.length} clients · Microsoft 365 ✅`);
+  setEl('clientsLabel', `Clients (${state.clients.length})`);
 }
 
-// ===== RENDER CLIENTS =====
 function renderClients(clients) {
   const list = document.getElementById('clientList');
   if(clients.length === 0) {
@@ -1147,685 +768,479 @@ function renderClients(clients) {
     </div>
   `).join('');
 }
-
-function filterClients(q) {
-  renderClients(state.clients.filter(c => c.Title.toLowerCase().includes(q.toLowerCase())));
-}
-function getInitials(n) { return (n||'').split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase() || '?'; }
-function statusLabel(s) { return {active:'● En cours', pending:'○ En attente', completed:'✓ Terminé'}[s] || s; }
+function filterClients(q) { renderClients(state.clients.filter(c=>c.Title.toLowerCase().includes(q.toLowerCase()))); }
+function getInitials(n) { return (n||'').split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase()||'?'; }
+function statusLabel(s) { return {active:'● En cours',pending:'○ En attente',completed:'✓ Terminé'}[s]||s; }
 function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ===== OPEN CLIENT =====
-function getElementById(id) {
-  return document.getElementById(id);
-}
-function setEl(id, val) {
-  const el = document.getElementById(id);
-  if(el) el.textContent = val;
-}
-
+function setEl(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
 function openClient(id) {
-  const c = state.clients.find(x => x.id === id);
+  const c = state.clients.find(x=>x.id===id);
   if(!c) return;
   state.currentClient = c;
-  setEl('clientHeaderName', c.Title);
-  setEl('clientHeaderProject', c.project);
-  setEl('heroAvatar', getInitials(c.Title));
-  setEl('heroName', c.Title);
-  setEl('heroProject', c.project);
-  setEl('statHeures', c.heures);
-  setEl('statFacture', c.facture);
-  setEl('statPhotos', (state.photos[c.Title] || []).length);
-  setEl('photosClientNameCam', c.Title);
-  setEl('timerClientName', c.Title);
-  
-  // Update contact info
-  const phoneBtn = document.getElementById('clientPhoneBtn');
-  const addressEl = document.getElementById('clientAddress');
-  if(phoneBtn) {
-    if(c.phone) {
-      phoneBtn.textContent = '📞 ' + c.phone;
-      phoneBtn.style.display = 'flex';
-    } else {
-      phoneBtn.style.display = 'none';
-    }
-  }
-  if(addressEl) {
-    if(c.address) {
-      addressEl.textContent = '📍 ' + c.address;
-      addressEl.style.display = 'flex';
-    } else {
-      addressEl.style.display = 'none';
-    }
-  }
+  setEl('clientHeaderName',c.Title); setEl('clientHeaderProject',c.project);
+  setEl('heroAvatar',getInitials(c.Title)); setEl('heroName',c.Title); setEl('heroProject',c.project);
+  setEl('statHeures',c.heures); setEl('statFacture',c.facture); setEl('statPhotos',c.photos||0);
+  setEl('photosClientNameCam',c.Title); setEl('timerClientName',c.Title);
+  const addrEl = document.getElementById('clientAddress');
+  if(addrEl) { if(c.address){addrEl.textContent='📍 '+c.address;addrEl.style.display='block';}else{addrEl.style.display='none';} }
   showScreen('screenClient');
 }
 
 // ===== SCREEN NAV =====
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => {
-    s.classList.remove('active');
-    s.style.display = '';
-  });
-  const el = document.getElementById(id);
-  if(el) {
-    el.classList.add('active');
-    if(id === 'screenPhotos') el.style.display = 'flex';
-  }
-  window.scrollTo(0, 0);
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='';});
+  const el=document.getElementById(id);
+  if(el){el.classList.add('active');if(id==='screenPhotos')el.style.display='flex';}
+  window.scrollTo(0,0);
 }
-function navTo(screen, navId) {
+function navTo(screen,navId) {
   showScreen(screen);
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById(navId).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const ni=document.getElementById(navId); if(ni)ni.classList.add('active');
 }
 
-// ===== CAMERA APPLE-STYLE =====
-let cameraFacing = 'environment';
-let currentMode = 'photo';
-let mediaRecorder = null;
-let recordedChunks = [];
-let recordTimer = null;
-let recordSeconds = 0;
-let flashEnabled = false;
-let currentVideoBlob = null;
-
-// Edit state
-let editState = {
-  tool: null,
-  color: '#FF453A',
-  size: 4,
-  drawing: false,
-  startX: 0, startY: 0,
-  history: [],
-  baseImage: null,
-  rotation: 0,
-  brightness: 0,
-  contrast: 0,
-  saturation: 0
-};
-let editZoom = 1.0;
-let lastPinchDist = 0;
-
+// ===== CAMÉRA =====
 function goToPhotos() {
-  if(state.currentClient) {
-    setEl('photosClientNameCam', state.currentClient.Title);
-    setEl('gallerySheetTitle', 'Photos — ' + state.currentClient.Title);
-  }
-  // Show the photos screen
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const screen = document.getElementById('screenPhotos');
-  if(screen) {
-    screen.classList.add('active');
-    screen.style.display = 'flex';
-  }
-  window.scrollTo(0, 0);
-  setTimeout(() => startCamera(), 200);
+  if(state.currentClient) setEl('photosClientNameCam', state.currentClient.Title);
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='';});
+  const screen=document.getElementById('screenPhotos');
+  if(screen){screen.classList.add('active');screen.style.display='flex';}
+  document.getElementById('cameraFullscreen').style.display='flex';
+  document.getElementById('photoEditor').style.display='none';
+  document.getElementById('videoEditor').style.display='none';
+  updateFilmstripThumb();
+  updateSavePendingBtn();
+  window.scrollTo(0,0);
+  setTimeout(()=>startCamera(),200);
 }
 
-function exitCameraMode() {
-  stopCamera();
-  showScreen('screenClient');
-}
+function exitCameraMode() { stopCamera(); showScreen('screenClient'); }
 
 async function startCamera() {
   try {
+    if(state.cameraStream) stopCamera();
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: cameraFacing, width: {ideal:1920}, height: {ideal:1080} },
-      audio: currentMode === 'video'
+      video:{ facingMode:{ideal:cameraFacing}, width:{ideal:1920}, height:{ideal:1080} },
+      audio: currentMode==='video'
     });
-    state.cameraStream = stream;
-    state.cameraActive = true;
-    const video = document.getElementById('cameraVideo');
-    video.srcObject = stream;
-    video.style.display = 'block';
-    document.getElementById('capturedPhoto').style.display = 'none';
-  } catch(e) {
-    showToast('Accès caméra refusé');
-  }
+    state.cameraStream=stream; state.cameraActive=true;
+    const video=document.getElementById('cameraVideo');
+    video.srcObject=stream; video.style.display='block';
+    applyZoomCSS(zoomCSS);
+    setupPinchZoom(video);
+  } catch(e) { showToast('⚠️ Accès caméra refusé'); }
 }
 
 function stopCamera() {
-  if(state.cameraStream) {
-    state.cameraStream.getTracks().forEach(t => t.stop());
-    state.cameraStream = null;
-  }
-  state.cameraActive = false;
+  if(state.cameraStream){state.cameraStream.getTracks().forEach(t=>t.stop());state.cameraStream=null;}
+  state.cameraActive=false;
 }
 
-function setMode(mode) {
-  currentMode = mode;
-  document.getElementById('modePhoto').style.color = mode === 'photo' ? 'white' : 'rgba(255,255,255,0.5)';
-  document.getElementById('modePhoto').style.fontWeight = mode === 'photo' ? '700' : '500';
-  document.getElementById('modeVideo').style.color = mode === 'video' ? 'white' : 'rgba(255,255,255,0.5)';
-  document.getElementById('modeVideo').style.fontWeight = mode === 'video' ? '700' : '500';
-  
-  const btn = document.getElementById('shutterBtn');
-  const inner = document.getElementById('shutterInner');
-  if(mode === 'video') {
-    inner.style.borderRadius = '6px';
-    inner.style.background = '#FF453A';
-    inner.style.width = '32px';
-    inner.style.height = '32px';
-    inner.style.margin = 'auto';
+// ===== ZOOM =====
+function setupPinchZoom(video) {
+  if(video._pinchStart) video.removeEventListener('touchstart',video._pinchStart);
+  if(video._pinchMove) video.removeEventListener('touchmove',video._pinchMove);
+  if(video._pinchEnd) video.removeEventListener('touchend',video._pinchEnd);
+  video._pinchStart=(e)=>{ if(e.touches.length===2){pinchStartDist=getPinchDist(e);pinchStartZoom=zoomCSS;} };
+  video._pinchMove=(e)=>{ if(e.touches.length===2){e.preventDefault();const d=getPinchDist(e);zoomCSS=Math.min(Math.max(1.0,pinchStartZoom*(d/pinchStartDist)),6.0);applyZoomCSS(zoomCSS);showZoomIndicator(zoomCSS);} };
+  video._pinchEnd=(e)=>{ if(e.touches.length<2) updateZoomButtons(zoomCSS); };
+  video.addEventListener('touchstart',video._pinchStart,{passive:true});
+  video.addEventListener('touchmove',video._pinchMove,{passive:false});
+  video.addEventListener('touchend',video._pinchEnd,{passive:true});
+}
+function getPinchDist(e){return Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}
+function applyZoomCSS(scale){const v=document.getElementById('cameraVideo');if(v)v.style.transform=`scale(${scale})`;zoomCSS=scale;}
+function showZoomIndicator(scale){
+  const el=document.getElementById('zoomIndicator');
+  el.style.display='block';el.textContent=scale.toFixed(1)+'x';
+  clearTimeout(zoomIndicatorTimer);zoomIndicatorTimer=setTimeout(()=>{el.style.display='none';},1500);
+}
+function setZoomLevel(btnIndex){
+  const levels=[1.0,2.0,4.0];
+  zoomCSS=levels[btnIndex-1];applyZoomCSS(zoomCSS);updateZoomButtons(zoomCSS);showZoomIndicator(zoomCSS);
+}
+function updateZoomButtons(scale){
+  const ids=['zoomBtn1','zoomBtn2','zoomBtn3'],levels=[1.0,2.0,4.0];
+  ids.forEach((id,i)=>{const b=document.getElementById(id);if(b){b.classList.remove('zoom-pill-active');if(Math.abs(scale-levels[i])<0.5)b.classList.add('zoom-pill-active');}});
+}
+
+// ===== MODE =====
+function setMode(mode){
+  currentMode=mode;
+  const mP=document.getElementById('modePhoto'),mV=document.getElementById('modeVideo');
+  mP.style.color=mode==='photo'?'white':'rgba(255,255,255,0.5)';mP.style.fontWeight=mode==='photo'?'700':'500';
+  mV.style.color=mode==='video'?'white':'rgba(255,255,255,0.5)';mV.style.fontWeight=mode==='video'?'700':'500';
+  const inner=document.getElementById('shutterInner');
+  if(mode==='video'){inner.style.borderRadius='8px';inner.style.background='#FF453A';inner.style.width='34px';inner.style.height='34px';inner.style.margin='auto';}
+  else{inner.style.borderRadius='50%';inner.style.background='white';inner.style.width='66px';inner.style.height='66px';inner.style.margin='0';}
+}
+
+// ===== CAPTURE =====
+function captureMedia(){
+  const btn=document.getElementById('shutterBtn');
+  btn.style.transform='scale(0.88)';setTimeout(()=>btn.style.transform='scale(1)',120);
+  if(currentMode==='photo') takePhoto();
+  else if(mediaRecorder&&mediaRecorder.state==='recording') stopRecording();
+  else startRecording();
+}
+function takePhoto(){
+  const video=document.getElementById('cameraVideo'),canvas=document.getElementById('photoCanvas');
+  const w=video.videoWidth||1280,h=video.videoHeight||720;
+  canvas.width=w;canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  if(zoomCSS>1){const cx=w/2,cy=h/2,sw=w/zoomCSS,sh=h/zoomCSS;ctx.drawImage(video,cx-sw/2,cy-sh/2,sw,sh,0,0,w,h);}
+  else ctx.drawImage(video,0,0);
+  const dataUrl=canvas.toDataURL('image/jpeg',0.93);
+  const ts=new Date(),filename=formatDateForFilename(ts)+'_'+(sessionPhotos.length+1).toString().padStart(2,'0')+'.jpg';
+  sessionPhotos.push({dataUrl,saved:false,filename});
+  updateFilmstripThumb();updateSavePendingBtn();renderFilmstripGrid();
+  showToast('📸 Photo ajoutée à la pellicule');
+}
+function formatDateForFilename(d){
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`;
+}
+
+// ===== PELLICULE =====
+function updateFilmstripThumb(){
+  const thumb=document.getElementById('filmstripThumb'),countEl=document.getElementById('filmstripCount');
+  if(!thumb) return;
+  const pending=sessionPhotos.filter(p=>!p.saved).length;
+  if(sessionPhotos.length>0){
+    const last=sessionPhotos[sessionPhotos.length-1];
+    thumb.innerHTML=`<img src="${last.dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+    if(countEl){countEl.style.display=pending>0?'flex':'none';countEl.textContent=pending;}
   } else {
-    inner.style.borderRadius = '50%';
-    inner.style.background = 'white';
-    inner.style.width = '62px';
-    inner.style.height = '62px';
-    inner.style.margin = '0';
+    thumb.innerHTML=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+    if(countEl) countEl.style.display='none';
   }
 }
-
-function captureMedia() {
-  if(currentMode === 'photo') {
-    takePhoto();
-  } else {
-    if(mediaRecorder && mediaRecorder.state === 'recording') {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  }
+function toggleFilmstrip(){
+  const panel=document.getElementById('filmstripPanel');
+  if(!panel.style.display||panel.style.display==='none') openFilmstrip();
+  else closeFilmstrip();
 }
-
-function takePhoto() {
-  const video = document.getElementById('cameraVideo');
-  const canvas = document.getElementById('photoCanvas');
-  canvas.width = video.videoWidth || 1280;
-  canvas.height = video.videoHeight || 720;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-  state.currentPhotoData = dataUrl;
-  stopCamera();
-  openPhotoEditor(dataUrl);
-  updateThumb(dataUrl);
+function openFilmstrip(){
+  renderFilmstripGrid();
+  const client=state.currentClient?state.currentClient.Title:'Session';
+  setEl('filmstripTitle',`${client} — ${sessionPhotos.length} photo${sessionPhotos.length!==1?'s':''}`);
+  document.getElementById('filmstripPanel').style.display='block';
 }
-
-function updateThumb(dataUrl) {
-  const thumb = document.getElementById('lastPhotoThumb');
-  thumb.innerHTML = '<img src="' + dataUrl + '" style="width:100%;height:100%;object-fit:cover;">';
-}
-
-function openLastPhoto() {
-  if(state.currentPhotoData) {
-    openPhotoEditor(state.currentPhotoData);
-  } else if(state.currentClient && state.photos[state.currentClient.Title]?.length > 0) {
-    const photos = state.photos[state.currentClient.Title];
-    viewPhotoFull(photos[photos.length-1].url);
-  }
-}
-
-function startRecording() {
-  if(!state.cameraStream) return;
-  recordedChunks = [];
-  try {
-    mediaRecorder = new MediaRecorder(state.cameraStream, { mimeType: 'video/webm' });
-  } catch(e) {
-    mediaRecorder = new MediaRecorder(state.cameraStream);
-  }
-  mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) recordedChunks.push(e.data); };
-  mediaRecorder.onstop = () => {
-    currentVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
-    openVideoEditor(currentVideoBlob);
-  };
-  mediaRecorder.start();
-  document.getElementById('recordingIndicator').style.display = 'block';
-  recordSeconds = 0;
-  recordTimer = setInterval(() => {
-    recordSeconds++;
-    const m = Math.floor(recordSeconds/60).toString().padStart(2,'0');
-    const s = (recordSeconds%60).toString().padStart(2,'0');
-    document.getElementById('recordTimer').textContent = m + ':' + s;
-  }, 1000);
-  // Change shutter to stop button
-  document.getElementById('shutterInner').style.borderRadius = '6px';
-}
-
-function stopRecording() {
-  if(mediaRecorder && mediaRecorder.state === 'recording') {
-    mediaRecorder.stop();
-    clearInterval(recordTimer);
-    document.getElementById('recordingIndicator').style.display = 'none';
-    setMode('video'); // reset button
-  }
-}
-
-function flipCamera() {
-  cameraFacing = cameraFacing === 'environment' ? 'user' : 'environment';
-  stopCamera();
-  startCamera();
-}
-
-function toggleFlash() {
-  flashEnabled = !flashEnabled;
-  document.getElementById('flashBtn').style.background = flashEnabled ? 'rgba(255,200,0,0.6)' : 'rgba(0,0,0,0.4)';
-}
-
-function openGallery() {
-  document.getElementById('galleryInput').click();
-}
-
-function handleGalleryPhoto(e) {
-  const file = e.target.files[0];
-  if(!file) return;
-  if(file.type.startsWith('video/')) {
-    currentVideoBlob = file;
-    openVideoEditor(file);
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    state.currentPhotoData = ev.target.result;
-    stopCamera();
-    openPhotoEditor(ev.target.result);
-  };
-  reader.readAsDataURL(file);
-  e.target.value = '';
-}
-
-// ===== PHOTO EDITOR =====
-function openPhotoEditor(dataUrl) {
-  document.getElementById('photoEditor').style.display = 'flex';
-  document.getElementById('cameraFullscreen').style.display = 'none';
-  
-  // Hide all toolbars
-  document.getElementById('annotToolbar').style.display = 'none';
-  document.getElementById('adjustToolbar').style.display = 'none';
-  document.getElementById('cropToolbar').style.display = 'none';
-  
-  // Reset edit state
-  editState = { tool: null, color: '#FF453A', size: 4, drawing: false, startX: 0, startY: 0, history: [], baseImage: null, rotation: 0, brightness: 0, contrast: 0, saturation: 0 };
-  editZoom = 1.0;
-  
-  // Init canvas
-  setTimeout(() => initEditCanvas(dataUrl), 100);
-}
-
-function initEditCanvas(dataUrl) {
-  const canvas = document.getElementById('editCanvas');
-  const area = document.getElementById('editorImageArea');
-  const ctx = canvas.getContext('2d');
-  const img = new Image();
-  img.onload = () => {
-    const maxW = area.offsetWidth;
-    const maxH = area.offsetHeight;
-    const ratio = Math.min(maxW / img.width, maxH / img.height);
-    canvas.width = img.width;
-    canvas.height = img.height;
-    canvas.style.width = Math.round(img.width * ratio) + 'px';
-    canvas.style.height = Math.round(img.height * ratio) + 'px';
-    ctx.drawImage(img, 0, 0);
-    editState.baseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    editState.history = [ctx.getImageData(0, 0, canvas.width, canvas.height)];
-    setupEditEvents(canvas, ctx);
-  };
-  img.src = dataUrl;
-}
-
-function setupEditEvents(canvas, ctx) {
-  let lastPinch = 0;
-  
-  canvas.addEventListener('touchstart', (e) => {
-    if(e.touches.length === 2) {
-      lastPinch = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      return;
-    }
-    if(!editState.tool) return;
-    e.preventDefault();
-    const t = e.touches[0];
-    const r = canvas.getBoundingClientRect();
-    const sx = canvas.width / r.width;
-    const sy = canvas.height / r.height;
-    editStartDraw(ctx, (t.clientX - r.left) * sx, (t.clientY - r.top) * sy);
-  }, { passive: false });
-
-  canvas.addEventListener('touchmove', (e) => {
-    if(e.touches.length === 2) {
-      e.preventDefault();
-      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      if(lastPinch > 0) { editZoom = Math.min(4, Math.max(0.5, editZoom + (d - lastPinch)/200)); applyEditZoom(); }
-      lastPinch = d;
-      return;
-    }
-    if(!editState.tool) return;
-    e.preventDefault();
-    const t = e.touches[0];
-    const r = canvas.getBoundingClientRect();
-    const sx = canvas.width / r.width;
-    const sy = canvas.height / r.height;
-    editMoveDraw(ctx, (t.clientX - r.left) * sx, (t.clientY - r.top) * sy);
-  }, { passive: false });
-
-  canvas.addEventListener('touchend', (e) => {
-    lastPinch = 0;
-    if(!editState.tool) return;
-    e.preventDefault();
-    editEndDraw(ctx);
-  }, { passive: false });
-
-  canvas.addEventListener('mousedown', (e) => {
-    if(!editState.tool) return;
-    const r = canvas.getBoundingClientRect();
-    editStartDraw(ctx, (e.clientX - r.left) * canvas.width / r.width, (e.clientY - r.top) * canvas.height / r.height);
-  });
-  canvas.addEventListener('mousemove', (e) => {
-    if(!editState.drawing || !editState.tool) return;
-    const r = canvas.getBoundingClientRect();
-    editMoveDraw(ctx, (e.clientX - r.left) * canvas.width / r.width, (e.clientY - r.top) * canvas.height / r.height);
-  });
-  canvas.addEventListener('mouseup', () => editEndDraw(ctx));
-}
-
-function applyEditZoom() {
-  const canvas = document.getElementById('editCanvas');
-  canvas.style.transform = 'scale(' + editZoom + ')';
-  canvas.style.transformOrigin = 'center center';
-}
-
-function editStartDraw(ctx, x, y) {
-  if(!editState.tool) return;
-  editState.drawing = true;
-  editState.startX = x;
-  editState.startY = y;
-  if(editState.tool === 'pen' || editState.tool === 'marker' || editState.tool === 'erase') {
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  }
-}
-
-function editMoveDraw(ctx, x, y) {
-  if(!editState.drawing || !editState.tool) return;
-  ctx.strokeStyle = editState.color;
-  ctx.lineWidth = editState.tool === 'marker' ? editState.size * 3 : editState.size;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.globalAlpha = editState.tool === 'marker' ? 0.4 : 1.0;
-  
-  if(editState.tool === 'pen' || editState.tool === 'marker') {
-    ctx.lineTo(x, y); ctx.stroke();
-  } else if(editState.tool === 'erase') {
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.globalAlpha = 1;
-    ctx.lineWidth = editState.size * 4;
-    ctx.lineTo(x, y); ctx.stroke();
-    ctx.globalCompositeOperation = 'source-over';
-  } else if(['arrow','circle','rect'].includes(editState.tool)) {
-    ctx.globalAlpha = 1;
-    if(editState.history.length > 0) ctx.putImageData(editState.history[editState.history.length-1], 0, 0);
-    ctx.fillStyle = editState.color;
-    ctx.lineWidth = editState.size;
-    if(editState.tool === 'arrow') {
-      drawEditArrow(ctx, editState.startX, editState.startY, x, y);
-    } else if(editState.tool === 'circle') {
-      const rx = Math.abs(x-editState.startX)/2, ry = Math.abs(y-editState.startY)/2;
-      ctx.beginPath();
-      ctx.ellipse((editState.startX+x)/2, (editState.startY+y)/2, Math.max(rx,5), Math.max(ry,5), 0, 0, Math.PI*2);
-      ctx.stroke();
-    } else if(editState.tool === 'rect') {
-      ctx.strokeRect(editState.startX, editState.startY, x-editState.startX, y-editState.startY);
-    }
-  }
-}
-
-function editEndDraw(ctx) {
-  if(!editState.drawing) return;
-  editState.drawing = false;
-  ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.beginPath();
-  editState.history.push(ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height));
-}
-
-function drawEditArrow(ctx, x1, y1, x2, y2) {
-  const headLen = 15 * editState.size / 4;
-  const angle = Math.atan2(y2-y1, x2-x1);
-  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(x2, y2);
-  ctx.lineTo(x2 - headLen*Math.cos(angle-Math.PI/6), y2 - headLen*Math.sin(angle-Math.PI/6));
-  ctx.lineTo(x2 - headLen*Math.cos(angle+Math.PI/6), y2 - headLen*Math.sin(angle+Math.PI/6));
-  ctx.closePath(); ctx.fill();
-}
-
-function setEditTool(tool, btn) {
-  if(editState.tool === tool) {
-    editState.tool = null;
-    document.querySelectorAll('.edit-tool').forEach(b => b.style.background = 'rgba(255,255,255,0.1)');
-    return;
-  }
-  editState.tool = tool;
-  document.querySelectorAll('.edit-tool').forEach(b => b.style.background = 'rgba(255,255,255,0.1)');
-  btn.style.background = editState.color;
-}
-
-function setEditColor(color, el) {
-  editState.color = color;
-  document.querySelectorAll('.edit-color').forEach(e => e.style.border = '2px solid transparent');
-  el.style.border = '3px solid ' + color;
-  // Update active tool button color
-  if(editState.tool) {
-    const activeBtn = document.querySelector('.edit-tool[style*="background: ' + editState.color + '"]');
-  }
-}
-
-function addTextAnnot() {
-  const text = prompt('Entrez votre texte:');
-  if(!text) return;
-  const canvas = document.getElementById('editCanvas');
-  const ctx = canvas.getContext('2d');
-  const size = Math.max(20, editState.size * 6);
-  ctx.font = 'bold ' + size + 'px DM Sans, Arial';
-  ctx.fillStyle = editState.color;
-  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-  ctx.lineWidth = 2;
-  const x = canvas.width / 2 - ctx.measureText(text).width / 2;
-  const y = canvas.height / 2;
-  ctx.strokeText(text, x, y);
-  ctx.fillText(text, x, y);
-  editState.history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-}
-
-function undoEdit() {
-  if(editState.history.length <= 1) return;
-  editState.history.pop();
-  const ctx = document.getElementById('editCanvas').getContext('2d');
-  ctx.putImageData(editState.history[editState.history.length-1], 0, 0);
-}
-
-function redoEdit() { showToast('Rétablir non disponible'); }
-
-function showAnnotMode() {
-  document.getElementById('annotToolbar').style.display = 'block';
-  document.getElementById('adjustToolbar').style.display = 'none';
-  document.getElementById('cropToolbar').style.display = 'none';
-  highlightEditorBtn('btnAnnot');
-}
-
-function showAdjust() {
-  document.getElementById('annotToolbar').style.display = 'none';
-  document.getElementById('adjustToolbar').style.display = 'block';
-  document.getElementById('cropToolbar').style.display = 'none';
-  highlightEditorBtn('btnAdjust');
-}
-
-function showCropMode() {
-  document.getElementById('annotToolbar').style.display = 'none';
-  document.getElementById('adjustToolbar').style.display = 'none';
-  document.getElementById('cropToolbar').style.display = 'block';
-  highlightEditorBtn('btnCrop');
-}
-
-function highlightEditorBtn(id) {
-  ['btnAdjust','btnCrop','btnAnnot'].forEach(b => {
-    document.getElementById(b).style.color = b === id ? '#0A84FF' : 'rgba(255,255,255,0.6)';
-  });
-}
-
-function applyAdjust(type, val) {
-  editState[type] = parseInt(val);
-  const canvas = document.getElementById('editCanvas');
-  const ctx = canvas.getContext('2d');
-  if(editState.baseImage) ctx.putImageData(editState.baseImage, 0, 0);
-  let f = '';
-  if(editState.brightness !== 0) f += 'brightness(' + (1 + editState.brightness/100) + ') ';
-  if(editState.contrast !== 0) f += 'contrast(' + (1 + editState.contrast/100) + ') ';
-  if(editState.saturation !== 0) f += 'saturate(' + (1 + editState.saturation/100) + ') ';
-  canvas.style.filter = f;
-}
-
-function applyCropRatio(ratio) {
-  showToast('Recadrage ' + (ratio ? ratio.toFixed(2) : 'libre') + ' — fonctionnalité avancée');
-}
-
-function rotateCrop() {
-  const canvas = document.getElementById('editCanvas');
-  const ctx = canvas.getContext('2d');
-  const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = canvas.height;
-  tempCanvas.height = canvas.width;
-  const tCtx = tempCanvas.getContext('2d');
-  tCtx.translate(tempCanvas.width/2, tempCanvas.height/2);
-  tCtx.rotate(Math.PI/2);
-  tCtx.drawImage(canvas, -canvas.width/2, -canvas.height/2);
-  canvas.width = tempCanvas.width;
-  canvas.height = tempCanvas.height;
-  ctx.drawImage(tempCanvas, 0, 0);
-  editState.history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-}
-
-function cancelEdit() {
-  document.getElementById('photoEditor').style.display = 'none';
-  document.getElementById('cameraFullscreen').style.display = 'flex';
-  startCamera();
-}
-
-function confirmEdit() {
-  // Save current state as current photo
-  const canvas = document.getElementById('editCanvas');
-  canvas.style.filter = '';
-  state.currentPhotoData = canvas.toDataURL('image/jpeg', 0.92);
-  updateThumb(state.currentPhotoData);
-  document.getElementById('photoEditor').style.display = 'none';
-  document.getElementById('cameraFullscreen').style.display = 'flex';
-  startCamera();
-  showToast('Photo confirmée — appuyez sur la miniature pour sauvegarder');
-}
-
-async function saveFromEditor() {
-  const canvas = document.getElementById('editCanvas');
-  canvas.style.filter = '';
-  state.currentPhotoData = canvas.toDataURL('image/jpeg', 0.92);
-  await saveCurrentPhoto();
-  if(state.currentPhotoData === null) {
-    document.getElementById('photoEditor').style.display = 'none';
-    document.getElementById('cameraFullscreen').style.display = 'flex';
-    updatePhotosGallery();
-    startCamera();
-  }
-}
-
-// ===== VIDEO EDITOR =====
-function openVideoEditor(blob) {
-  document.getElementById('videoEditor').style.display = 'flex';
-  document.getElementById('cameraFullscreen').style.display = 'none';
-  const videoEl = document.getElementById('previewVideo');
-  videoEl.src = URL.createObjectURL(blob);
-}
-
-function cancelVideoEdit() {
-  document.getElementById('videoEditor').style.display = 'none';
-  document.getElementById('cameraFullscreen').style.display = 'flex';
-  startCamera();
-}
-
-async function saveVideoToOneDrive() {
-  if(!currentVideoBlob || !state.currentClient) { showToast('Aucune vidéo ou client'); return; }
-  showToast('Sauvegarde vidéo en cours...');
-  const clientName = state.currentClient.Title;
-  const ts = new Date().toISOString().replace(/[:.]/g,'-').substring(0,16);
-  const fileName = clientName.replace(/[^a-zA-Z0-9]/g,'_') + '_video_' + ts + '.webm';
-  
-  if(state.accessToken) {
-    try {
-      const path = '/me/drive/root:/' + CONFIG.oneDriveRoot + '/' + clientName + '/10_Photos/Chantier/' + fileName + ':/content';
-      const resp = await fetch('https://graph.microsoft.com/v1.0' + path, {
-        method: 'PUT',
-        headers: { 'Authorization': 'Bearer ' + state.accessToken, 'Content-Type': 'video/webm' },
-        body: currentVideoBlob
-      });
-      if(resp.ok) {
-        showToast('Vidéo sauvegardée dans OneDrive !');
-        cancelVideoEdit();
-        return;
-      }
-    } catch(e) {}
-  }
-  showToast('Sauvegarde locale — connectez Microsoft 365');
-  cancelVideoEdit();
-}
-
-// ===== PHOTOS GALLERY =====
-function openGallerySheet() {
-  updatePhotosGallery();
-  document.getElementById('photosGallerySheet').style.display = 'block';
-}
-
-function closeGallerySheet(e) {
-  if(e.target === document.getElementById('photosGallerySheet')) {
-    document.getElementById('photosGallerySheet').style.display = 'none';
-  }
-}
-
-function viewPhotoFull(url) {
-  const w = window.open('');
-  w.document.write('<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="' + url + '" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>');
-}
-
-
-
-async function saveCurrentPhotoNow() {
-  if(!state.currentPhotoData) { showToast('Prenez ou choisissez une photo dabord'); return; }
-  await saveCurrentPhoto();
-}
-
-function resetAfterSave() {
-  state.currentPhotoData = null;
-  if(state.currentClient) {
-    const count = (state.photos[state.currentClient.Title] || []).length;
-    document.getElementById('statPhotos').textContent = count;
-  }
-}
-
-// ===== PHOTOS GALLERY UPDATE =====
-function updatePhotosGallery() {
-  const gallery = document.getElementById('photosGallery');
-  if(!gallery) return;
-  const clientName = state.currentClient ? state.currentClient.Title : null;
-  const photos = clientName ? (state.photos[clientName] || []) : [];
-  if(photos.length === 0) {
-    gallery.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune photo</div>';
-    return;
-  }
-  gallery.innerHTML = photos.map((p, i) => `
-    <div class="gallery-thumb" onclick="viewPhotoFull('${p.url}')">
-      <img src="${p.url}" alt="Photo ${i+1}">
+function closeFilmstrip(){document.getElementById('filmstripPanel').style.display='none';}
+function closeFilmstripOutside(e){if(e.target===document.getElementById('filmstripPanel'))closeFilmstrip();}
+function renderFilmstripGrid(){
+  const grid=document.getElementById('filmstripGrid'),empty=document.getElementById('filmstripEmpty');
+  if(!grid) return;
+  if(sessionPhotos.length===0){grid.innerHTML='';if(empty)empty.style.display='block';return;}
+  if(empty) empty.style.display='none';
+  grid.innerHTML=sessionPhotos.map((p,i)=>`
+    <div class="filmstrip-item" onclick="openPhotoEditorFromFilmstrip(${i})">
+      <img src="${p.dataUrl}" alt="Photo ${i+1}" loading="lazy">
+      ${p.saved?'<div class="saved-badge">✓</div>':''}
     </div>
   `).join('');
 }
-  
-  // ===== TOAST =====
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
+function updateSavePendingBtn(){
+  const btn=document.getElementById('savePendingBtn'),countEl=document.getElementById('savePendingCount'),pluralEl=document.getElementById('savePendingPlural');
+  if(!btn) return;
+  const pending=sessionPhotos.filter(p=>!p.saved).length;
+  if(pending>0){btn.style.display='flex';if(countEl)countEl.textContent=pending;if(pluralEl)pluralEl.textContent=pending>1?'s':'';}
+  else btn.style.display='none';
+}
+function updatePhotosGallery(){
+  const gallery=document.getElementById('photosGallery');
+  if(!gallery) return;
+  if(sessionPhotos.length===0){gallery.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune photo dans cette session</div>';return;}
+  gallery.innerHTML=sessionPhotos.map((p,i)=>`<div class="gallery-thumb" onclick="openPhotoEditorFromFilmstrip(${i})"><img src="${p.dataUrl}" alt="Photo ${i+1}"></div>`).join('');
 }
 
-// ===== SERVICE WORKER =====
-if('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+// ===== SAUVEGARDE ONEDRIVE =====
+async function saveAllPendingPhotos(){
+  const pending=sessionPhotos.filter(p=>!p.saved);
+  if(pending.length===0){showToast('Aucune photo à sauvegarder');return;}
+  if(!state.currentClient){showToast('⚠️ Sélectionnez un client d\'abord');return;}
+  closeFilmstrip();
+  showToast(`⬆️ Sauvegarde de ${pending.length} photo${pending.length>1?'s':''}...`);
+  let saved=0;
+  for(const photo of pending){
+    const ok=await uploadPhotoToOneDrive(photo.dataUrl,photo.filename);
+    if(ok){photo.saved=true;saved++;}
+  }
+  updateFilmstripThumb();updateSavePendingBtn();renderFilmstripGrid();
+  if(saved>0){
+    showToast(`✅ ${saved} photo${saved>1?'s':''} sauvegardée${saved>1?'s':''} dans OneDrive !`);
+    setEl('statPhotos',sessionPhotos.filter(p=>p.saved).length);
+  } else showToast('⚠️ Connexion Microsoft 365 requise pour sauvegarder');
 }
+async function saveCurrentPhotoToOneDrive(){
+  if(editingPhotoIndex<0||editingPhotoIndex>=sessionPhotos.length){showToast('Aucune photo sélectionnée');return;}
+  const canvas=document.getElementById('editCanvas');
+  canvas.style.filter='';
+  const dataUrl=canvas.toDataURL('image/jpeg',0.93);
+  sessionPhotos[editingPhotoIndex].dataUrl=dataUrl;
+  showToast('⬆️ Sauvegarde en cours...');
+  const ok=await uploadPhotoToOneDrive(dataUrl,sessionPhotos[editingPhotoIndex].filename);
+  if(ok){sessionPhotos[editingPhotoIndex].saved=true;showToast('✅ Photo sauvegardée dans OneDrive !');updateFilmstripThumb();updateSavePendingBtn();renderFilmstripGrid();}
+  else showToast('⚠️ Connexion Microsoft 365 requise');
+}
+async function uploadPhotoToOneDrive(dataUrl,filename){
+  if(!state.accessToken||!state.currentClient) return false;
+  try{
+    const res=await fetch(dataUrl);const blob=await res.blob();
+    const clientName=state.currentClient.Title;
+    const path=`/me/drive/root:/${CONFIG.oneDriveRoot}/${clientName}/10_Photos/Chantier/${filename}:/content`;
+    const resp=await fetch(`https://graph.microsoft.com/v1.0${path}`,{method:'PUT',headers:{'Authorization':`Bearer ${state.accessToken}`,'Content-Type':'image/jpeg'},body:blob});
+    return resp.ok;
+  }catch(e){return false;}
+}
+
+// ===== FLIP + FLASH =====
+function flipCamera(){cameraFacing=cameraFacing==='environment'?'user':'environment';stopCamera();startCamera();}
+function toggleFlash(){
+  flashEnabled=!flashEnabled;
+  document.getElementById('flashBtn').style.background=flashEnabled?'rgba(255,210,0,0.7)':'rgba(0,0,0,0.5)';
+  if(state.cameraStream){const track=state.cameraStream.getVideoTracks()[0];if(track){try{track.applyConstraints({advanced:[{torch:flashEnabled}]});}catch(e){}}}
+}
+
+// ===== GALERIE IPHONE =====
+function openGallery(){document.getElementById('galleryInput').click();}
+function handleGalleryFiles(e){
+  const files=Array.from(e.target.files||[]);
+  if(!files.length) return;
+  let imgCount=0;
+  files.forEach(file=>{
+    if(file.type.startsWith('video/')){currentVideoBlob=file;openVideoEditor(file);return;}
+    if(!file.type.startsWith('image/')) return;
+    imgCount++;
+    const reader=new FileReader();
+    reader.onload=(ev)=>{
+      const ts=new Date(),filename=formatDateForFilename(ts)+'_gal_'+(sessionPhotos.length+1).toString().padStart(2,'0')+'.jpg';
+      sessionPhotos.push({dataUrl:ev.target.result,saved:false,filename});
+      updateFilmstripThumb();updateSavePendingBtn();renderFilmstripGrid();
+    };
+    reader.readAsDataURL(file);
+  });
+  if(imgCount>0) setTimeout(()=>showToast(`📷 ${imgCount} photo${imgCount>1?'s':''} importée${imgCount>1?'s':''} dans la pellicule`),300);
+  e.target.value='';
+}
+
+// ===== ENREGISTREMENT VIDÉO =====
+function startRecording(){
+  if(!state.cameraStream) return;
+  recordedChunks=[];
+  const opts=['video/webm;codecs=vp9','video/webm','video/mp4'].find(t=>{try{return MediaRecorder.isTypeSupported(t);}catch(e){return false;}})||'';
+  try{mediaRecorder=opts?new MediaRecorder(state.cameraStream,{mimeType:opts}):new MediaRecorder(state.cameraStream);}catch(e){mediaRecorder=new MediaRecorder(state.cameraStream);}
+  mediaRecorder.ondataavailable=(e)=>{if(e.data.size>0)recordedChunks.push(e.data);};
+  mediaRecorder.onstop=()=>{currentVideoBlob=new Blob(recordedChunks,{type:'video/webm'});openVideoEditor(currentVideoBlob);};
+  mediaRecorder.start();
+  document.getElementById('recordingIndicator').style.display='flex';
+  recordSeconds=0;
+  recordTimer=setInterval(()=>{recordSeconds++;const m=Math.floor(recordSeconds/60).toString().padStart(2,'0'),s=(recordSeconds%60).toString().padStart(2,'0');setEl('recordTimer',m+':'+s);},1000);
+  document.getElementById('shutterInner').style.borderRadius='8px';
+}
+function stopRecording(){
+  if(mediaRecorder&&mediaRecorder.state==='recording')mediaRecorder.stop();
+  clearInterval(recordTimer);document.getElementById('recordingIndicator').style.display='none';setMode('video');
+}
+
+// ===== ÉDITEUR PHOTO =====
+function openPhotoEditorFromFilmstrip(index){closeFilmstrip();editingPhotoIndex=index;openPhotoEditor(sessionPhotos[index].dataUrl);}
+function openPhotoEditor(dataUrl){
+  document.getElementById('photoEditor').style.display='flex';
+  document.getElementById('cameraFullscreen').style.display='none';
+  document.getElementById('annotToolbar').style.display='none';
+  document.getElementById('adjustToolbar').style.display='none';
+  document.getElementById('cropToolbar').style.display='none';
+  editState={tool:null,color:'#FF453A',size:4,drawing:false,startX:0,startY:0,history:[],baseImage:null,brightness:0,contrast:0,saturation:0};
+  cropRatioValue=null;
+  ['sliderBrightness','sliderContrast','sliderSaturation'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=0;});
+  document.querySelectorAll('.editor-mode-btn').forEach(b=>b.classList.remove('active'));
+  setTimeout(()=>initEditCanvas(dataUrl),80);
+}
+function initEditCanvas(dataUrl){
+  const canvas=document.getElementById('editCanvas'),area=document.getElementById('editorImageArea'),ctx=canvas.getContext('2d'),img=new Image();
+  img.onload=()=>{
+    const maxW=area.offsetWidth||window.innerWidth,maxH=Math.max(area.offsetHeight||300,window.innerHeight*0.55);
+    const ratio=Math.min(maxW/img.width,maxH/img.height,1);
+    canvas.width=img.width;canvas.height=img.height;
+    canvas.style.width=Math.round(img.width*ratio)+'px';canvas.style.height=Math.round(img.height*ratio)+'px';
+    canvas.style.filter='';
+    ctx.drawImage(img,0,0);
+    editState.baseImage=ctx.getImageData(0,0,canvas.width,canvas.height);
+    editState.history=[ctx.getImageData(0,0,canvas.width,canvas.height)];
+    setupEditEvents(canvas,ctx);
+  };
+  img.src=dataUrl;
+}
+function setupEditEvents(canvas,ctx){
+  ['_ts','_tm','_te','_md','_mm','_mu'].forEach(k=>{if(canvas[k]){canvas.removeEventListener(k==='_ts'?'touchstart':k==='_tm'?'touchmove':k==='_te'?'touchend':k==='_md'?'mousedown':k==='_mm'?'mousemove':'mouseup',canvas[k]);}});
+  const getTP=(touch)=>{const r=canvas.getBoundingClientRect();return{x:(touch.clientX-r.left)*canvas.width/r.width,y:(touch.clientY-r.top)*canvas.height/r.height};};
+  const getMP=(e)=>{const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height};};
+  canvas._ts=(e)=>{if(e.touches.length!==1||!editState.tool)return;e.preventDefault();const p=getTP(e.touches[0]);editStartDraw(ctx,p.x,p.y);};
+  canvas._tm=(e)=>{if(e.touches.length!==1||!editState.drawing)return;e.preventDefault();const p=getTP(e.touches[0]);editMoveDraw(ctx,p.x,p.y);};
+  canvas._te=(e)=>{e.preventDefault();editEndDraw(ctx);};
+  canvas._md=(e)=>{if(!editState.tool)return;const p=getMP(e);editStartDraw(ctx,p.x,p.y);};
+  canvas._mm=(e)=>{if(!editState.drawing)return;const p=getMP(e);editMoveDraw(ctx,p.x,p.y);};
+  canvas._mu=()=>editEndDraw(ctx);
+  canvas.addEventListener('touchstart',canvas._ts,{passive:false});
+  canvas.addEventListener('touchmove',canvas._tm,{passive:false});
+  canvas.addEventListener('touchend',canvas._te,{passive:false});
+  canvas.addEventListener('mousedown',canvas._md);
+  canvas.addEventListener('mousemove',canvas._mm);
+  canvas.addEventListener('mouseup',canvas._mu);
+}
+function editStartDraw(ctx,x,y){if(!editState.tool)return;editState.drawing=true;editState.startX=x;editState.startY=y;if(['pen','marker','erase'].includes(editState.tool)){ctx.beginPath();ctx.moveTo(x,y);}}
+function editMoveDraw(ctx,x,y){
+  if(!editState.drawing||!editState.tool) return;
+  ctx.globalAlpha=editState.tool==='marker'?0.45:1.0;
+  ctx.strokeStyle=editState.color;ctx.lineWidth=editState.tool==='marker'?editState.size*3.5:editState.size;
+  ctx.lineCap='round';ctx.lineJoin='round';
+  if(editState.tool==='pen'||editState.tool==='marker'){ctx.lineTo(x,y);ctx.stroke();}
+  else if(editState.tool==='erase'){ctx.globalCompositeOperation='destination-out';ctx.globalAlpha=1;ctx.lineWidth=editState.size*5;ctx.lineTo(x,y);ctx.stroke();ctx.globalCompositeOperation='source-over';}
+  else if(['arrow','circle','rect'].includes(editState.tool)){
+    ctx.globalAlpha=1;
+    if(editState.history.length>0)ctx.putImageData(editState.history[editState.history.length-1],0,0);
+    ctx.fillStyle=editState.color;ctx.lineWidth=Math.max(editState.size,2);
+    if(editState.tool==='arrow')drawArrow(ctx,editState.startX,editState.startY,x,y);
+    else if(editState.tool==='circle'){const rx=Math.abs(x-editState.startX)/2,ry=Math.abs(y-editState.startY)/2;ctx.beginPath();ctx.ellipse((editState.startX+x)/2,(editState.startY+y)/2,Math.max(rx,4),Math.max(ry,4),0,0,Math.PI*2);ctx.stroke();}
+    else if(editState.tool==='rect'){ctx.strokeRect(editState.startX,editState.startY,x-editState.startX,y-editState.startY);}
+  }
+}
+function editEndDraw(ctx){if(!editState.drawing)return;editState.drawing=false;ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.beginPath();editState.history.push(ctx.getImageData(0,0,ctx.canvas.width,ctx.canvas.height));}
+function drawArrow(ctx,x1,y1,x2,y2){
+  const headLen=Math.max(14,editState.size*4),angle=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-headLen*Math.cos(angle-Math.PI/6),y2-headLen*Math.sin(angle-Math.PI/6));ctx.lineTo(x2-headLen*Math.cos(angle+Math.PI/6),y2-headLen*Math.sin(angle+Math.PI/6));ctx.closePath();ctx.fill();
+}
+function setEditTool(tool,btn){
+  if(editState.tool===tool){editState.tool=null;document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));return;}
+  editState.tool=tool;document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+}
+function setEditColor(color,el){
+  editState.color=color;document.querySelectorAll('.color-dot').forEach(e=>e.classList.remove('active'));el.classList.add('active');
+}
+function addTextAnnot(){
+  const text=prompt('Texte à ajouter sur la photo :');if(!text||!text.trim())return;
+  const canvas=document.getElementById('editCanvas'),ctx=canvas.getContext('2d');
+  const size=Math.max(24,editState.size*7);
+  ctx.font=`bold ${size}px 'DM Sans',Arial,sans-serif`;ctx.fillStyle=editState.color;ctx.strokeStyle='rgba(0,0,0,0.6)';ctx.lineWidth=3;
+  const tw=ctx.measureText(text).width;ctx.strokeText(text,(canvas.width-tw)/2,canvas.height/2);ctx.fillText(text,(canvas.width-tw)/2,canvas.height/2);
+  editState.history.push(ctx.getImageData(0,0,canvas.width,canvas.height));
+}
+function undoEdit(){if(editState.history.length<=1){showToast('Rien à annuler');return;}editState.history.pop();const ctx=document.getElementById('editCanvas').getContext('2d');ctx.putImageData(editState.history[editState.history.length-1],0,0);}
+function showAnnotMode(){document.getElementById('annotToolbar').style.display='block';document.getElementById('adjustToolbar').style.display='none';document.getElementById('cropToolbar').style.display='none';setActiveEditorBtn('btnAnnot');}
+function showAdjust(){document.getElementById('annotToolbar').style.display='none';document.getElementById('adjustToolbar').style.display='block';document.getElementById('cropToolbar').style.display='none';setActiveEditorBtn('btnAdjust');}
+function showCropMode(){document.getElementById('annotToolbar').style.display='none';document.getElementById('adjustToolbar').style.display='none';document.getElementById('cropToolbar').style.display='block';setActiveEditorBtn('btnCrop');}
+function setActiveEditorBtn(id){document.querySelectorAll('.editor-mode-btn').forEach(b=>b.classList.remove('active'));const el=document.getElementById(id);if(el)el.classList.add('active');}
+function applyAdjust(type,val){
+  editState[type]=parseInt(val);
+  const canvas=document.getElementById('editCanvas');
+  let f='';
+  if(editState.brightness!==0)f+=`brightness(${1+editState.brightness/100}) `;
+  if(editState.contrast!==0)f+=`contrast(${1+editState.contrast/100}) `;
+  if(editState.saturation!==0)f+=`saturate(${1+editState.saturation/100}) `;
+  canvas.style.filter=f.trim();
+}
+function setCropRatioBtn(ratio,btn){
+  cropRatioValue=ratio;
+  document.querySelectorAll('.crop-ratio-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function applyCrop(){
+  const canvas=document.getElementById('editCanvas'),ctx=canvas.getContext('2d');
+  const filter=canvas.style.filter;canvas.style.filter='';
+  const w=canvas.width,h=canvas.height;
+  let cropX=0,cropY=0,cropW=w,cropH=h;
+  if(cropRatioValue){const curr=w/h;if(curr>cropRatioValue){cropW=Math.round(h*cropRatioValue);cropX=Math.round((w-cropW)/2);}else{cropH=Math.round(w/cropRatioValue);cropY=Math.round((h-cropH)/2);}}
+  const temp=document.createElement('canvas');temp.width=cropW;temp.height=cropH;
+  const tCtx=temp.getContext('2d');if(filter)tCtx.filter=filter;
+  tCtx.drawImage(canvas,cropX,cropY,cropW,cropH,0,0,cropW,cropH);tCtx.filter='none';
+  canvas.width=cropW;canvas.height=cropH;ctx.drawImage(temp,0,0);
+  const area=document.getElementById('editorImageArea'),maxW=area.offsetWidth,maxH=area.offsetHeight-60;
+  const ratio=Math.min(maxW/cropW,maxH/cropH,1);
+  canvas.style.width=Math.round(cropW*ratio)+'px';canvas.style.height=Math.round(cropH*ratio)+'px';canvas.style.filter='';
+  editState.history.push(ctx.getImageData(0,0,cropW,cropH));editState.baseImage=ctx.getImageData(0,0,cropW,cropH);
+  showToast('✂️ Recadrage appliqué');
+}
+function rotateCrop(){
+  const canvas=document.getElementById('editCanvas'),ctx=canvas.getContext('2d');canvas.style.filter='';
+  const temp=document.createElement('canvas');temp.width=canvas.height;temp.height=canvas.width;
+  const tCtx=temp.getContext('2d');tCtx.translate(temp.width/2,temp.height/2);tCtx.rotate(Math.PI/2);tCtx.drawImage(canvas,-canvas.width/2,-canvas.height/2);
+  canvas.width=temp.width;canvas.height=temp.height;ctx.drawImage(temp,0,0);
+  const area=document.getElementById('editorImageArea'),maxW=area.offsetWidth,maxH=area.offsetHeight-60;
+  const ratio=Math.min(maxW/canvas.width,maxH/canvas.height,1);
+  canvas.style.width=Math.round(canvas.width*ratio)+'px';canvas.style.height=Math.round(canvas.height*ratio)+'px';
+  editState.history.push(ctx.getImageData(0,0,canvas.width,canvas.height));editState.baseImage=ctx.getImageData(0,0,canvas.width,canvas.height);
+  showToast('↺ Photo tournée 90°');
+}
+function cancelEdit(){
+  document.getElementById('photoEditor').style.display='none';document.getElementById('cameraFullscreen').style.display='flex';startCamera();
+}
+function confirmEdit(){
+  const canvas=document.getElementById('editCanvas');canvas.style.filter='';
+  const dataUrl=canvas.toDataURL('image/jpeg',0.93);
+  if(editingPhotoIndex>=0&&editingPhotoIndex<sessionPhotos.length){sessionPhotos[editingPhotoIndex].dataUrl=dataUrl;sessionPhotos[editingPhotoIndex].saved=false;}
+  updateFilmstripThumb();updateSavePendingBtn();renderFilmstripGrid();
+  document.getElementById('photoEditor').style.display='none';document.getElementById('cameraFullscreen').style.display='flex';
+  startCamera();showToast('✅ Modifications appliquées');
+}
+
+// ===== ÉDITEUR VIDÉO =====
+function openVideoEditor(blob){document.getElementById('videoEditor').style.display='flex';document.getElementById('cameraFullscreen').style.display='none';document.getElementById('previewVideo').src=URL.createObjectURL(blob);}
+function cancelVideoEdit(){document.getElementById('videoEditor').style.display='none';document.getElementById('cameraFullscreen').style.display='flex';startCamera();}
+async function saveVideoToOneDrive(){
+  if(!currentVideoBlob||!state.currentClient){showToast('Aucune vidéo ou client');return;}
+  if(!state.accessToken){showToast('⚠️ Connexion Microsoft 365 requise');return;}
+  showToast('⬆️ Sauvegarde vidéo...');
+  const ts=new Date(),filename=formatDateForFilename(ts)+'_video.webm',clientName=state.currentClient.Title;
+  try{
+    const path=`/me/drive/root:/${CONFIG.oneDriveRoot}/${clientName}/10_Photos/Chantier/${filename}:/content`;
+    const resp=await fetch(`https://graph.microsoft.com/v1.0${path}`,{method:'PUT',headers:{'Authorization':`Bearer ${state.accessToken}`,'Content-Type':'video/webm'},body:currentVideoBlob});
+    if(resp.ok){showToast('✅ Vidéo sauvegardée dans OneDrive !');cancelVideoEdit();}else showToast('⚠️ Erreur de sauvegarde');
+  }catch(e){showToast('⚠️ Erreur réseau');}
+}
+
+// ===== TIMER =====
+function toggleTimer(){
+  if(state.timerRunning){state.timerRunning=false;clearInterval(state.timerInterval);setEl('timerStartBtn','▶ Reprendre');}
+  else{state.timerRunning=true;state.timerInterval=setInterval(()=>{state.timerSeconds++;const h=Math.floor(state.timerSeconds/3600),m=Math.floor((state.timerSeconds%3600)/60),s=state.timerSeconds%60;setEl('timerDisplay',`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);},1000);setEl('timerStartBtn','⏸ Pause');}
+}
+function stopAndSaveTimer(){
+  clearInterval(state.timerInterval);state.timerRunning=false;
+  const h=Math.floor(state.timerSeconds/3600),m=Math.floor((state.timerSeconds%3600)/60);
+  if(state.timerSeconds>0){const entry=document.createElement('div');entry.className='time-entry';entry.innerHTML=`<div class="entry-dot"></div><div class="entry-info"><div class="entry-client">${state.currentClient?state.currentClient.Title:'Client'}</div><div class="entry-desc">Session de travail</div></div><div class="entry-time">${h}h${String(m).padStart(2,'0')}</div>`;const entries=document.getElementById('timeEntries');const empty=entries.querySelector('div[style]');if(empty)empty.remove();entries.insertBefore(entry,entries.firstChild);}
+  state.timerSeconds=0;setEl('timerDisplay','00:00:00');setEl('timerStartBtn','▶ Démarrer');showToast('⏱ Temps sauvegardé');
+}
+
+// ===== AUTRES FONCTIONS =====
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+function callClient(){if(state.currentClient&&state.currentClient.phone){window.location.href='tel:'+state.currentClient.phone;}else showToast('Aucun numéro pour ce client');}
+function openNavigation(){if(state.currentClient&&state.currentClient.address){if(confirm('Ouvrir dans Plans Apple?'))window.open('http://maps.apple.com/?daddr='+encodeURIComponent(state.currentClient.address));else window.open('https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(state.currentClient.address));}}
+function showAddClient(){showToast('Utilisez le formulaire Forms pour ajouter un client');}
+function showSuiviProjet(){showToast('Suivi projet — bientôt disponible');}
+function showFacturer(){showToast('Facturation — utilisez Power Automate Flux 2');}
+function startVoiceNote(){showToast('Note vocale — bientôt disponible');}
+function logDeplacement(){showToast('Déplacement enregistré dans TripLog');}
+function askAnna(){navTo('screenAnna','nav-anna');}
+function toggleSwatch(el){el.classList.toggle('selected');}
+function addMoodImage(){document.getElementById('moodInput').click();}
+function handleMoodImage(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=(ev)=>{const grid=document.getElementById('moodGrid');const empty=grid.querySelector('div[style*="grid-column"]');if(empty)empty.remove();const item=document.createElement('div');item.className='mood-item';item.innerHTML=`<img src="${ev.target.result}" alt="Inspiration"><div class="mood-label">Inspiration</div>`;grid.appendChild(item);};r.readAsDataURL(file);e.target.value='';}
+function exportMoodboard(){showToast('Partage moodboard — bientôt disponible');}
+function saveNote(){showToast('📋 Note sauvegardée dans OneNote');}
+function sendNoteToClient(){showToast('📧 Note envoyée au client');}
+function sendToAnna(msg){
+  const input=document.getElementById('annaInput');const text=msg||input.value.trim();if(!text)return;
+  input.value='';
+  const chat=document.getElementById('annaChat');
+  const userBubble=document.createElement('div');userBubble.className='chat-bubble bubble-user';userBubble.textContent=text;chat.appendChild(userBubble);
+  const typing=document.createElement('div');typing.className='anna-typing';typing.innerHTML='<div class="dot"></div><div class="dot"></div><div class="dot"></div>';chat.appendChild(typing);
+  chat.scrollTop=chat.scrollHeight;
+  setTimeout(()=>{typing.remove();const annaBubble=document.createElement('div');annaBubble.className='chat-bubble bubble-anna';annaBubble.textContent='Je traite votre demande... Pour les vraies réponses d\'Anna, ouvrez le projet Claude.';chat.appendChild(annaBubble);chat.scrollTop=chat.scrollHeight;},1200);
+}
+
+// Service Worker
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script>
 </body>
 </html>
