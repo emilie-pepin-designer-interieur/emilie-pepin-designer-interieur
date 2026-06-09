@@ -1882,6 +1882,14 @@ function showAddClient() {
   setTimeout(() => window.open('https://forms.microsoft.com/r/dfPQU71x5v', '_blank'), 500);
 }
 
+function goToPhotos() {
+  if(state.currentClient) {
+    document.getElementById('photosClientName').textContent = state.currentClient.Title;
+    updatePhotosGallery();
+  }
+  showScreen('screenPhotos');
+}
+
 function showSuiviProjet() { showToast('📊 Suivi de projet — bientôt disponible'); }
 function showFacturer() { showToast('💰 Facturation — bientôt disponible'); }
 function startVoiceNote() { showToast('🎤 Note vocale — bientôt disponible'); }
