@@ -753,6 +753,9 @@ async function initAuth() {
   
   if(msalOk) {
     try {
+      // MUST initialize before any other MSAL call
+      await msalInstance.initialize();
+      
       // Handle redirect response
       const resp = await msalInstance.handleRedirectPromise();
       if(resp && resp.accessToken) {
