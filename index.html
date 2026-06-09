@@ -1882,6 +1882,36 @@ function showAddClient() {
   setTimeout(() => window.open('https://forms.microsoft.com/r/dfPQU71x5v', '_blank'), 500);
 }
 
+function updatePhotosGallery() {
+  if(!state.currentClient) return;
+  const photos = state.photos[state.currentClient.Title] || [];
+  const gallery = document.getElementById('photosGallery');
+  if(!gallery) return;
+  if(photos.length === 0) {
+    gallery.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune photo pour ce client</div>';
+    return;
+  }
+  gallery.innerHTML = photos.map((p, i) => `
+    <div class="gallery-thumb" onclick="viewPhoto(${i})">
+      <img src="${p.url}" alt="${p.name}">
+    </div>
+  `).join('');
+}
+
+function addPhotoToGallery(clientName, dataUrl, fileName) {
+  if(!state.photos[clientName]) state.photos[clientName] = [];
+  state.photos[clientName].push({ url: dataUrl, name: fileName });
+  updatePhotosGallery();
+}
+
+function viewPhoto(i) {
+  const photos = state.photos[state.currentClient?.Title] || [];
+  if(photos[i]) {
+    const w = window.open('');
+    w.document.write('<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="' + photos[i].url + '" style="max-width:100%;max-height:100vh;object-fit:contain"><p style="position:fixed;bottom:10px;left:0;right:0;text-align:center;color:white;font-family:sans-serif;font-size:12px">' + photos[i].name + '</p></body></html>');
+  }
+}
+
 function goToPhotos() {
   if(state.currentClient) {
     document.getElementById('photosClientName').textContent = state.currentClient.Title;
