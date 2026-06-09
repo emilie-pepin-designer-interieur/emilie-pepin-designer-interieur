@@ -1251,7 +1251,6 @@ function goToPhotos() {
   if(state.currentClient) {
     setEl('photosClientNameCam', state.currentClient.Title);
     setEl('gallerySheetTitle', 'Photos — ' + state.currentClient.Title);
-    updatePhotosGallery();
   }
   // Show the photos screen
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
