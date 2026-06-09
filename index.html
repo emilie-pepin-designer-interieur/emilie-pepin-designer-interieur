@@ -480,15 +480,47 @@ body {
         <button class="cam-btn cam-btn-secondary" onclick="openGallery()">🖼️ Galerie</button>
       </div>
     </div>
-    <div class="annotation-bar" id="annotBar" style="display:none">
-      <button class="annot-btn active" onclick="selectAnnotation(this,'probleme')">🔴 Problème</button>
-      <button class="annot-btn" onclick="selectAnnotation(this,'ok')">✅ OK</button>
-      <button class="annot-btn" onclick="selectAnnotation(this,'attention')">⚠️ Attention</button>
-      <button class="annot-btn" onclick="selectAnnotation(this,'mesure')">📐 Mesure</button>
-      <button class="annot-btn" onclick="selectAnnotation(this,'idee')">💡 Idée</button>
-    </div>
-    <div id="savePhotoBar" style="display:none;padding:10px 14px">
-      <button class="submit-btn" onclick="saveCurrentPhoto()">💾 Sauvegarder dans OneDrive</button>
+    <!-- ANNOTATION EDITOR -->
+    <div id="annotEditor" style="display:none;margin:0 14px 14px;">
+      <div style="background:white;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-card);">
+        <!-- Canvas for annotations -->
+        <div style="position:relative;width:100%;">
+          <canvas id="annotCanvas" style="width:100%;display:block;cursor:crosshair;touch-action:none;"></canvas>
+        </div>
+        <!-- Tools -->
+        <div style="padding:10px 12px;border-top:1px solid var(--blush);">
+          <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;">
+            <button class="annot-tool active" id="tool-pen" onclick="setTool('pen',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--mauve);background:var(--mauve);color:white;font-size:12px;font-weight:500;cursor:pointer;">✏️ Crayon</button>
+            <button class="annot-tool" id="tool-arrow" onclick="setTool('arrow',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;color:var(--text-mid);font-size:12px;font-weight:500;cursor:pointer;">➡️ Flèche</button>
+            <button class="annot-tool" id="tool-circle" onclick="setTool('circle',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;color:var(--text-mid);font-size:12px;font-weight:500;cursor:pointer;">⭕ Cercle</button>
+            <button class="annot-tool" id="tool-text" onclick="setTool('text',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;color:var(--text-mid);font-size:12px;font-weight:500;cursor:pointer;">📝 Texte</button>
+            <button class="annot-tool" id="tool-erase" onclick="setTool('erase',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;color:var(--text-mid);font-size:12px;font-weight:500;cursor:pointer;">🧹 Effacer</button>
+          </div>
+          <!-- Colors -->
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+            <span style="font-size:11px;color:var(--text-light);font-weight:500;">Couleur:</span>
+            <div id="color-red" onclick="setColor('#FF3B30',this)" style="width:26px;height:26px;border-radius:50%;background:#FF3B30;cursor:pointer;border:3px solid #FF3B30;"></div>
+            <div id="color-orange" onclick="setColor('#FF9500',this)" style="width:26px;height:26px;border-radius:50%;background:#FF9500;cursor:pointer;border:2px solid transparent;"></div>
+            <div id="color-yellow" onclick="setColor('#FFCC00',this)" style="width:26px;height:26px;border-radius:50%;background:#FFCC00;cursor:pointer;border:2px solid transparent;"></div>
+            <div id="color-green" onclick="setColor('#34C759',this)" style="width:26px;height:26px;border-radius:50%;background:#34C759;cursor:pointer;border:2px solid transparent;"></div>
+            <div id="color-blue" onclick="setColor('#007AFF',this)" style="width:26px;height:26px;border-radius:50%;background:#007AFF;cursor:pointer;border:2px solid transparent;"></div>
+            <div id="color-mauve" onclick="setColor('#6B2D45',this)" style="width:26px;height:26px;border-radius:50%;background:#6B2D45;cursor:pointer;border:2px solid transparent;"></div>
+            <div id="color-white" onclick="setColor('#FFFFFF',this)" style="width:26px;height:26px;border-radius:50%;background:white;cursor:pointer;border:2px solid #ddd;"></div>
+          </div>
+          <!-- Size -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:11px;color:var(--text-light);font-weight:500;">Épaisseur:</span>
+            <input type="range" id="brushSize" min="2" max="20" value="4" style="flex:1;" oninput="updateBrushSize(this.value)">
+            <span id="brushSizeLabel" style="font-size:11px;color:var(--text-light);min-width:20px;">4</span>
+          </div>
+          <!-- Action buttons -->
+          <div style="display:flex;gap:8px;">
+            <button onclick="undoAnnotation()" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:1.5px solid var(--blush);background:white;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">↩️ Annuler</button>
+            <button onclick="clearAnnotations()" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:1.5px solid var(--blush);background:white;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">🗑️ Tout effacer</button>
+            <button onclick="saveAnnotatedPhoto()" style="flex:2;padding:10px;border-radius:var(--radius-sm);border:none;background:var(--mauve);color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;">💾 Sauvegarder</button>
+          </div>
+        </div>
+      </div>
     </div>
     <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleGalleryPhoto(event)">
     <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleGalleryPhoto(event)">
@@ -1067,12 +1099,12 @@ function takePhoto() {
 
 function showCapturedPhoto(dataUrl) {
   state.currentPhotoData = dataUrl;
-  const img = document.getElementById('capturedPhoto');
-  img.src = dataUrl;
-  img.style.display = 'block';
+  // Hide preview, show annotation editor
+  document.getElementById('capturedPhoto').style.display = 'none';
   document.getElementById('cameraPlaceholder').style.display = 'none';
-  document.getElementById('annotBar').style.display = 'flex';
-  document.getElementById('savePhotoBar').style.display = 'block';
+  document.getElementById('annotEditor').style.display = 'block';
+  // Init annotation canvas with photo
+  setTimeout(() => initAnnotCanvas(dataUrl), 100);
 }
 
 function openNativeCamera() {
@@ -1097,6 +1129,216 @@ function selectAnnotation(btn, type) {
   document.querySelectorAll('.annot-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   state.currentAnnotation = type;
+}
+
+// ===== ANNOTATION EDITOR =====
+let annotState = {
+  tool: 'pen',
+  color: '#FF3B30',
+  size: 4,
+  drawing: false,
+  startX: 0, startY: 0,
+  history: [],
+  baseImage: null
+};
+
+function initAnnotCanvas(imgSrc) {
+  const canvas = document.getElementById('annotCanvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.onload = () => {
+    // Set canvas size to match image
+    const maxW = canvas.parentElement.offsetWidth;
+    const ratio = img.height / img.width;
+    canvas.width = maxW;
+    canvas.height = maxW * ratio;
+    canvas.style.height = (maxW * ratio) + 'px';
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    annotState.baseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    annotState.history = [ctx.getImageData(0, 0, canvas.width, canvas.height)];
+    setupAnnotEvents(canvas, ctx);
+  };
+  img.src = imgSrc;
+}
+
+function setupAnnotEvents(canvas, ctx) {
+  // Touch events for iPhone
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    startDraw(ctx, (touch.clientX - rect.left) * scaleX, (touch.clientY - rect.top) * scaleY);
+  }, { passive: false });
+  
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    moveDraw(ctx, (touch.clientX - rect.left) * scaleX, (touch.clientY - rect.top) * scaleY);
+  }, { passive: false });
+  
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    endDraw(ctx);
+  }, { passive: false });
+  
+  // Mouse events for desktop
+  canvas.addEventListener('mousedown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    startDraw(ctx, (e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+  });
+  canvas.addEventListener('mousemove', (e) => {
+    if(!annotState.drawing) return;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    moveDraw(ctx, (e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+  });
+  canvas.addEventListener('mouseup', () => endDraw(ctx));
+}
+
+function startDraw(ctx, x, y) {
+  annotState.drawing = true;
+  annotState.startX = x;
+  annotState.startY = y;
+  
+  if(annotState.tool === 'pen' || annotState.tool === 'erase') {
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  }
+  
+  if(annotState.tool === 'text') {
+    const text = prompt('Entrez votre annotation:');
+    if(text) {
+      ctx.font = `bold ${annotState.size * 4}px DM Sans, Arial`;
+      ctx.fillStyle = annotState.color;
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.strokeText(text, x, y);
+      ctx.fillText(text, x, y);
+      annotState.history.push(ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height));
+    }
+    annotState.drawing = false;
+  }
+}
+
+function moveDraw(ctx, x, y) {
+  if(!annotState.drawing) return;
+  
+  if(annotState.tool === 'pen') {
+    ctx.strokeStyle = annotState.color;
+    ctx.lineWidth = annotState.size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  } else if(annotState.tool === 'erase') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.strokeStyle = 'rgba(0,0,0,1)';
+    ctx.lineWidth = annotState.size * 3;
+    ctx.lineCap = 'round';
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+  } else if(annotState.tool === 'arrow' || annotState.tool === 'circle') {
+    // Redraw base + preview shape
+    if(annotState.history.length > 0) {
+      ctx.putImageData(annotState.history[annotState.history.length - 1], 0, 0);
+    }
+    ctx.strokeStyle = annotState.color;
+    ctx.fillStyle = annotState.color;
+    ctx.lineWidth = annotState.size;
+    
+    if(annotState.tool === 'arrow') {
+      drawArrow(ctx, annotState.startX, annotState.startY, x, y);
+    } else if(annotState.tool === 'circle') {
+      const rx = Math.abs(x - annotState.startX) / 2;
+      const ry = Math.abs(y - annotState.startY) / 2;
+      const cx = (annotState.startX + x) / 2;
+      const cy = (annotState.startY + y) / 2;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx || 10, ry || 10, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+}
+
+function endDraw(ctx) {
+  if(!annotState.drawing) return;
+  annotState.drawing = false;
+  ctx.beginPath();
+  annotState.history.push(ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height));
+}
+
+function drawArrow(ctx, x1, y1, x2, y2) {
+  const headLen = 15;
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI/6), y2 - headLen * Math.sin(angle - Math.PI/6));
+  ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI/6), y2 - headLen * Math.sin(angle + Math.PI/6));
+  ctx.closePath();
+  ctx.fill();
+}
+
+function setTool(tool, btn) {
+  annotState.tool = tool;
+  document.querySelectorAll('.annot-tool').forEach(b => {
+    b.style.background = 'white';
+    b.style.color = 'var(--text-mid)';
+    b.style.borderColor = 'var(--blush)';
+  });
+  btn.style.background = 'var(--mauve)';
+  btn.style.color = 'white';
+  btn.style.borderColor = 'var(--mauve)';
+}
+
+function setColor(color, el) {
+  annotState.color = color;
+  document.querySelectorAll('[id^="color-"]').forEach(e => e.style.border = '2px solid transparent');
+  el.style.border = '3px solid ' + color;
+  if(color === '#FFFFFF') el.style.border = '3px solid #999';
+}
+
+function updateBrushSize(val) {
+  annotState.size = parseInt(val);
+  document.getElementById('brushSizeLabel').textContent = val;
+}
+
+function undoAnnotation() {
+  const canvas = document.getElementById('annotCanvas');
+  const ctx = canvas.getContext('2d');
+  if(annotState.history.length > 1) {
+    annotState.history.pop();
+    ctx.putImageData(annotState.history[annotState.history.length - 1], 0, 0);
+  }
+}
+
+function clearAnnotations() {
+  const canvas = document.getElementById('annotCanvas');
+  const ctx = canvas.getContext('2d');
+  if(annotState.baseImage) {
+    ctx.putImageData(annotState.baseImage, 0, 0);
+    annotState.history = [annotState.baseImage];
+  }
+}
+
+async function saveAnnotatedPhoto() {
+  const canvas = document.getElementById('annotCanvas');
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+  await savePhotoToOneDrive(dataUrl);
+  document.getElementById('annotEditor').style.display = 'none';
+  document.getElementById('cameraPlaceholder').style.display = 'flex';
 }
 
 async function saveCurrentPhoto() {
