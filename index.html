@@ -1904,18 +1904,42 @@ function callClient() {
 }
 
 function openNavigation() {
-  if(state.currentClient?.address) {
-    const addr = encodeURIComponent(state.currentClient.address);
-    // Opens Apple Maps on iPhone, Google Maps on others
-    const isIphone = /iPhone|iPad|iPod/.test(navigator.userAgent);
-    if(isIphone) {
-      window.open('maps://?q=' + addr);
-    } else {
-      window.open('https://www.google.com/maps/search/?api=1&query=' + addr);
-    }
-  } else {
-    showToast('Adresse non disponible');
+  if(!state.currentClient || !state.currentClient.address) { 
+    showToast('Adresse non disponible'); 
+    return; 
   }
+  const addr = encodeURIComponent(state.currentClient.address);
+  const addrDisplay = state.currentClient.address;
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'navPicker';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:flex;align-items:flex-end;';
+  overlay.addEventListener('click', function(e) { if(e.target === overlay) overlay.remove(); });
+  
+  const appleUrl = 'maps://?daddr=' + addr;
+  const googleUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + addr;
+  
+  const div = document.createElement('div');
+  div.style.cssText = 'background:white;width:100%;border-radius:20px 20px 0 0;padding:20px;';
+  div.innerHTML = 
+    '<div style="text-align:center;font-family:Cormorant Garamond,serif;font-size:18px;color:#6B2D45;margin-bottom:6px;">Navigation</div>' +
+    '<div style="text-align:center;font-size:12px;color:#A88090;margin-bottom:16px;">📍 ' + addrDisplay + '</div>' +
+    '<button id="appleMapBtn" style="width:100%;padding:14px;border-radius:12px;border:none;background:#F2D7E0;color:#6B2D45;font-family:DM Sans,sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:10px;">🗺️ Plans Apple</button>' +
+    '<button id="googleMapBtn" style="width:100%;padding:14px;border-radius:12px;border:none;background:#F2D7E0;color:#6B2D45;font-family:DM Sans,sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:10px;">🌍 Google Maps</button>' +
+    '<button id="cancelNavBtn" style="width:100%;padding:14px;border-radius:12px;border:1.5px solid #F2D7E0;background:white;color:#A88090;font-family:DM Sans,sans-serif;font-size:15px;cursor:pointer;">Annuler</button>';
+  
+  overlay.appendChild(div);
+  document.body.appendChild(overlay);
+  
+  document.getElementById('appleMapBtn').addEventListener('click', function() {
+    window.open(appleUrl); overlay.remove();
+  });
+  document.getElementById('googleMapBtn').addEventListener('click', function() {
+    window.open(googleUrl); overlay.remove();
+  });
+  document.getElementById('cancelNavBtn').addEventListener('click', function() {
+    overlay.remove();
+  });
 }
 
 function showAddClient() {
