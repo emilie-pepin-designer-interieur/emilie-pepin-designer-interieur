@@ -475,10 +475,9 @@ body {
           <span>Choisissez une option ci-dessous</span>
         </div>
       </div>
-      <div class="camera-controls" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-        <button class="cam-btn cam-btn-secondary" onclick="openGallery()">🖼️ Galerie</button>
-        <button class="cam-btn cam-btn-secondary" onclick="openOneDrive()">☁️ OneDrive</button>
-        <button class="cam-btn cam-btn-primary" onclick="openNativeCamera()">📷 Photo</button>
+      <div class="camera-controls">
+        <button class="cam-btn cam-btn-secondary" onclick="openGalleryPicker()">🖼️ Galerie</button>
+        <button class="cam-btn cam-btn-primary" onclick="openNativeCamera()">📷 Prendre une photo</button>
       </div>
     </div>
     <!-- ANNOTATION EDITOR -->
@@ -514,17 +513,34 @@ body {
             <input type="range" id="brushSize" min="2" max="20" value="4" style="flex:1;" oninput="updateBrushSize(this.value)">
             <span id="brushSizeLabel" style="font-size:11px;color:var(--text-light);min-width:20px;">4</span>
           </div>
+          <!-- Zoom controls -->
+          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+            <span style="font-size:11px;color:var(--text-light);font-weight:500;">Zoom:</span>
+            <button onclick="zoomAnnot(-0.25)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--blush);background:white;font-size:16px;cursor:pointer;">−</button>
+            <span id="zoomLevel" style="font-size:12px;color:var(--text-mid);min-width:35px;text-align:center;">100%</span>
+            <button onclick="zoomAnnot(0.25)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--blush);background:white;font-size:16px;cursor:pointer;">+</button>
+            <button onclick="resetZoom()" style="padding:6px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;font-size:11px;color:var(--text-mid);cursor:pointer;">Réinitialiser</button>
+          </div>
           <!-- Action buttons -->
           <div style="display:flex;gap:8px;">
             <button onclick="undoAnnotation()" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:1.5px solid var(--blush);background:white;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">↩️ Annuler</button>
-            <button onclick="clearAnnotations()" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:1.5px solid var(--blush);background:white;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">🗑️ Tout effacer</button>
-            <button onclick="saveAnnotatedPhoto()" style="flex:2;padding:10px;border-radius:var(--radius-sm);border:none;background:var(--mauve);color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;">💾 Sauvegarder</button>
+            <button onclick="clearAnnotations()" style="flex:1;padding:10px;border-radius:var(--radius-sm);border:1.5px solid var(--blush);background:white;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">🗑️ Effacer</button>
+            <button onclick="saveAnnotatedPhoto()" style="flex:2;padding:10px;border-radius:var(--radius-sm);border:none;background:#6B2D45;color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;">💾 Sauvegarder dans OneDrive</button>
           </div>
         </div>
       </div>
     </div>
     <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleGalleryPhoto(event)">
     <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleGalleryPhoto(event)" multiple>
+    <!-- Gallery picker with OneDrive option -->
+    <div id="galleryPicker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:flex-end;">
+      <div style="background:white;width:100%;border-radius:20px 20px 0 0;padding:16px;">
+        <div style="text-align:center;font-family:'Cormorant Garamond',serif;font-size:18px;color:#6B2D45;margin-bottom:14px;">Choisir une photo</div>
+        <button onclick="pickFromOneDrive()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#F2D7E0;color:#6B2D45;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;">☁️ OneDrive — Photos du client</button>
+        <button onclick="pickFromPhone()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#F2D7E0;color:#6B2D45;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;">📱 Pellicule iPhone</button>
+        <button onclick="closeGalleryPicker()" style="width:100%;padding:14px;border-radius:12px;border:1.5px solid #F2D7E0;background:white;color:#A88090;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;">Annuler</button>
+      </div>
+    </div>
     <div style="padding:14px 14px 6px"><div class="section-label" style="padding:0">Photos récentes</div></div>
     <div class="photos-gallery" id="photosGallery">
       <div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune photo pour ce client</div>
@@ -1109,13 +1125,30 @@ function showCapturedPhoto(dataUrl) {
 }
 
 function openNativeCamera() {
-  // Opens iPhone native camera with full annotation support
   document.getElementById('nativeCameraInput').click();
+}
+
+function openGalleryPicker() {
+  document.getElementById('galleryPicker').style.display = 'flex';
+}
+
+function closeGalleryPicker() {
+  document.getElementById('galleryPicker').style.display = 'none';
+}
+
+function pickFromPhone() {
+  closeGalleryPicker();
+  document.getElementById('galleryInput').click();
+}
+
+async function pickFromOneDrive() {
+  closeGalleryPicker();
+  await openOneDrive();
 }
 
 async function openOneDrive() {
   if(!state.accessToken || !state.currentClient) {
-    showToast('⚠️ Connectez-vous d\'abord à Microsoft 365');
+    showToast('Connectez-vous d abord a Microsoft 365');
     return;
   }
   showToast('☁️ Chargement OneDrive...');
@@ -1415,12 +1448,43 @@ function clearAnnotations() {
   }
 }
 
+// ===== ZOOM =====
+let currentZoom = 1.0;
+
+function zoomAnnot(delta) {
+  currentZoom = Math.min(3.0, Math.max(0.5, currentZoom + delta));
+  applyZoom();
+}
+
+function resetZoom() {
+  currentZoom = 1.0;
+  applyZoom();
+}
+
+function applyZoom() {
+  const canvas = document.getElementById('annotCanvas');
+  canvas.style.transform = 'scale(' + currentZoom + ')';
+  canvas.style.transformOrigin = 'top left';
+  canvas.parentElement.style.overflow = currentZoom > 1 ? 'auto' : 'hidden';
+  canvas.parentElement.style.height = currentZoom > 1 ? (canvas.offsetHeight * currentZoom) + 'px' : 'auto';
+  document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
+}
+
 async function saveAnnotatedPhoto() {
   const canvas = document.getElementById('annotCanvas');
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-  await savePhotoToOneDrive(dataUrl);
-  document.getElementById('annotEditor').style.display = 'none';
-  document.getElementById('cameraPlaceholder').style.display = 'flex';
+  // Reset zoom before saving to get full resolution
+  const prevTransform = canvas.style.transform;
+  canvas.style.transform = 'none';
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  canvas.style.transform = prevTransform;
+  
+  const saved = await savePhotoToOneDrive(dataUrl);
+  if(saved !== false) {
+    document.getElementById('annotEditor').style.display = 'none';
+    document.getElementById('cameraPlaceholder').style.display = 'flex';
+    currentZoom = 1.0;
+    state.currentPhotoData = null;
+  }
 }
 
 async function saveCurrentPhoto() {
@@ -1453,8 +1517,8 @@ async function saveCurrentPhoto() {
       });
       
       if(resp.ok) {
-        showToast('✅ Photo sauvegardée dans OneDrive !');
-        addPhotoToGallery(clientName, state.currentPhotoData, fileName);
+        showToast('Photo sauvegardee dans OneDrive !');
+        addPhotoToGallery(clientName, dataUrl, fileName);
         state.currentPhotoData = null;
         document.getElementById('savePhotoBar').style.display = 'none';
         document.getElementById('annotBar').style.display = 'none';
@@ -1464,13 +1528,13 @@ async function saveCurrentPhoto() {
         if(state.currentClient) state.currentClient.photos = (state.photos[clientName] || []).length;
         return;
       } else {
-        showToast('⚠️ Erreur OneDrive — sauvegarde locale');
+        showToast('Erreur OneDrive - sauvegarde locale');
       }
     } catch(e) {
-      showToast('⚠️ Erreur réseau — sauvegarde locale');
+      showToast('Erreur reseau - sauvegarde locale');
     }
   } else {
-    showToast('📱 Sauvegardé localement (connectez-vous pour OneDrive)');
+    showToast('Sauvegarde locale - connectez Microsoft 365 pour OneDrive');
   }
   
   // Fallback local
