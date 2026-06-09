@@ -466,19 +466,18 @@ body {
   </div>
   <div class="scroll-content">
     <div class="photo-zone">
-      <div class="camera-preview" id="cameraPreview" onclick="startCameraIfInactive()">
+      <div class="camera-preview" id="cameraPreview">
         <video id="cameraVideo" autoplay playsinline muted></video>
         <canvas id="photoCanvas"></canvas>
         <img id="capturedPhoto" alt="Photo">
         <div class="camera-placeholder" id="cameraPlaceholder">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span>Appuyer pour activer la caméra</span>
+          <span>Choisissez une option ci-dessous</span>
         </div>
       </div>
       <div class="camera-controls">
+        <button class="cam-btn cam-btn-primary" onclick="openNativeCamera()">📷 Prendre une photo</button>
         <button class="cam-btn cam-btn-secondary" onclick="openGallery()">🖼️ Galerie</button>
-        <button class="cam-btn cam-btn-primary" id="camBtn" onclick="toggleCamera()">📷 Activer</button>
-        <button class="cam-btn cam-btn-primary" id="snapBtn" onclick="takePhoto()" style="display:none">📸 Capturer</button>
       </div>
     </div>
     <div class="annotation-bar" id="annotBar" style="display:none">
@@ -491,6 +490,7 @@ body {
     <div id="savePhotoBar" style="display:none;padding:10px 14px">
       <button class="submit-btn" onclick="saveCurrentPhoto()">💾 Sauvegarder dans OneDrive</button>
     </div>
+    <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleGalleryPhoto(event)">
     <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleGalleryPhoto(event)">
     <div style="padding:14px 14px 6px"><div class="section-label" style="padding:0">Photos récentes</div></div>
     <div class="photos-gallery" id="photosGallery">
@@ -1073,6 +1073,11 @@ function showCapturedPhoto(dataUrl) {
   document.getElementById('cameraPlaceholder').style.display = 'none';
   document.getElementById('annotBar').style.display = 'flex';
   document.getElementById('savePhotoBar').style.display = 'block';
+}
+
+function openNativeCamera() {
+  // Opens iPhone native camera with full annotation support
+  document.getElementById('nativeCameraInput').click();
 }
 
 function openGallery() {
