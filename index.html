@@ -462,7 +462,6 @@ body {
       <div class="header-title">📸 Photos chantier</div>
       <div class="header-subtitle" id="photosClientName">Client</div>
     </div>
-    <button class="header-action" onclick="openGallery()">🖼️</button>
   </div>
   <div class="scroll-content">
     <div class="photo-zone">
@@ -476,14 +475,16 @@ body {
         </div>
       </div>
       <div class="camera-controls">
-        <button class="cam-btn cam-btn-secondary" onclick="openGalleryPicker()">🖼️ Galerie</button>
+        <button class="cam-btn cam-btn-secondary" onclick="openGallery()" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="9" height="9" rx="2" fill="#C4859A"/><rect x="13" y="2" width="9" height="9" rx="2" fill="#9B6B8A"/><rect x="2" y="13" width="9" height="9" rx="2" fill="#9B6B8A"/><rect x="13" y="13" width="9" height="9" rx="2" fill="#6B2D45"/></svg>
+          Galerie
+        </button>
         <button class="cam-btn cam-btn-primary" onclick="openNativeCamera()">📷 Prendre une photo</button>
       </div>
     </div>
-    <!-- Save and OneDrive buttons always visible -->
-    <div style="padding:0 14px 10px;display:flex;gap:10px;" id="photoActionBtns">
-      <button onclick="openOneDrive()" class="cam-btn cam-btn-secondary" style="flex:1;">☁️ Parcourir OneDrive</button>
-      <button onclick="saveCurrentPhotoNow()" class="cam-btn cam-btn-primary" style="flex:1;" id="saveNowBtn">💾 Sauvegarder</button>
+    <!-- Save button -->
+    <div style="padding:0 14px 10px;" id="photoActionBtns">
+      <button onclick="saveCurrentPhotoNow()" style="width:100%;padding:14px;border-radius:14px;border:none;background:#6B2D45;color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;" id="saveNowBtn">💾 Sauvegarder dans OneDrive</button>
     </div>
     <!-- ANNOTATION EDITOR -->
     <div id="annotEditor" style="display:none;margin:0 14px 14px;">
@@ -538,14 +539,7 @@ body {
     </div>
     <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleGalleryPhoto(event)">
     <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleGalleryPhoto(event)" multiple>
-    <!-- Gallery picker - iPhone only -->
-    <div id="galleryPicker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:flex-end;">
-      <div style="background:white;width:100%;border-radius:20px 20px 0 0;padding:16px;">
-        <div style="text-align:center;font-family:'Cormorant Garamond',serif;font-size:18px;color:#6B2D45;margin-bottom:14px;">Choisir une photo</div>
-        <button onclick="pickFromPhone()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#F2D7E0;color:#6B2D45;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:10px;">📱 Pellicule iPhone</button>
-        <button onclick="closeGalleryPicker()" style="width:100%;padding:14px;border-radius:12px;border:1.5px solid #F2D7E0;background:white;color:#A88090;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;">Annuler</button>
-      </div>
-    </div>
+
     <div style="padding:14px 14px 6px"><div class="section-label" style="padding:0">Photos récentes</div></div>
     <div class="photos-gallery" id="photosGallery">
       <div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune photo pour ce client</div>
@@ -1143,29 +1137,16 @@ function openNativeCamera() {
 }
 
 async function saveCurrentPhotoNow() {
-  if(!state.currentPhotoData) {
-    showToast('Prenez ou choisissez une photo d abord');
+  const photoData = state.currentPhotoData;
+  if(!photoData) {
+    showToast('Prenez ou choisissez une photo dabord');
     return;
   }
-  await savePhotoToOneDrive(state.currentPhotoData);
-}
-
-function openGalleryPicker() {
-  document.getElementById('galleryPicker').style.display = 'flex';
-}
-
-function closeGalleryPicker() {
-  document.getElementById('galleryPicker').style.display = 'none';
-}
-
-function pickFromPhone() {
-  closeGalleryPicker();
-  document.getElementById('galleryInput').click();
-}
-
-async function pickFromOneDrive() {
-  closeGalleryPicker();
-  await openOneDrive();
+  if(!state.currentClient) {
+    showToast('Aucun client selectionne');
+    return;
+  }
+  await savePhotoToOneDrive(photoData);
 }
 
 async function openOneDrive() {
@@ -1250,6 +1231,7 @@ async function loadOneDrivePhoto(url, name) {
 }
 
 function openGallery() {
+  // Open iPhone photos library directly
   document.getElementById('galleryInput').click();
 }
 
