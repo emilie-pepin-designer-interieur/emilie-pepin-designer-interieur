@@ -480,6 +480,11 @@ body {
         <button class="cam-btn cam-btn-primary" onclick="openNativeCamera()">📷 Prendre une photo</button>
       </div>
     </div>
+    <!-- Save and OneDrive buttons always visible -->
+    <div style="padding:0 14px 10px;display:flex;gap:10px;" id="photoActionBtns">
+      <button onclick="openOneDrive()" class="cam-btn cam-btn-secondary" style="flex:1;">☁️ Parcourir OneDrive</button>
+      <button onclick="saveCurrentPhotoNow()" class="cam-btn cam-btn-primary" style="flex:1;" id="saveNowBtn">💾 Sauvegarder</button>
+    </div>
     <!-- ANNOTATION EDITOR -->
     <div id="annotEditor" style="display:none;margin:0 14px 14px;">
       <div style="background:white;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-card);">
@@ -489,8 +494,9 @@ body {
         </div>
         <!-- Tools -->
         <div style="padding:10px 12px;border-top:1px solid var(--blush);">
+          <div style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:6px;font-style:italic;">Choisissez un outil pour annoter • Pincez pour zoomer</div>
           <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;">
-            <button class="annot-tool active" id="tool-pen" onclick="setTool('pen',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--mauve);background:var(--mauve);color:white;font-size:12px;font-weight:500;cursor:pointer;">✏️ Crayon</button>
+            <button class="annot-tool" id="tool-pen" onclick="setTool('pen',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;color:var(--text-mid);font-size:12px;font-weight:500;cursor:pointer;">✏️ Crayon</button>
             <button class="annot-tool" id="tool-arrow" onclick="setTool('arrow',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;color:var(--text-mid);font-size:12px;font-weight:500;cursor:pointer;">➡️ Flèche</button>
             <button class="annot-tool" id="tool-circle" onclick="setTool('circle',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;color:var(--text-mid);font-size:12px;font-weight:500;cursor:pointer;">⭕ Cercle</button>
             <button class="annot-tool" id="tool-text" onclick="setTool('text',this)" style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1.5px solid var(--blush);background:white;color:var(--text-mid);font-size:12px;font-weight:500;cursor:pointer;">📝 Texte</button>
@@ -532,12 +538,11 @@ body {
     </div>
     <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleGalleryPhoto(event)">
     <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleGalleryPhoto(event)" multiple>
-    <!-- Gallery picker with OneDrive option -->
+    <!-- Gallery picker - iPhone only -->
     <div id="galleryPicker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:flex-end;">
       <div style="background:white;width:100%;border-radius:20px 20px 0 0;padding:16px;">
         <div style="text-align:center;font-family:'Cormorant Garamond',serif;font-size:18px;color:#6B2D45;margin-bottom:14px;">Choisir une photo</div>
-        <button onclick="pickFromOneDrive()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#F2D7E0;color:#6B2D45;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;">☁️ OneDrive — Photos du client</button>
-        <button onclick="pickFromPhone()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#F2D7E0;color:#6B2D45;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;">📱 Pellicule iPhone</button>
+        <button onclick="pickFromPhone()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#F2D7E0;color:#6B2D45;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:10px;">📱 Pellicule iPhone</button>
         <button onclick="closeGalleryPicker()" style="width:100%;padding:14px;border-radius:12px;border:1.5px solid #F2D7E0;background:white;color:#A88090;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;">Annuler</button>
       </div>
     </div>
@@ -1116,16 +1121,33 @@ function takePhoto() {
 
 function showCapturedPhoto(dataUrl) {
   state.currentPhotoData = dataUrl;
-  // Hide preview, show annotation editor
-  document.getElementById('capturedPhoto').style.display = 'none';
+  // Show in preview area
+  document.getElementById('capturedPhoto').src = dataUrl;
+  document.getElementById('capturedPhoto').style.display = 'block';
   document.getElementById('cameraPlaceholder').style.display = 'none';
+  // Show annotation editor below
   document.getElementById('annotEditor').style.display = 'block';
+  // Reset tool selection
+  annotState.tool = null;
+  document.querySelectorAll('.annot-tool').forEach(b => {
+    b.style.background = 'white';
+    b.style.color = 'var(--text-mid)';
+    b.style.borderColor = 'var(--blush)';
+  });
   // Init annotation canvas with photo
-  setTimeout(() => initAnnotCanvas(dataUrl), 100);
+  setTimeout(() => initAnnotCanvas(dataUrl), 150);
 }
 
 function openNativeCamera() {
   document.getElementById('nativeCameraInput').click();
+}
+
+async function saveCurrentPhotoNow() {
+  if(!state.currentPhotoData) {
+    showToast('Prenez ou choisissez une photo d abord');
+    return;
+  }
+  await savePhotoToOneDrive(state.currentPhotoData);
 }
 
 function openGalleryPicker() {
@@ -1248,7 +1270,7 @@ function selectAnnotation(btn, type) {
 
 // ===== ANNOTATION EDITOR =====
 let annotState = {
-  tool: 'pen',
+  tool: null,
   color: '#FF3B30',
   size: 4,
   drawing: false,
@@ -1277,26 +1299,55 @@ function initAnnotCanvas(imgSrc) {
 }
 
 function setupAnnotEvents(canvas, ctx) {
+  let lastPinchDist = 0;
+
   // Touch events for iPhone
   canvas.addEventListener('touchstart', (e) => {
+    if(e.touches.length === 2) {
+      // Pinch start
+      lastPinchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      return;
+    }
+    if(!annotState.tool) return; // No tool = allow page scroll
     e.preventDefault();
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    startDraw(ctx, (touch.clientX - rect.left) * scaleX, (touch.clientY - rect.top) * scaleY);
+    const scaleX = canvas.width / (rect.width / currentZoom);
+    const scaleY = canvas.height / (rect.height / currentZoom);
+    startDraw(ctx, (touch.clientX - rect.left) / currentZoom * scaleX, (touch.clientY - rect.top) / currentZoom * scaleY);
   }, { passive: false });
   
   canvas.addEventListener('touchmove', (e) => {
+    if(e.touches.length === 2) {
+      // Pinch zoom
+      e.preventDefault();
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if(lastPinchDist > 0) {
+        const delta = (dist - lastPinchDist) / 200;
+        currentZoom = Math.min(4.0, Math.max(0.5, currentZoom + delta));
+        applyZoom();
+      }
+      lastPinchDist = dist;
+      return;
+    }
+    if(!annotState.tool) return;
     e.preventDefault();
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    moveDraw(ctx, (touch.clientX - rect.left) * scaleX, (touch.clientY - rect.top) * scaleY);
+    const scaleX = canvas.width / (rect.width / currentZoom);
+    const scaleY = canvas.height / (rect.height / currentZoom);
+    moveDraw(ctx, (touch.clientX - rect.left) / currentZoom * scaleX, (touch.clientY - rect.top) / currentZoom * scaleY);
   }, { passive: false });
   
   canvas.addEventListener('touchend', (e) => {
+    lastPinchDist = 0;
+    if(!annotState.tool) return;
     e.preventDefault();
     endDraw(ctx);
   }, { passive: false });
@@ -1319,6 +1370,7 @@ function setupAnnotEvents(canvas, ctx) {
 }
 
 function startDraw(ctx, x, y) {
+  if(!annotState.tool) return; // No tool selected - allow scroll
   annotState.drawing = true;
   annotState.startX = x;
   annotState.startY = y;
