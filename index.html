@@ -1156,20 +1156,28 @@ function statusLabel(s) { return {active:'● En cours', pending:'○ En attente
 function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ===== OPEN CLIENT =====
+function getElementById(id) {
+  return document.getElementById(id);
+}
+function setEl(id, val) {
+  const el = document.getElementById(id);
+  if(el) el.textContent = val;
+}
+
 function openClient(id) {
   const c = state.clients.find(x => x.id === id);
   if(!c) return;
   state.currentClient = c;
-  document.getElementById('clientHeaderName').textContent = c.Title;
-  document.getElementById('clientHeaderProject').textContent = c.project;
-  document.getElementById('heroAvatar').textContent = getInitials(c.Title);
-  document.getElementById('heroName').textContent = c.Title;
-  document.getElementById('heroProject').textContent = c.project;
-  document.getElementById('statHeures').textContent = c.heures;
-  document.getElementById('statFacture').textContent = c.facture;
-  document.getElementById('statPhotos').textContent = (state.photos[c.Title] || []).length;
-  document.getElementById('photosClientName').textContent = c.Title;
-  document.getElementById('timerClientName').textContent = c.Title;
+  setEl('clientHeaderName', c.Title);
+  setEl('clientHeaderProject', c.project);
+  setEl('heroAvatar', getInitials(c.Title));
+  setEl('heroName', c.Title);
+  setEl('heroProject', c.project);
+  setEl('statHeures', c.heures);
+  setEl('statFacture', c.facture);
+  setEl('statPhotos', (state.photos[c.Title] || []).length);
+  setEl('photosClientNameCam', c.Title);
+  setEl('timerClientName', c.Title);
   
   // Update contact info
   const phoneBtn = document.getElementById('clientPhoneBtn');
