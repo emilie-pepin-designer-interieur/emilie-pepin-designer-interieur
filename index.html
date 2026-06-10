@@ -2019,8 +2019,450 @@ function sendToAnna(msg){
   setTimeout(()=>{typing.remove();const annaBubble=document.createElement('div');annaBubble.className='chat-bubble bubble-anna';annaBubble.textContent='Je traite votre demande... Pour les vraies réponses d\'Anna, ouvrez le projet Claude.';chat.appendChild(annaBubble);chat.scrollTop=chat.scrollHeight;},1200);
 }
 
+
+// ===== EXCALIDRAW MARKUP ENGINE =====
+// Détection appareil
+function isIPad() {
+  return /iPad/.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints > 1 && /MacIntel/.test(navigator.userAgent));
+}
+function isWeb() {
+  return !navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches;
+}
+
+// État Excalidraw
+let exState = {
+  tool: 'pen', color: '#FF453A', size: 6,
+  drawing: false, startX: 0, startY: 0,
+  history: [], zoom: 1.0, panX: 0, panY: 0,
+  photoIndex: -1
+};
+let exPinchStart = 0, exPinchZoom = 1.0;
+
+// Ouvrir Excalidraw avec une photo
+function openExcalidraw(photoIndex) {
+  exState.photoIndex = photoIndex;
+  exState.history = [];
+  exState.zoom = 1.0; exState.panX = 0; exState.panY = 0;
+  exState.tool = 'pen';
+
+  const screen = document.getElementById('screenExcalidraw');
+  screen.style.display = 'flex';
+
+  // Cacher nav
+  const nav = document.getElementById('bottomNav');
+  if(nav) nav.classList.add('nav-hidden');
+
+  const photo = sessionPhotos[photoIndex];
+  if(!photo) return;
+
+  const src = photo.dataUrl || photo.odUrl || '';
+  if(!src) { showToast('⚠️ Photo non disponible'); return; }
+
+  setTimeout(() => initExcalidraw(src), 100);
+}
+
+function initExcalidraw(src) {
+  const container = document.getElementById('excalidrawContainer');
+  const bgCanvas = document.getElementById('excalidrawBg');
+  const drawCanvas = document.getElementById('excalidrawCanvas');
+  if(!container || !bgCanvas || !drawCanvas) return;
+
+  const w = container.offsetWidth;
+  const h = container.offsetHeight;
+
+  bgCanvas.width = w; bgCanvas.height = h;
+  drawCanvas.width = w; drawCanvas.height = h;
+
+  // Charger photo en fond
+  const img = new Image();
+  img.onload = () => {
+    const ctx = bgCanvas.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+    // Centrer et fitter l'image
+    const scale = Math.min(w / img.width, h / img.height);
+    const iw = img.width * scale, ih = img.height * scale;
+    const ix = (w - iw) / 2, iy = (h - ih) / 2;
+    ctx.drawImage(img, ix, iy, iw, ih);
+    exState.imgX = ix; exState.imgY = iy;
+    exState.imgW = iw; exState.imgH = ih;
+    // Init historique
+    const dCtx = drawCanvas.getContext('2d');
+    exState.history = [dCtx.getImageData(0, 0, w, h)];
+    // Setup events
+    setupExEvents(drawCanvas);
+  };
+  img.src = src;
+}
+
+function setupExEvents(canvas) {
+  // Nettoyer
+  canvas.onpointerdown = null; canvas.onpointermove = null;
+  canvas.onpointerup = null; canvas.onpointercancel = null;
+
+  canvas.addEventListener('pointerdown', exPointerDown, {passive: false});
+  canvas.addEventListener('pointermove', exPointerMove, {passive: false});
+  canvas.addEventListener('pointerup', exPointerUp, {passive: false});
+  canvas.addEventListener('pointercancel', exPointerUp, {passive: false});
+
+  // Pinch zoom touch
+  canvas.addEventListener('touchstart', exTouchStart, {passive: false});
+  canvas.addEventListener('touchmove', exTouchMove, {passive: false});
+
+  // Clic pour texte
+  canvas.addEventListener('click', exClick);
+}
+
+// Pointer Events - supporte Apple Pencil (pointerType === 'pen')
+function exPointerDown(e) {
+  e.preventDefault();
+  if(e.touches && e.touches.length > 1) return; // Pinch
+  const {x, y} = getExPoint(e, this || e.target);
+  exState.drawing = true;
+  exState.startX = x; exState.startY = y;
+  const ctx = document.getElementById('excalidrawCanvas').getContext('2d');
+  if(['pen','marker'].includes(exState.tool)) {
+    ctx.beginPath(); ctx.moveTo(x, y);
+  }
+  // Pression Apple Pencil
+  if(e.pressure && e.pointerType === 'pen') {
+    exState.currentSize = Math.max(1, exState.size * e.pressure * 2);
+  } else {
+    exState.currentSize = exState.size;
+  }
+}
+
+function exPointerMove(e) {
+  e.preventDefault();
+  if(!exState.drawing) return;
+  if(e.touches && e.touches.length > 1) return;
+  const {x, y} = getExPoint(e, e.target);
+  const canvas = document.getElementById('excalidrawCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Adapter taille selon pression Apple Pencil
+  let size = exState.currentSize || exState.size;
+  if(e.pressure && e.pointerType === 'pen' && e.pressure > 0) {
+    size = Math.max(1, exState.size * e.pressure * 2);
+  }
+
+  ctx.strokeStyle = exState.color;
+  ctx.fillStyle = exState.color;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+  if(exState.tool === 'pen') {
+    ctx.globalAlpha = 1; ctx.lineWidth = size;
+    ctx.lineTo(x, y); ctx.stroke();
+  } else if(exState.tool === 'marker') {
+    ctx.globalAlpha = 0.35; ctx.lineWidth = size * 5;
+    ctx.lineTo(x, y); ctx.stroke();
+  } else if(exState.tool === 'erase') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.globalAlpha = 1; ctx.lineWidth = size * 8;
+    ctx.beginPath(); ctx.arc(x, y, size*4, 0, Math.PI*2); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  } else if(['arrow','rect','circle'].includes(exState.tool)) {
+    ctx.globalAlpha = 1; ctx.lineWidth = Math.max(size, 2);
+    if(exState.history.length > 0) ctx.putImageData(exState.history[exState.history.length-1], 0, 0);
+    if(exState.tool === 'arrow') drawExArrow(ctx, exState.startX, exState.startY, x, y);
+    else if(exState.tool === 'rect') ctx.strokeRect(exState.startX, exState.startY, x-exState.startX, y-exState.startY);
+    else if(exState.tool === 'circle') {
+      const rx=Math.abs(x-exState.startX)/2, ry=Math.abs(y-exState.startY)/2;
+      ctx.beginPath(); ctx.ellipse((exState.startX+x)/2,(exState.startY+y)/2,Math.max(rx,4),Math.max(ry,4),0,0,Math.PI*2); ctx.stroke();
+    }
+  }
+}
+
+function exPointerUp(e) {
+  if(!exState.drawing) return;
+  exState.drawing = false;
+  const canvas = document.getElementById('excalidrawCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.beginPath();
+  exState.history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+}
+
+function exClick(e) {
+  if(exState.tool !== 'text') return;
+  const {x, y} = getExPoint(e, e.target);
+  const text = prompt('Texte à annoter:');
+  if(!text) return;
+  const canvas = document.getElementById('excalidrawCanvas');
+  const ctx = canvas.getContext('2d');
+  const size = exState.size * 4 + 12;
+  ctx.font = `bold ${size}px 'DM Sans', Arial, sans-serif`;
+  ctx.fillStyle = exState.color;
+  ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+  ctx.lineWidth = 2;
+  ctx.strokeText(text, x, y);
+  ctx.fillText(text, x, y);
+  exState.history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+}
+
+// Pinch zoom
+function exTouchStart(e) {
+  if(e.touches.length === 2) { exPinchStart = getPinchDist(e); exPinchZoom = exState.zoom; }
+}
+function exTouchMove(e) {
+  if(e.touches.length !== 2) return;
+  e.preventDefault();
+  const d = getPinchDist(e);
+  exState.zoom = Math.min(Math.max(0.5, exPinchZoom * (d / exPinchStart)), 5);
+  applyExZoom();
+}
+
+function applyExZoom() {
+  const c = document.getElementById('excalidrawContainer');
+  if(!c) return;
+  document.getElementById('exZoomLabel').textContent = Math.round(exState.zoom * 100) + '%';
+  // Zoom via CSS transform
+  document.getElementById('excalidrawBg').style.transform = `scale(${exState.zoom})`;
+  document.getElementById('excalidrawBg').style.transformOrigin = 'center center';
+  document.getElementById('excalidrawCanvas').style.transform = `scale(${exState.zoom})`;
+  document.getElementById('excalidrawCanvas').style.transformOrigin = 'center center';
+}
+
+function exZoom(factor) {
+  exState.zoom = Math.min(Math.max(0.3, exState.zoom * factor), 5);
+  applyExZoom();
+}
+
+function getExPoint(e, canvas) {
+  const r = canvas.getBoundingClientRect();
+  const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+  const clientY = e.clientY || (e.touches && e.touches[0].clientY) || 0;
+  return {
+    x: (clientX - r.left) / exState.zoom,
+    y: (clientY - r.top) / exState.zoom
+  };
+}
+
+function drawExArrow(ctx, x1, y1, x2, y2) {
+  const headLen = Math.max(16, exState.size * 4);
+  const angle = Math.atan2(y2-y1, x2-x1);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-headLen*Math.cos(angle-Math.PI/6), y2-headLen*Math.sin(angle-Math.PI/6));
+  ctx.lineTo(x2-headLen*Math.cos(angle+Math.PI/6), y2-headLen*Math.sin(angle+Math.PI/6));
+  ctx.closePath(); ctx.fill();
+}
+
+function setExTool(tool) {
+  exState.tool = tool;
+  document.querySelectorAll('.ex-tool').forEach(b => b.classList.remove('active'));
+  const map = {pen:'exPen',marker:'exMarker',arrow:'exArrow',rect:'exRect',circle:'exCircle',text:'exText',erase:'exErase'};
+  const btn = document.getElementById(map[tool]);
+  if(btn) btn.classList.add('active');
+}
+
+function setExColor(color, el) {
+  exState.color = color;
+  document.querySelectorAll('.ex-color').forEach(e => e.classList.remove('active'));
+  if(el) el.classList.add('active');
+}
+
+function exUndo() {
+  if(exState.history.length <= 1) { showToast('Rien à annuler'); return; }
+  exState.history.pop();
+  const canvas = document.getElementById('excalidrawCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.putImageData(exState.history[exState.history.length-1], 0, 0);
+}
+
+function closeExcalidraw() {
+  document.getElementById('screenExcalidraw').style.display = 'none';
+  const nav = document.getElementById('bottomNav');
+  if(nav) nav.classList.remove('nav-hidden');
+}
+
+async function saveExcalidrawToOneDrive() {
+  if(exState.photoIndex < 0) { showToast('Aucune photo'); return; }
+  // Fusionner fond + annotations dans un seul canvas
+  const bgCanvas = document.getElementById('excalidrawBg');
+  const drawCanvas = document.getElementById('excalidrawCanvas');
+  const merged = document.createElement('canvas');
+  merged.width = bgCanvas.width; merged.height = bgCanvas.height;
+  const ctx = merged.getContext('2d');
+  ctx.drawImage(bgCanvas, 0, 0);
+  ctx.drawImage(drawCanvas, 0, 0);
+  const dataUrl = merged.toDataURL('image/jpeg', 0.93);
+  // Sauvegarder dans sessionPhotos
+  sessionPhotos[exState.photoIndex].dataUrl = dataUrl;
+  sessionPhotos[exState.photoIndex].saved = false;
+  // Upload OneDrive
+  showToast('⬆️ Sauvegarde...');
+  const ok = await uploadPhotoToOneDrive(dataUrl, sessionPhotos[exState.photoIndex].filename);
+  if(ok) {
+    sessionPhotos[exState.photoIndex].saved = true;
+    showToast('✅ Photo annotée sauvegardée dans OneDrive !');
+    updateFilmstripThumb(); updateSavePendingBtn();
+    closeExcalidraw();
+  } else {
+    showToast('⚠️ Connexion Microsoft 365 requise');
+  }
+}
+
+// Modifier openPhotoEditorFromFilmstrip pour détecter iPad/web
+function openPhotoEditorFromFilmstrip(index) {
+  closeFilmstrip();
+  editingPhotoIndex = index;
+  const photo = sessionPhotos[index];
+  if(!photo) return;
+
+  const src = photo.dataUrl || '';
+  if(!src && photo.odUrl) {
+    showToast('⏳ Chargement...');
+    fetch(photo.odUrl).then(r=>r.blob()).then(blob=>{
+      const reader = new FileReader();
+      reader.onload = ev => {
+        sessionPhotos[index].dataUrl = ev.target.result;
+        openMarkupForDevice(index, ev.target.result);
+      };
+      reader.readAsDataURL(blob);
+    }).catch(()=>showToast('⚠️ Impossible de charger'));
+    return;
+  }
+  openMarkupForDevice(index, src);
+}
+
+function openMarkupForDevice(index, src) {
+  if(isIPad() || isWeb()) {
+    // iPad + Web → Excalidraw
+    exState.photoIndex = index;
+    openExcalidraw(index);
+  } else {
+    // iPhone → éditeur canvas HTML
+    openPhotoEditor(src);
+  }
+}
+
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script>
+
+  <!-- ===== ÉCRAN EXCALIDRAW (iPad + Web) ===== -->
+  <div id="screenExcalidraw" style="display:none;position:fixed;inset:0;z-index:210;
+       background:#1c1c1e;flex-direction:column;">
+
+    <!-- Header -->
+    <div style="background:#1c1c1e;padding:calc(env(safe-area-inset-top,44px)+8px) 16px 10px;
+                display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+                border-bottom:1px solid rgba(255,255,255,0.1);">
+      <button onclick="closeExcalidraw()" style="background:none;border:none;color:#FF453A;
+              font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;
+              -webkit-tap-highlight-color:transparent;">Annuler</button>
+      <div style="color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;">
+        ✏️ Markup</div>
+      <button onclick="saveExcalidrawToOneDrive()" style="background:none;border:none;
+              color:#0A84FF;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;
+              cursor:pointer;-webkit-tap-highlight-color:transparent;">
+        ⬆ OneDrive</button>
+    </div>
+
+    <!-- Zone Excalidraw -->
+    <div id="excalidrawContainer" style="flex:1;position:relative;overflow:hidden;">
+      <canvas id="excalidrawBg" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+      <canvas id="excalidrawCanvas" style="position:absolute;inset:0;width:100%;height:100%;
+              touch-action:none;"></canvas>
+
+      <!-- Barre outils style Excalidraw/Markup Apple -->
+      <div id="exToolbar" style="position:absolute;left:50%;transform:translateX(-50%);
+           top:12px;background:rgba(28,28,30,0.92);border-radius:14px;
+           padding:8px 12px;display:flex;gap:8px;align-items:center;
+           box-shadow:0 4px 20px rgba(0,0,0,0.4);backdrop-filter:blur(10px);
+           -webkit-backdrop-filter:blur(10px);z-index:10;">
+        <button onclick="setExTool('pen')" id="exPen" class="ex-tool active" title="Crayon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+        <button onclick="setExTool('marker')" id="exMarker" class="ex-tool" title="Marqueur">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
+        <button onclick="setExTool('arrow')" id="exArrow" class="ex-tool" title="Flèche">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="19" x2="19" y2="5"/><polyline points="8 5 19 5 19 16"/></svg></button>
+        <button onclick="setExTool('rect')" id="exRect" class="ex-tool" title="Rectangle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="5" width="18" height="14" rx="2"/></svg></button>
+        <button onclick="setExTool('circle')" id="exCircle" class="ex-tool" title="Cercle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9"/></svg></button>
+        <button onclick="setExTool('text')" id="exText" class="ex-tool" title="Texte">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 7 4 4 20 4 20 7"/>
+            <line x1="9" y1="20" x2="15" y2="20"/>
+            <line x1="12" y1="4" x2="12" y2="20"/></svg></button>
+        <button onclick="setExTool('erase')" id="exErase" class="ex-tool" title="Effacer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/>
+            <path d="M22 21H7"/></svg></button>
+        <div style="width:1px;height:24px;background:rgba(255,255,255,0.15);margin:0 4px;"></div>
+        <button onclick="exUndo()" style="background:none;border:none;color:rgba(255,255,255,0.7);
+                font-size:18px;cursor:pointer;width:36px;height:36px;border-radius:8px;
+                display:flex;align-items:center;justify-content:center;
+                -webkit-tap-highlight-color:transparent;">↩</button>
+      </div>
+
+      <!-- Palette couleurs + taille (bas gauche) -->
+      <div style="position:absolute;left:12px;bottom:calc(env(safe-area-inset-bottom,0px)+20px);
+           background:rgba(28,28,30,0.92);border-radius:14px;padding:10px;
+           display:flex;flex-direction:column;gap:8px;
+           box-shadow:0 4px 20px rgba(0,0,0,0.4);backdrop-filter:blur(10px);
+           -webkit-backdrop-filter:blur(10px);z-index:10;">
+        <div onclick="setExColor('#FF453A',this)" class="ex-color" style="background:#FF453A;border-color:white;transform:scale(1.2);"></div>
+        <div onclick="setExColor('#FF9F0A',this)" class="ex-color" style="background:#FF9F0A;"></div>
+        <div onclick="setExColor('#FFD60A',this)" class="ex-color" style="background:#FFD60A;"></div>
+        <div onclick="setExColor('#30D158',this)" class="ex-color" style="background:#30D158;"></div>
+        <div onclick="setExColor('#0A84FF',this)" class="ex-color" style="background:#0A84FF;"></div>
+        <div onclick="setExColor('#BF5AF2',this)" class="ex-color" style="background:#BF5AF2;"></div>
+        <div onclick="setExColor('#FFFFFF',this)" class="ex-color" style="background:white;"></div>
+        <div onclick="setExColor('#000000',this)" class="ex-color" style="background:#1c1c1e;border:1px solid rgba(255,255,255,0.3)!important;"></div>
+        <div onclick="setExColor('#6B2D45',this)" class="ex-color" style="background:#6B2D45;"></div>
+        <input type="range" id="exSize" min="1" max="40" value="6"
+          style="width:100%;writing-mode:vertical-lr;direction:rtl;height:80px;
+                 accent-color:#0A84FF;transform:rotate(180deg);"
+          oninput="exState.size=parseInt(this.value)"
+          onchange="exState.size=parseInt(this.value)">
+      </div>
+
+      <!-- Zoom controls (bas droite) -->
+      <div style="position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom,0px)+20px);
+           background:rgba(28,28,30,0.92);border-radius:14px;padding:8px;
+           display:flex;flex-direction:column;gap:8px;align-items:center;
+           box-shadow:0 4px 20px rgba(0,0,0,0.4);z-index:10;">
+        <button onclick="exZoom(1.2)" style="background:none;border:none;color:white;
+                font-size:20px;cursor:pointer;width:36px;height:36px;border-radius:8px;
+                display:flex;align-items:center;justify-content:center;">+</button>
+        <div id="exZoomLabel" style="color:rgba(255,255,255,0.5);font-size:11px;
+             font-family:'DM Sans',sans-serif;">100%</div>
+        <button onclick="exZoom(0.8)" style="background:none;border:none;color:white;
+                font-size:20px;cursor:pointer;width:36px;height:36px;border-radius:8px;
+                display:flex;align-items:center;justify-content:center;">−</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+  .ex-tool {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(255,255,255,0.08); border: none;
+    color: rgba(255,255,255,0.6); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+  }
+  .ex-tool.active { background: white !important; color: #1c1c1e !important; }
+  .ex-tool:active { transform: scale(0.92); }
+  .ex-color {
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; transition: transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ex-color.active { transform: scale(1.25) !important; border-color: white !important; }
+  </style>
+
+  <!-- Input caméra native - utilisé par goToPhotos -->
+  <input type="file" id="shutterInput" accept="image/*,video/*"
+    style="display:none;" onchange="handleNativeCapture(event)" multiple>
 </body>
 </html>function handleNativeCapture(e){
   const files=Array.from(e.target.files||[]);
