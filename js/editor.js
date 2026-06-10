@@ -4,6 +4,13 @@ function openPhotoEditorFromFilmstrip(index){closeFilmstrip();editingPhotoIndex=
 function openPhotoEditor(dataUrl){
   const editor=document.getElementById('photoEditor');
   editor.style.display='flex';
+  editor.style.zIndex='210';
+  // S'assurer que le header est visible sur iPhone PWA
+  const header=document.getElementById('editorHeader');
+  if(header){
+    header.style.paddingTop='calc(env(safe-area-inset-top,44px) + 12px)';
+    header.style.minHeight='70px';
+  }
   const nav=document.getElementById('bottomNav');if(nav)nav.classList.add('nav-hidden');
   document.getElementById('cameraFullscreen').style.display='none';
   ['annotToolbar','adjustToolbar','cropToolbar'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
@@ -255,10 +262,38 @@ function activateTextTool(){
 }
 
 function showTextDialog(){
-  const dlg=document.getElementById('textDialog');if(dlg)dlg.style.display='flex';
+  const dlg=document.getElementById('textDialog');
+  if(!dlg) return;
+  // Ajouter zone d'aperçu si pas encore présente
+  if(!document.getElementById('textPreview')){
+    const preview=document.createElement('div');
+    preview.id='textPreview';
+    preview.style.cssText="background:#1c1c1e;border-radius:8px;padding:10px;text-align:center;min-height:40px;margin-bottom:12px;font-family:'DM Sans',Arial,sans-serif;font-weight:bold;color:white;font-size:24px;word-break:break-all;";
+    preview.textContent='Aperçu';
+    const firstChild=dlg.querySelector('div');
+    if(firstChild) dlg.insertBefore(preview,firstChild.nextSibling);
+  }
+  dlg.style.display='flex';
   const input=document.getElementById('textInput'),sizeEl=document.getElementById('textSizeSlider'),sizeVal=document.getElementById('textSizeValue');
-  if(sizeEl&&sizeVal){sizeEl.value=32;sizeVal.textContent='32';sizeEl.oninput=()=>{sizeVal.textContent=sizeEl.value;liveText.size=parseInt(sizeEl.value);updateLiveText();};}
-  if(input){input.value='';input.oninput=()=>{liveText.text=input.value;updateLiveText();};setTimeout(()=>input.focus(),100);}
+  if(sizeEl&&sizeVal){
+    sizeEl.value=32;sizeVal.textContent='32';
+    liveText.size=32;
+    // iOS: utiliser les deux events pour garantir le déclenchement
+    const onSizeChange=()=>{
+      liveText.size=parseInt(sizeEl.value);
+      sizeVal.textContent=sizeEl.value;
+      updateLiveText();
+    };
+    sizeEl.oninput=onSizeChange;
+    sizeEl.addEventListener('change',onSizeChange);
+    sizeEl.addEventListener('touchmove',onSizeChange,{passive:true});
+  }
+  if(input){
+    input.value='';
+    const onInputChange=()=>{liveText.text=input.value;updateLiveText();};
+    input.oninput=onInputChange;
+    setTimeout(()=>input.focus(),100);
+  }
 }
 
 function confirmTextDialog(){
@@ -292,8 +327,18 @@ function placeLiveTextOnCanvas(){
 }
 
 function updateLiveText(){
-  const div=document.getElementById('liveTextEl');if(!div)return;
-  div.textContent=liveText.text;div.style.fontSize=liveText.size+'px';div.style.color=liveText.color;
+  const div=document.getElementById('liveTextEl');
+  if(!div) return;
+  div.textContent=liveText.text||'Texte...';
+  div.style.fontSize=liveText.size+'px';
+  div.style.color=liveText.color;
+  // Mettre à jour aussi la preview dans le dialogue si pas encore placé
+  const preview=document.getElementById('textPreview');
+  if(preview){
+    preview.textContent=liveText.text||'Aperçu';
+    preview.style.fontSize=Math.min(liveText.size,24)+'px';
+    preview.style.color=liveText.color;
+  }
 }
 
 function showLiveTextConfirmBtn(){
@@ -395,4 +440,3 @@ async function saveVideoToOneDrive(){
     if(r.ok){showToast('✅ Vidéo sauvegardée !');cancelVideoEdit();}else showToast('⚠️ Erreur');
   }catch(e){showToast('⚠️ Erreur réseau');}
 }
-
