@@ -12,7 +12,25 @@ function goToPhotos() {
   document.getElementById('photoActionMenu').style.display='none';
   updateFilmstripThumb(); updateSavePendingBtn();
   window.scrollTo(0,0);
-  setTimeout(()=>startCamera(),150);
+  setTimeout(()=>{startCamera();bindShutterButton();},150);
+}
+
+function bindShutterButton(){
+  const btn = document.getElementById('shutterBtn');
+  if(!btn) return;
+  // Supprimer anciens listeners
+  if(btn._shutterBound) return;
+  btn._shutterBound = true;
+  // iOS PWA: utiliser touchend pour garantir le déclenchement
+  btn.addEventListener('touchstart', (e)=>{
+    e.preventDefault();
+    btn.style.transform='scale(0.88)';
+  }, {passive:false});
+  btn.addEventListener('touchend', (e)=>{
+    e.preventDefault();
+    btn.style.transform='scale(1)';
+    captureMedia();
+  }, {passive:false});
 }
 
 function exitCameraMode() {
@@ -186,16 +204,18 @@ window.addEventListener('offline',()=>showToast('📴 Hors ligne — photos en a
 function updateFilmstripThumb(){
   const thumb=document.getElementById('filmstripThumb'),countEl=document.getElementById('filmstripCount');
   if(!thumb) return;
-  const pending=sessionPhotos.filter(p=>!p.saved).length+offlineQueue.length;
-  if(sessionPhotos.length>0){
-    const last=sessionPhotos[sessionPhotos.length-1];
-    thumb.innerHTML=`<img src="${last.dataUrl||last.odThumbnail||''}" style="width:100%;height:100%;object-fit:cover;">
+  const pending=sessionPhotos.filter(p=>!p.saved&&p.dataUrl).length;
+  // Trouver la meilleure image à afficher (dernière avec src valide)
+  const withSrc = sessionPhotos.filter(p=>p.dataUrl||p.odThumbnail||p.odUrl);
+  if(withSrc.length>0){
+    const last=withSrc[withSrc.length-1];
+    const src=last.dataUrl||last.odThumbnail||last.odUrl||'';
+    thumb.innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
       ${pending>0?`<div style="position:absolute;bottom:2px;right:2px;background:#FF9F0A;color:white;font-size:9px;font-weight:700;font-family:'DM Sans',sans-serif;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;">${pending}</div>`:''}`;
   } else {
     thumb.innerHTML=`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
   }
-  if(countEl) countEl.style.display=pending>0?'flex':'none';
-  if(countEl) countEl.textContent=pending;
+  if(countEl){countEl.style.display=pending>0?'flex':'none';countEl.textContent=pending;}
 }
 
 function handleFilmstripTap(){
@@ -245,10 +265,18 @@ function renderFilmstripGrid(){
   if(sessionPhotos.length===0){grid.innerHTML='';if(empty)empty.style.display='block';return;}
   if(empty) empty.style.display='none';
   grid.innerHTML=sessionPhotos.map((p,i)=>{
-    const src=p.dataUrl||p.odThumbnail||p.odUrl||'';
-    return `<div class="filmstrip-item" onclick="openPhotoActionMenu(${i})" style="position:relative;aspect-ratio:1;overflow:hidden;background:#333;cursor:pointer;">
-      ${src?`<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:10px;">OneDrive</div>`}
-      <div style="position:absolute;top:3px;right:3px;background:${p.saved?'#30D158':'#FF9F0A'};color:white;font-size:9px;font-weight:700;padding:2px 5px;border-radius:5px;font-family:'DM Sans',sans-serif;">${p.saved?'✓':'↑'}</div>
+    // Utiliser dataUrl en priorité, puis thumbnail OneDrive (URL directe)
+    const src=p.dataUrl||(p.odThumbnail||'');
+    const hasSrc=src&&src.length>0;
+    return `<div onclick="openPhotoActionMenu(${i})" style="position:relative;aspect-ratio:1;overflow:hidden;background:#2a2a2a;cursor:pointer;border-radius:2px;">
+      ${hasSrc
+        ? `<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.parentElement.querySelector('.od-label').style.display='flex';this.style.display='none';">`
+        : ''}
+      <div class="od-label" style="display:${hasSrc?'none':'flex'};width:100%;height:100%;align-items:center;justify-content:center;flex-direction:column;gap:4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+        <span style="color:rgba(255,255,255,0.3);font-size:9px;font-family:'DM Sans',sans-serif;">OneDrive</span>
+      </div>
+      <div style="position:absolute;top:3px;right:3px;background:${p.saved?'#30D158':'#FF9F0A'};color:white;font-size:9px;font-weight:700;padding:2px 4px;border-radius:4px;font-family:'DM Sans',sans-serif;">${p.saved?'✓':'↑'}</div>
     </div>`;
   }).join('');
 }
@@ -412,10 +440,24 @@ function updatePhotosGallery(){renderFilmstripGrid();}
 
 // ===== FLIP + FLASH + GALERIE =====
 function flipCamera(){cameraFacing=cameraFacing==='environment'?'user':'environment';stopCamera();startCamera();}
+// flashMode: 'auto' | 'on' | 'off'
+let flashMode = 'auto';
 function toggleFlash(){
-  flashEnabled=!flashEnabled;
-  const btn=document.getElementById('flashBtn');if(btn)btn.style.background=flashEnabled?'rgba(255,210,0,0.7)':'rgba(0,0,0,0.45)';
-  if(state.cameraStream){const t=state.cameraStream.getVideoTracks()[0];if(t){try{t.applyConstraints({advanced:[{torch:flashEnabled}]});}catch(e){}}}
+  const modes = ['auto','on','off'];
+  flashMode = modes[(modes.indexOf(flashMode)+1) % modes.length];
+  const btn = document.getElementById('flashBtn');
+  if(btn){
+    const icons = {auto:'⚡A', on:'⚡', off:'⚡̶'};
+    const bgs = {auto:'rgba(0,0,0,0.45)', on:'rgba(255,210,0,0.7)', off:'rgba(80,80,80,0.7)'};
+    btn.textContent = icons[flashMode];
+    btn.style.background = bgs[flashMode];
+  }
+  // Appliquer torch si supporté (Android)
+  if(state.cameraStream){
+    const t=state.cameraStream.getVideoTracks()[0];
+    if(t){try{t.applyConstraints({advanced:[{torch:flashMode==='on'}]});}catch(e){}}
+  }
+  showToast(flashMode==='auto'?'Flash : Auto':flashMode==='on'?'Flash : Activé':'Flash : Désactivé');
 }
 function openGallery(){document.getElementById('galleryInput').click();}
 function handleGalleryFiles(e){
@@ -456,4 +498,3 @@ function stopRecording(){
   const ri=document.getElementById('recordingIndicator');if(ri)ri.style.display='none';
   setMode('video');
 }
-
