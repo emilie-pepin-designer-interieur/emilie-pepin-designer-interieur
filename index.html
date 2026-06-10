@@ -1097,38 +1097,18 @@ function goToPhotos() {
   document.getElementById('photoActionMenu').style.display='none';
   updateFilmstripThumb(); updateSavePendingBtn();
   window.scrollTo(0,0);
-  // Démarrer caméra immédiatement - iOS exige interaction utilisateur directe
-  startCamera().then(()=>{
-    bindShutterButton();
-  }).catch(err=>{
-    showToast('⚠️ Appuyez sur "Activer caméra"');
-    document.getElementById('activateCamBtn').style.display='flex';
-  });
+  setTimeout(()=>startCamera(),150);
 }
+
 function bindShutterButton(){
   const btn=document.getElementById('shutterBtn');
   if(!btn||btn._bound) return;
   btn._bound=true;
-  // iOS PWA: utiliser les 3 méthodes pour garantir le déclenchement
-  btn.addEventListener('touchstart',(e)=>{
-    e.stopPropagation();
-    btn.style.transform='scale(0.88)';
-  },{passive:true});
-  btn.addEventListener('touchend',(e)=>{
-    e.stopPropagation();
-    btn.style.transform='scale(1)';
-    window.captureMedia();
-  },{passive:true});
-  btn.addEventListener('pointerdown',(e)=>{
-    btn.style.transform='scale(0.88)';
-  });
-  btn.addEventListener('pointerup',(e)=>{
-    btn.style.transform='scale(1)';
-    window.captureMedia();
-  });
+  btn.addEventListener('touchstart',(e)=>{e.preventDefault();btn.style.transform='scale(0.88)';},{passive:false});
+  btn.addEventListener('touchend',(e)=>{e.preventDefault();btn.style.transform='scale(1)';if(window.captureMedia)window.captureMedia();},{passive:false});
 }
 
-window.exitCameraMode = function() {
+function exitCameraMode() {
   stopCamera();
   const nav=document.getElementById('bottomNav'); if(nav) nav.classList.remove('nav-hidden');
   const screen=document.getElementById('screenPhotos');
@@ -1139,33 +1119,15 @@ window.exitCameraMode = function() {
 async function startCamera() {
   try {
     if(state.cameraStream) stopCamera();
-    // iOS: essayer d'abord sans contraintes de résolution
-    let stream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video:{facingMode:{ideal:cameraFacing},width:{ideal:1920},height:{ideal:1080}},
-        audio:false
-      });
-    } catch(e1) {
-      // Fallback: contraintes minimales
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video:{facingMode:cameraFacing},
-          audio:false
-        });
-      } catch(e2) {
-        // Dernier recours: juste video:true
-        stream = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
-      }
-    }
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:cameraFacing},width:{ideal:1920},height:{ideal:1080}},
+      audio:currentMode==='video'
+    });
     state.cameraStream=stream; state.cameraActive=true;
     const video=document.getElementById('cameraVideo');
     video.srcObject=stream;
-    // iOS: pas besoin d'attendre onloadedmetadata
-    video.play().catch(e=>console.log('play:',e));
-    // Cacher le bouton d'activation si visible
-    const btn=document.getElementById('activateCamBtn');
-    if(btn) btn.style.display='none';
+    await new Promise(r=>video.onloadedmetadata=r);
+    video.play();
     applyZoomCSS(zoomCSS);
     setupPinchZoom();
     await detectZoomLevels(stream);
@@ -1209,7 +1171,7 @@ function renderZoomPills() {
   row.innerHTML=zoomLevels.map((l,i)=>`<button onclick="setZoomByIndex(${i})" id="zpill_${i}" class="zoom-pill ${i===0?'zoom-pill-active':''}">${l.label}</button>`).join('');
 }
 
-window.setZoomByIndex = function(i) {
+function setZoomByIndex(i) {
   if(i<0||i>=zoomLevels.length) return;
   zoomCSS=zoomLevels[i].scale; applyZoomCSS(zoomCSS);
   showZoomIndicator(zoomLevels[i].label);
@@ -1240,7 +1202,7 @@ function applyZoomCSS(scale){const v=document.getElementById('cameraVideo');if(v
 function showZoomIndicator(label){const el=document.getElementById('zoomIndicator');if(!el)return;el.style.display='block';el.textContent=label;clearTimeout(zoomIndicatorTimer);zoomIndicatorTimer=setTimeout(()=>el.style.display='none',1400);}
 
 // ===== GRILLE =====
-window.toggleGrid = function(){
+function toggleGrid(){
   gridVisible=!gridVisible;
   const g=document.getElementById('cameraGrid'),btn=document.getElementById('gridBtn');
   if(g) g.style.display=gridVisible?'block':'none';
@@ -1248,7 +1210,7 @@ window.toggleGrid = function(){
 }
 
 // ===== MODE =====
-window.setMode = function(mode){
+function setMode(mode){
   currentMode=mode;
   const mP=document.getElementById('modePhoto'),mV=document.getElementById('modeVideo');
   if(mP){mP.style.color=mode==='photo'?'white':'rgba(255,255,255,0.45)';mP.style.fontWeight=mode==='photo'?'700':'500';}
@@ -1259,19 +1221,17 @@ window.setMode = function(mode){
 }
 
 // ===== CAPTURE =====
-window.captureMedia = function(){
+window.captureMedia=function captureMedia(){
   const btn=document.getElementById('shutterBtn');
   if(btn){btn.style.transform='scale(0.88)';setTimeout(()=>btn.style.transform='scale(1)',120);}
-  if(currentMode==='photo') window.takePhoto();
+  if(currentMode==='photo') takePhoto();
   else if(mediaRecorder&&mediaRecorder.state==='recording') stopRecording();
   else startRecording();
 }
 
-window.takePhoto = function(){
+function takePhoto(){
   const video=document.getElementById('cameraVideo'),canvas=document.getElementById('photoCanvas');
-  if(!video||!canvas) { showToast('⚠️ Caméra non disponible'); return; }
-  if(!video.srcObject) { showToast('⚠️ Flux caméra absent'); return; }
-  if(video.readyState < 2) { showToast('⚠️ Caméra pas prête'); return; }
+  if(!video||!canvas) return;
   const w=video.videoWidth||1280,h=video.videoHeight||720;
   canvas.width=w; canvas.height=h;
   const ctx=canvas.getContext('2d');
@@ -1317,20 +1277,6 @@ window.addEventListener('offline',()=>showToast('📴 Hors ligne — photos en a
 
 // ===== PELLICULE =====
 function updateFilmstripThumb(){
-  const thumb=document.getElementById('filmstripThumb');
-  if(!thumb) return;
-  const pending=sessionPhotos.filter(p=>!p.saved&&p.dataUrl).length;
-  const withSrc=sessionPhotos.filter(p=>p.dataUrl||p.odThumbnail);
-  if(withSrc.length>0){
-    const last=withSrc[withSrc.length-1];
-    const src=last.dataUrl||last.odThumbnail||'';
-    thumb.innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">${pending>0?`<div style="position:absolute;bottom:2px;right:2px;background:#FF9F0A;color:white;font-size:9px;font-weight:700;font-family:'DM Sans',sans-serif;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;">${pending}</div>`:''}`;
-  } else {
-    thumb.innerHTML='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
-  }
-  return; // Fonction remplacée ci-dessus
-}
-function updateFilmstripThumb_OLD(){
   const thumb=document.getElementById('filmstripThumb'),countEl=document.getElementById('filmstripCount');
   if(!thumb) return;
   const pending=sessionPhotos.filter(p=>!p.saved).length+offlineQueue.length;
@@ -1558,17 +1504,13 @@ async function uploadPhotoToOneDrive(dataUrl,filename){
 function updatePhotosGallery(){renderFilmstripGrid();}
 
 // ===== FLIP + FLASH + GALERIE =====
-window.flipCamera = function(){cameraFacing=cameraFacing==='environment'?'user':'environment';stopCamera();startCamera();}
-let flashMode='auto';
-window.toggleFlash = function(){
-  const modes=['auto','on','off'];
-  flashMode=modes[(modes.indexOf(flashMode)+1)%modes.length];
-  const btn=document.getElementById('flashBtn');
-  if(btn){btn.textContent=flashMode==='auto'?'⚡A':flashMode==='on'?'⚡':'🚫';btn.style.background=flashMode==='on'?'rgba(255,210,0,0.7)':flashMode==='off'?'rgba(80,80,80,0.7)':'rgba(0,0,0,0.45)';}
-  if(state.cameraStream){const t=state.cameraStream.getVideoTracks()[0];if(t){try{t.applyConstraints({advanced:[{torch:flashMode==='on'}]});}catch(e){}}}
-  showToast(flashMode==='auto'?'Flash : Auto':flashMode==='on'?'Flash : Activé':'Flash : Désactivé');
+function flipCamera(){cameraFacing=cameraFacing==='environment'?'user':'environment';stopCamera();startCamera();}
+function toggleFlash(){
+  flashEnabled=!flashEnabled;
+  const btn=document.getElementById('flashBtn');if(btn)btn.style.background=flashEnabled?'rgba(255,210,0,0.7)':'rgba(0,0,0,0.45)';
+  if(state.cameraStream){const t=state.cameraStream.getVideoTracks()[0];if(t){try{t.applyConstraints({advanced:[{torch:flashEnabled}]});}catch(e){}}}
 }
-window.openGallery = function(){document.getElementById('galleryInput').click();}
+function openGallery(){document.getElementById('galleryInput').click();}
 function handleGalleryFiles(e){
   const files=Array.from(e.target.files||[]);if(!files.length)return;
   files.forEach(file=>{
@@ -1614,9 +1556,6 @@ function openPhotoEditorFromFilmstrip(index){closeFilmstrip();editingPhotoIndex=
 function openPhotoEditor(dataUrl){
   const editor=document.getElementById('photoEditor');
   editor.style.display='flex';
-  editor.style.zIndex='210';
-  const header=document.getElementById('editorHeader');
-  if(header){header.style.paddingTop='calc(env(safe-area-inset-top,44px) + 14px)';header.style.minHeight='72px';}
   const nav=document.getElementById('bottomNav');if(nav)nav.classList.add('nav-hidden');
   document.getElementById('cameraFullscreen').style.display='none';
   ['annotToolbar','adjustToolbar','cropToolbar'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
@@ -1870,7 +1809,7 @@ function activateTextTool(){
 function showTextDialog(){
   const dlg=document.getElementById('textDialog');if(dlg)dlg.style.display='flex';
   const input=document.getElementById('textInput'),sizeEl=document.getElementById('textSizeSlider'),sizeVal=document.getElementById('textSizeValue');
-  if(sizeEl&&sizeVal){sizeEl.value=32;sizeVal.textContent='32';const onSize=()=>{liveText.size=parseInt(sizeEl.value);sizeVal.textContent=sizeEl.value;updateLiveText();};sizeEl.oninput=onSize;sizeEl.addEventListener('change',onSize);sizeEl.addEventListener('touchmove',onSize,{passive:true});}
+  if(sizeEl&&sizeVal){sizeEl.value=32;sizeVal.textContent='32';sizeEl.oninput=()=>{sizeVal.textContent=sizeEl.value;liveText.size=parseInt(sizeEl.value);updateLiveText();};}
   if(input){input.value='';input.oninput=()=>{liveText.text=input.value;updateLiveText();};setTimeout(()=>input.focus(),100);}
 }
 
