@@ -1097,7 +1097,13 @@ function goToPhotos() {
   document.getElementById('photoActionMenu').style.display='none';
   updateFilmstripThumb(); updateSavePendingBtn();
   window.scrollTo(0,0);
-  setTimeout(()=>{startCamera();bindShutterButton();},150);
+  // Démarrer caméra immédiatement - iOS exige interaction utilisateur directe
+  startCamera().then(()=>{
+    bindShutterButton();
+  }).catch(err=>{
+    showToast('⚠️ Appuyez sur "Activer caméra"');
+    document.getElementById('activateCamBtn').style.display='flex';
+  });
 }
 function bindShutterButton(){
   const btn=document.getElementById('shutterBtn');
@@ -1133,15 +1139,33 @@ window.exitCameraMode = function() {
 async function startCamera() {
   try {
     if(state.cameraStream) stopCamera();
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:cameraFacing},width:{ideal:1920},height:{ideal:1080}},
-      audio:currentMode==='video'
-    });
+    // iOS: essayer d'abord sans contraintes de résolution
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video:{facingMode:{ideal:cameraFacing},width:{ideal:1920},height:{ideal:1080}},
+        audio:false
+      });
+    } catch(e1) {
+      // Fallback: contraintes minimales
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video:{facingMode:cameraFacing},
+          audio:false
+        });
+      } catch(e2) {
+        // Dernier recours: juste video:true
+        stream = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+      }
+    }
     state.cameraStream=stream; state.cameraActive=true;
     const video=document.getElementById('cameraVideo');
     video.srcObject=stream;
-    await new Promise(r=>video.onloadedmetadata=r);
-    video.play();
+    // iOS: pas besoin d'attendre onloadedmetadata
+    video.play().catch(e=>console.log('play:',e));
+    // Cacher le bouton d'activation si visible
+    const btn=document.getElementById('activateCamBtn');
+    if(btn) btn.style.display='none';
     applyZoomCSS(zoomCSS);
     setupPinchZoom();
     await detectZoomLevels(stream);
