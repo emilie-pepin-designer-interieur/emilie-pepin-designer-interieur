@@ -1220,7 +1220,7 @@ function setMode(mode){
 }
 
 // ===== CAPTURE =====
-function captureMedia(){
+window.captureMedia = function(){
   const btn=document.getElementById('shutterBtn');
   if(btn){btn.style.transform='scale(0.88)';setTimeout(()=>btn.style.transform='scale(1)',120);}
   if(currentMode==='photo') takePhoto();
@@ -1228,7 +1228,7 @@ function captureMedia(){
   else startRecording();
 }
 
-function takePhoto(){
+window.takePhoto = function(){
   const video=document.getElementById('cameraVideo'),canvas=document.getElementById('photoCanvas');
   if(!video||!canvas) return;
   const w=video.videoWidth||1280,h=video.videoHeight||720;
