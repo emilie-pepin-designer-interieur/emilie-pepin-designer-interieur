@@ -1086,124 +1086,103 @@ function navTo(screen,navId) {
 // ===== CAMÉRA =====
 function goToPhotos() {
   if(state.currentClient) setEl('photosClientNameCam', state.currentClient.Title);
-  
-  // Afficher menu de choix style Apple
   const existing = document.getElementById('photoChoiceSheet');
   if(existing) existing.remove();
-  
   const clientName = state.currentClient ? state.currentClient.Title : 'Client';
   const sheet = document.createElement('div');
   sheet.id = 'photoChoiceSheet';
-  sheet.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;display:flex;align-items:flex-end;';
+  sheet.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;display:flex;align-items:flex-end;';
   sheet.innerHTML = `
     <div style="width:100%;background:#1c1c1e;border-radius:20px 20px 0 0;
-                padding:16px 16px calc(env(safe-area-inset-bottom,0px)+16px);
-                font-family:'DM Sans',sans-serif;">
-      <div style="width:40px;height:4px;background:rgba(255,255,255,0.2);
-                  border-radius:2px;margin:0 auto 16px;"></div>
-      <div style="color:white;font-family:'Cormorant Garamond',serif;font-size:18px;
-                  text-align:center;margin-bottom:4px;">${clientName}</div>
-      <div style="color:rgba(255,255,255,0.45);font-size:12px;text-align:center;
-                  margin-bottom:16px;">Photos chantier</div>
-      
-      <!-- Prendre une photo -->
+                padding:16px 16px calc(env(safe-area-inset-bottom,0px)+16px);">
+      <div style="width:40px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 16px;"></div>
+      <div style="color:white;font-family:'Cormorant Garamond',serif;font-size:20px;text-align:center;margin-bottom:2px;">${clientName}</div>
+      <div style="color:rgba(255,255,255,0.4);font-size:12px;font-family:'DM Sans',sans-serif;text-align:center;margin-bottom:18px;">Photos chantier</div>
+
       <button onclick="takeNewPhoto();document.getElementById('photoChoiceSheet').remove();"
-        style="width:100%;padding:16px;background:rgba(255,255,255,0.08);
-               border:none;color:white;border-radius:14px;font-size:16px;
-               font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:10px;
-               display:flex;align-items:center;gap:14px;
+        style="width:100%;padding:15px 16px;background:rgba(255,255,255,0.07);border:none;
+               color:white;border-radius:14px;font-family:'DM Sans',sans-serif;cursor:pointer;
+               margin-bottom:10px;display:flex;align-items:center;gap:14px;
                -webkit-tap-highlight-color:transparent;">
-        <div style="width:44px;height:44px;background:#0A84FF;border-radius:12px;
-                    display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+        <div style="width:46px;height:46px;background:#0A84FF;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-            <circle cx="12" cy="13" r="4"/>
-          </svg>
+            <circle cx="12" cy="13" r="4"/></svg>
         </div>
         <div style="text-align:left;">
-          <div style="font-weight:600;font-size:16px;">Prendre une photo</div>
-          <div style="color:rgba(255,255,255,0.45);font-size:12px;margin-top:2px;">Ouvrir la caméra Apple</div>
+          <div style="font-weight:600;font-size:16px;">Appareil photo</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:2px;">Prendre une photo ou vidéo</div>
         </div>
+        <svg style="margin-left:auto;flex-shrink:0;" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"><polyline points="1 1 7 7 1 13"/></svg>
       </button>
 
-      <!-- Voir photos du client -->
       <button onclick="openClientPhotos();document.getElementById('photoChoiceSheet').remove();"
-        style="width:100%;padding:16px;background:rgba(255,255,255,0.08);
-               border:none;color:white;border-radius:14px;font-size:16px;
-               font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:10px;
-               display:flex;align-items:center;gap:14px;
+        style="width:100%;padding:15px 16px;background:rgba(255,255,255,0.07);border:none;
+               color:white;border-radius:14px;font-family:'DM Sans',sans-serif;cursor:pointer;
+               margin-bottom:10px;display:flex;align-items:center;gap:14px;
                -webkit-tap-highlight-color:transparent;">
-        <div style="width:44px;height:44px;background:#30D158;border-radius:12px;
-                    display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+        <div style="width:46px;height:46px;background:#FF9F0A;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
             <rect x="3" y="3" width="18" height="18" rx="2"/>
             <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
+            <polyline points="21 15 16 10 5 21"/></svg>
         </div>
         <div style="text-align:left;">
-          <div style="font-weight:600;font-size:16px;">Photos du client</div>
-          <div style="color:rgba(255,255,255,0.45);font-size:12px;margin-top:2px;">Voir et annoter les photos OneDrive</div>
+          <div style="font-weight:600;font-size:16px;">Photos OneDrive</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:2px;">Voir et annoter les photos du client</div>
         </div>
+        <svg style="margin-left:auto;flex-shrink:0;" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"><polyline points="1 1 7 7 1 13"/></svg>
       </button>
 
-      <!-- Importer depuis galerie -->
-      <button onclick="importFromGallery();document.getElementById('photoChoiceSheet').remove();"
-        style="width:100%;padding:16px;background:rgba(255,255,255,0.08);
-               border:none;color:white;border-radius:14px;font-size:16px;
-               font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:14px;
-               display:flex;align-items:center;gap:14px;
+      <button onclick="openDevicePhotos();document.getElementById('photoChoiceSheet').remove();"
+        style="width:100%;padding:15px 16px;background:rgba(255,255,255,0.07);border:none;
+               color:white;border-radius:14px;font-family:'DM Sans',sans-serif;cursor:pointer;
+               margin-bottom:14px;display:flex;align-items:center;gap:14px;
                -webkit-tap-highlight-color:transparent;">
-        <div style="width:44px;height:44px;background:#BF5AF2;border-radius:12px;
-                    display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <rect x="2" y="2" width="9" height="9" rx="1"/>
-            <rect x="13" y="2" width="9" height="9" rx="1"/>
-            <rect x="2" y="13" width="9" height="9" rx="1"/>
-            <rect x="13" y="13" width="9" height="9" rx="1"/>
-          </svg>
+        <div style="width:46px;height:46px;background:#30D158;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <rect x="2" y="2" width="9" height="9" rx="1.5"/>
+            <rect x="13" y="2" width="9" height="9" rx="1.5"/>
+            <rect x="2" y="13" width="9" height="9" rx="1.5"/>
+            <rect x="13" y="13" width="9" height="9" rx="1.5"/></svg>
         </div>
         <div style="text-align:left;">
-          <div style="font-weight:600;font-size:16px;">Importer depuis la galerie</div>
-          <div style="color:rgba(255,255,255,0.45);font-size:12px;margin-top:2px;">Choisir une photo existante</div>
+          <div style="font-weight:600;font-size:16px;">Photothèque</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:2px;">Importer depuis iPhone / iPad</div>
         </div>
+        <svg style="margin-left:auto;flex-shrink:0;" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"><polyline points="1 1 7 7 1 13"/></svg>
       </button>
 
       <button onclick="document.getElementById('photoChoiceSheet').remove();"
-        style="width:100%;padding:14px;background:rgba(255,255,255,0.06);
-               border:none;color:rgba(255,255,255,0.6);border-radius:14px;
-               font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;
-               -webkit-tap-highlight-color:transparent;">Annuler</button>
+        style="width:100%;padding:14px;background:rgba(255,255,255,0.05);border:none;
+               color:rgba(255,255,255,0.5);border-radius:14px;font-family:'DM Sans',sans-serif;
+               font-size:15px;cursor:pointer;-webkit-tap-highlight-color:transparent;">Annuler</button>
     </div>`;
-  sheet.addEventListener('click', e => { if(e.target === sheet) sheet.remove(); });
+  sheet.addEventListener('click', e => { if(e.target===sheet) sheet.remove(); });
   document.body.appendChild(sheet);
 }
 
 function takeNewPhoto() {
   const input = document.getElementById('shutterInput');
-  if(input) {
-    input.removeAttribute('capture');
-    input.setAttribute('accept', 'image/*,video/*');
-    input.click();
-  }
+  if(input) { input.removeAttribute('capture'); input.setAttribute('accept','image/*,video/*'); input.click(); }
 }
 
-function importFromGallery() {
+function openDevicePhotos() {
+  // Ouvrir la photothèque native (pas de capture= donc pas de caméra)
   const input = document.getElementById('galleryInput');
-  if(input) input.click();
+  if(input) { input.removeAttribute('capture'); input.setAttribute('accept','image/*,video/*'); input.setAttribute('multiple',''); input.click(); }
 }
 
 async function openClientPhotos() {
-  // Ouvrir la pellicule et charger les photos OneDrive
   openPhotoGalleryScreen();
   setTimeout(async () => {
-    await openFilmstrip();
+    openFilmstrip();
     if(state.accessToken && state.currentClient) {
       await loadOneDrivePhotos();
       renderFilmstripGrid();
       updateFilmstripThumb();
     }
-  }, 300);
+  }, 200);
 }
 
 function openPhotoGalleryScreen() {
@@ -1455,7 +1434,7 @@ function renderFilmstripGrid(){
     return `<div style="background:#2a2a2a;border-radius:4px;overflow:hidden;display:flex;flex-direction:column;">
       <div style="aspect-ratio:1;position:relative;overflow:hidden;cursor:pointer;" onclick="openPhotoViewer(${i})">
         ${src?`<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`}
-        <div style="position:absolute;top:3px;right:3px;background:${p.saved?'#30D158':'#FF9F0A'};color:white;font-size:8px;font-weight:700;padding:1px 4px;border-radius:4px;font-family:'DM Sans',sans-serif;">${p.saved?'✓':'↑'}</div>
+        ${!p.saved ? `<div style="position:absolute;top:3px;right:3px;background:#FF9F0A;color:white;font-size:8px;font-weight:700;padding:1px 4px;border-radius:4px;font-family:'DM Sans',sans-serif;">↑</div>` : ''}
       </div>
       <div style="display:flex;border-top:1px solid rgba(255,255,255,0.08);">
         <button onclick="openPhotoEditorFromFilmstrip(${i})" style="flex:1;padding:7px 2px;background:none;border:none;border-right:1px solid rgba(255,255,255,0.08);color:#0A84FF;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;-webkit-tap-highlight-color:transparent;">
@@ -1481,75 +1460,283 @@ function deletePhotoAt(index){
 }
 
 // ===== LECTEUR PHOTO APPLE-STYLE =====
-function openPhotoViewer(index){
-  viewerCurrentIndex=index;
-  let viewer=document.getElementById('photoViewer');
-  if(!viewer){
-    viewer=document.createElement('div');
-    viewer.id='photoViewer';
-    viewer.style.cssText='position:fixed;inset:0;z-index:300;background:#000;display:flex;flex-direction:column;';
-    viewer.innerHTML=`
-      <div style="padding:calc(env(safe-area-inset-top,44px)+8px) 16px 10px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.8);flex-shrink:0;">
-        <button onclick="closePhotoViewer()" style="background:none;border:none;color:white;font-size:15px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:8px;">Fermer</button>
-        <span id="viewerCounter" style="color:white;font-size:13px;font-family:'DM Sans',sans-serif;"></span>
-        <button onclick="annotateFromViewer()" style="background:none;border:none;color:#0A84FF;font-size:15px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;padding:8px;">Modifier</button>
+
+function openPhotoViewer(index) {
+  viewerCurrentIndex = index;
+  let viewer = document.getElementById('photoViewer');
+  if(!viewer) {
+    viewer = document.createElement('div');
+    viewer.id = 'photoViewer';
+    viewer.style.cssText = 'position:fixed;inset:0;z-index:300;background:#000;display:flex;flex-direction:column;';
+    viewer.innerHTML = `
+      <!-- Header style app Photos Apple -->
+      <div id="viewerHeader" style="position:absolute;top:0;left:0;right:0;z-index:10;
+           padding:calc(env(safe-area-inset-top,44px)+8px) 16px 12px;
+           display:flex;align-items:center;justify-content:space-between;
+           background:linear-gradient(to bottom,rgba(0,0,0,0.7),transparent);">
+        <button onclick="closePhotoViewer()" style="background:none;border:none;color:white;
+                font-family:'DM Sans',sans-serif;font-size:16px;cursor:pointer;
+                display:flex;align-items:center;gap:6px;padding:8px 0;
+                -webkit-tap-highlight-color:transparent;">
+          <svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="white" stroke-width="2.5">
+            <polyline points="8 1 2 8 8 15"/></svg>
+          Retour
+        </button>
+        <div id="viewerDateLabel" style="color:white;font-family:'DM Sans',sans-serif;
+             font-size:13px;opacity:0.8;text-align:center;"></div>
+        <button onclick="shareViewerPhoto()" style="background:none;border:none;color:white;
+                cursor:pointer;padding:8px 0;-webkit-tap-highlight-color:transparent;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+            <polyline points="16 6 12 2 8 6"/>
+            <line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+        </button>
       </div>
-      <div id="viewerMain" style="flex:1;position:relative;overflow:hidden;display:flex;align-items:center;min-height:0;">
-        <div id="viewerTrack" style="display:flex;height:100%;will-change:transform;"></div>
+
+      <!-- Zone photo principale avec swipe -->
+      <div id="viewerMain" style="flex:1;position:relative;overflow:hidden;
+           display:flex;align-items:center;">
+        <div id="viewerTrack" style="display:flex;height:100%;will-change:transform;
+             transition:transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94);"></div>
       </div>
-      <div id="viewerStrip" style="height:76px;display:flex;gap:3px;padding:6px 8px;overflow-x:auto;background:rgba(0,0,0,0.85);-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center;flex-shrink:0;padding-bottom:calc(env(safe-area-inset-bottom,0px)+6px);"></div>`;
+
+      <!-- Footer style app Photos Apple -->
+      <div id="viewerFooter" style="position:absolute;bottom:0;left:0;right:0;
+           padding:0 0 calc(env(safe-area-inset-bottom,0px)+8px);
+           background:linear-gradient(to top,rgba(0,0,0,0.8),transparent);">
+
+        <!-- Boutons actions style Apple -->
+        <div style="display:flex;justify-content:space-around;align-items:center;
+                    padding:8px 20px 12px;">
+          <button onclick="annotateFromViewer()" style="background:none;border:none;
+                  color:white;cursor:pointer;display:flex;flex-direction:column;
+                  align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;">
+            <div style="width:44px;height:44px;background:rgba(255,255,255,0.15);
+                        border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            </div>
+            <span style="font-family:'DM Sans',sans-serif;font-size:11px;
+                         color:rgba(255,255,255,0.8);">Modifier</span>
+          </button>
+
+          <button onclick="saveViewerToOneDrive()" style="background:none;border:none;
+                  color:white;cursor:pointer;display:flex;flex-direction:column;
+                  align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;">
+            <div style="width:44px;height:44px;background:rgba(255,255,255,0.15);
+                        border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <span style="font-family:'DM Sans',sans-serif;font-size:11px;
+                         color:rgba(255,255,255,0.8);">OneDrive</span>
+          </button>
+
+          <button onclick="deleteViewerPhoto()" style="background:none;border:none;
+                  color:white;cursor:pointer;display:flex;flex-direction:column;
+                  align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;">
+            <div style="width:44px;height:44px;background:rgba(255,69,58,0.3);
+                        border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF453A" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6"/><path d="M14 11v6"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </div>
+            <span style="font-family:'DM Sans',sans-serif;font-size:11px;
+                         color:#FF453A;">Supprimer</span>
+          </button>
+        </div>
+
+        <!-- Pellicule horizontale style app Photos -->
+        <div id="viewerStrip" style="display:flex;gap:3px;padding:0 8px 8px;
+             overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+             align-items:center;"></div>
+      </div>`;
     document.body.appendChild(viewer);
-    const main=viewer.querySelector('#viewerMain');
-    main.addEventListener('touchstart',e=>{viewerStartX=e.touches[0].clientX;},{passive:true});
-    main.addEventListener('touchend',e=>{
-      const dx=e.changedTouches[0].clientX-viewerStartX;
-      if(Math.abs(dx)>50){if(dx<0)viewerNav(1);else viewerNav(-1);}
-    },{passive:true});
+
+    // Swipe horizontal
+    const main = viewer.querySelector('#viewerMain');
+    let swipeStartX = 0, swipeStartY = 0, isSwiping = false;
+    main.addEventListener('touchstart', e => {
+      swipeStartX = e.touches[0].clientX;
+      swipeStartY = e.touches[0].clientY;
+      isSwiping = false;
+    }, {passive:true});
+    main.addEventListener('touchmove', e => {
+      const dx = Math.abs(e.touches[0].clientX - swipeStartX);
+      const dy = Math.abs(e.touches[0].clientY - swipeStartY);
+      if(dx > dy && dx > 10) isSwiping = true;
+    }, {passive:true});
+    main.addEventListener('touchend', e => {
+      if(!isSwiping) return;
+      const dx = e.changedTouches[0].clientX - swipeStartX;
+      if(Math.abs(dx) > 50) {
+        if(dx < 0 && viewerCurrentIndex < sessionPhotos.length-1) scrollViewerTo(viewerCurrentIndex+1, true);
+        else if(dx > 0 && viewerCurrentIndex > 0) scrollViewerTo(viewerCurrentIndex-1, true);
+      }
+    }, {passive:true});
   }
-  viewer.style.display='flex';
+  viewer.style.display = 'flex';
+  // Cacher nav
+  const nav = document.getElementById('bottomNav'); if(nav) nav.classList.add('nav-hidden');
   renderViewerPhotos();
-  scrollViewerTo(index,false);
+  scrollViewerTo(index, false);
   renderViewerStrip();
 }
 
-function renderViewerPhotos(){
-  const track=document.getElementById('viewerTrack');
+function renderViewerPhotos() {
+  const track = document.getElementById('viewerTrack');
   if(!track) return;
-  track.style.transition='none';
-  track.innerHTML=sessionPhotos.map((p,i)=>{
-    const src=p.dataUrl||p.odUrl||'';
-    return `<div style="min-width:100vw;height:100%;display:flex;align-items:center;justify-content:center;background:#000;">
-      ${src?`<img src="${src}" style="max-width:100%;max-height:100%;object-fit:contain;" loading="lazy">`:`<div style="color:rgba(255,255,255,0.3);font-size:13px;font-family:'DM Sans',sans-serif;">Chargement...</div>`}
+  track.style.transition = 'none';
+  track.innerHTML = sessionPhotos.map((p, i) => {
+    const src = p.dataUrl || p.odUrl || '';
+    return `<div style="min-width:100vw;height:100%;display:flex;align-items:center;
+                        justify-content:center;background:#000;">
+      ${src
+        ? `<img src="${src}" style="max-width:100%;max-height:100%;object-fit:contain;"
+               loading="lazy" onerror="this.style.display='none'">`
+        : `<div style="color:rgba(255,255,255,0.3);font-family:'DM Sans',sans-serif;
+                       font-size:14px;text-align:center;padding:20px;">
+             <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+               stroke="rgba(255,255,255,0.2)" stroke-width="1"><rect x="3" y="3" width="18"
+               height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+               <polyline points="21 15 16 10 5 21"/></svg>
+             <div style="margin-top:10px;">Chargement...</div>
+           </div>`}
     </div>`;
   }).join('');
 }
 
-function scrollViewerTo(index,animated){
-  const track=document.getElementById('viewerTrack'),counter=document.getElementById('viewerCounter');
-  if(track){track.style.transition=animated?'transform 0.3s ease':'none';track.style.transform=`translateX(${-index*100}vw)`;}
-  if(counter) counter.textContent=`${index+1} / ${sessionPhotos.length}`;
-  viewerCurrentIndex=index;
-  document.querySelectorAll('.viewer-strip-item').forEach((el,i)=>el.style.border=i===index?'2px solid white':'2px solid transparent');
+function scrollViewerTo(index, animated) {
+  const track = document.getElementById('viewerTrack');
+  const dateLabel = document.getElementById('viewerDateLabel');
+  if(track) {
+    track.style.transition = animated ? 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none';
+    track.style.transform = `translateX(${-index * 100}vw)`;
+  }
+  viewerCurrentIndex = index;
+  // Mettre à jour date
+  if(dateLabel && sessionPhotos[index]) {
+    const p = sessionPhotos[index];
+    const d = p.date ? new Date(p.date) : null;
+    dateLabel.textContent = d ? d.toLocaleDateString('fr-CA', {
+      month:'long', day:'numeric', year:'numeric'
+    }) : p.filename || '';
+  }
+  // Highlight pellicule
+  document.querySelectorAll('.viewer-strip-thumb').forEach((el, i) => {
+    el.style.opacity = i === index ? '1' : '0.5';
+    el.style.transform = i === index ? 'scale(1.08)' : 'scale(1)';
+    el.style.border = i === index ? '2px solid white' : '2px solid transparent';
+  });
+  // Scroll pellicule vers photo active
+  const strip = document.getElementById('viewerStrip');
+  if(strip) {
+    const thumb = strip.querySelectorAll('.viewer-strip-thumb')[index];
+    if(thumb) thumb.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  }
 }
 
-function renderViewerStrip(){
-  const strip=document.getElementById('viewerStrip');
+function renderViewerStrip() {
+  const strip = document.getElementById('viewerStrip');
   if(!strip) return;
-  strip.innerHTML=sessionPhotos.map((p,i)=>{
-    const src=p.dataUrl||p.odThumbnail||'';
-    return `<div class="viewer-strip-item" onclick="scrollViewerTo(${i},true)"
-      style="min-width:60px;height:60px;border-radius:8px;overflow:hidden;cursor:pointer;flex-shrink:0;border:${i===viewerCurrentIndex?'2px solid white':'2px solid transparent'};">
-      ${src?`<img src="${src}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;background:#333;"></div>`}
+  strip.innerHTML = sessionPhotos.map((p, i) => {
+    const src = p.dataUrl || p.odThumbnail || '';
+    return `<div class="viewer-strip-thumb" onclick="scrollViewerTo(${i},true)"
+      style="min-width:60px;height:60px;border-radius:8px;overflow:hidden;
+             cursor:pointer;flex-shrink:0;border:2px solid transparent;
+             transition:all 0.2s;opacity:${i===viewerCurrentIndex?'1':'0.5'};
+             transform:${i===viewerCurrentIndex?'scale(1.08)':'scale(1)'};
+             border-color:${i===viewerCurrentIndex?'white':'transparent'};">
+      ${src
+        ? `<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;">`
+        : `<div style="width:100%;height:100%;background:#333;display:flex;
+                       align-items:center;justify-content:center;">
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="rgba(255,255,255,0.3)" stroke-width="1.5">
+               <rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+           </div>`}
     </div>`;
   }).join('');
 }
 
-function viewerNav(dir){
-  const ni=viewerCurrentIndex+dir;
-  if(ni>=0&&ni<sessionPhotos.length) scrollViewerTo(ni,true);
+function closePhotoViewer() {
+  const v = document.getElementById('photoViewer');
+  if(v) v.style.display = 'none';
+  const nav = document.getElementById('bottomNav');
+  if(nav) nav.classList.remove('nav-hidden');
 }
-function closePhotoViewer(){const v=document.getElementById('photoViewer');if(v)v.style.display='none';}
-function annotateFromViewer(){closePhotoViewer();editingPhotoIndex=viewerCurrentIndex;const p=sessionPhotos[viewerCurrentIndex];if(p?.dataUrl)openPhotoEditor(p.dataUrl);}
+
+function annotateFromViewer() {
+  closePhotoViewer();
+  editingPhotoIndex = viewerCurrentIndex;
+  const photo = sessionPhotos[viewerCurrentIndex];
+  if(!photo) return;
+  if(photo.dataUrl) {
+    openMarkupForDevice(viewerCurrentIndex, photo.dataUrl);
+  } else if(photo.odUrl) {
+    showToast('⏳ Chargement de la photo...');
+    fetch(photo.odUrl)
+      .then(r => r.blob())
+      .then(blob => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          sessionPhotos[viewerCurrentIndex].dataUrl = ev.target.result;
+          openMarkupForDevice(viewerCurrentIndex, ev.target.result);
+        };
+        reader.readAsDataURL(blob);
+      })
+      .catch(() => showToast('⚠️ Impossible de charger la photo'));
+  }
+}
+
+async function saveViewerToOneDrive() {
+  const photo = sessionPhotos[viewerCurrentIndex];
+  if(!photo || !photo.dataUrl) { showToast('⚠️ Photo non disponible'); return; }
+  showToast('⬆️ Sauvegarde...');
+  const ok = await uploadPhotoToOneDrive(photo.dataUrl, photo.filename);
+  if(ok) { photo.saved = true; showToast('✅ Photo sauvegardée dans OneDrive !'); updateFilmstripThumb(); }
+  else showToast('⚠️ Connexion Microsoft 365 requise');
+}
+
+async function deleteViewerPhoto() {
+  if(!confirm('Supprimer cette photo définitivement ?')) return;
+  const photo = sessionPhotos[viewerCurrentIndex];
+  if(photo?.oneDriveId && state.accessToken) {
+    await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${photo.oneDriveId}`, {
+      method: 'DELETE', headers: { Authorization: `Bearer ${state.accessToken}` }
+    });
+  }
+  sessionPhotos.splice(viewerCurrentIndex, 1);
+  if(sessionPhotos.length === 0) { closePhotoViewer(); return; }
+  const newIdx = Math.min(viewerCurrentIndex, sessionPhotos.length - 1);
+  renderViewerPhotos();
+  renderViewerStrip();
+  scrollViewerTo(newIdx, false);
+  renderFilmstripGrid();
+  updateFilmstripThumb();
+  showToast('🗑️ Photo supprimée');
+}
+
+function shareViewerPhoto() {
+  const photo = sessionPhotos[viewerCurrentIndex];
+  if(!photo?.dataUrl) { showToast('⚠️ Photo non disponible'); return; }
+  // Utiliser Web Share API si disponible
+  if(navigator.share) {
+    fetch(photo.dataUrl).then(r=>r.blob()).then(blob => {
+      const file = new File([blob], photo.filename || 'photo.jpg', {type:'image/jpeg'});
+      navigator.share({ files: [file], title: state.currentClient?.Title || 'Photo chantier' })
+        .catch(() => {});
+    });
+  } else {
+    showToast('Partage non disponible sur cet appareil');
+  }
+}
+
 
 // ===== MENU ACTION PHOTO =====
 function openPhotoActionMenu(index){
