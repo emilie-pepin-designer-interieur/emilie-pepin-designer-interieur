@@ -412,17 +412,21 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
           <span style="color:rgba(255,255,255,0.55);font-size:10px;font-family:'DM Sans',sans-serif;">Photos</span>
         </div>
 
-        <!-- DÉCLENCHEUR APPLE -->
-        <button id="shutterBtn" onclick="captureMedia()" style="width:84px;height:84px;
+        <!-- DÉCLENCHEUR APPLE - label + input natif iOS -->
+        <label for="shutterInput" id="shutterBtn" style="width:84px;height:84px;
                 border-radius:50%;background:rgba(255,255,255,0.18);
                 border:4px solid rgba(255,255,255,0.9);
                 cursor:pointer;display:flex;align-items:center;justify-content:center;
                 transition:transform 0.1s;flex-shrink:0;
                 -webkit-tap-highlight-color:transparent;
-                box-shadow:0 0 0 2px rgba(255,255,255,0.25),0 6px 20px rgba(0,0,0,0.5);">
+                box-shadow:0 0 0 2px rgba(255,255,255,0.25),0 6px 20px rgba(0,0,0,0.5);"
+          ontouchstart="this.style.transform='scale(0.88)'"
+          ontouchend="this.style.transform='scale(1)'">
           <div id="shutterInner" style="width:70px;height:70px;border-radius:50%;
-               background:white;transition:all 0.15s;"></div>
-        </button>
+               background:white;transition:all 0.15s;pointer-events:none;"></div>
+        </label>
+        <input type="file" id="shutterInput" accept="image/*" capture="environment"
+          style="display:none;" onchange="handleNativeCapture(event)">
 
         <!-- FLIP -->
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:72px;">
@@ -753,8 +757,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 
   <input type="file" id="galleryInput" accept="image/*,video/*" multiple
     style="display:none" onchange="handleGalleryFiles(event)">
-  <input type="file" id="nativeCameraInput" accept="image/*" capture="environment"
-    style="display:none" onchange="handleNativeCapture(event)">
 </div>
 
 <!-- ===== SCREEN NOTE DE CHANTIER ===== -->
@@ -1100,22 +1102,6 @@ function goToPhotos() {
   updateFilmstripThumb(); updateSavePendingBtn();
   window.scrollTo(0,0);
   setTimeout(()=>startCamera(),150);
-}
-
-function bindShutterButton(){
-  const btn=document.getElementById('shutterBtn');
-  if(!btn||btn._bound) return;
-  btn._bound=true;
-  btn.addEventListener('touchstart',(e)=>{
-    e.preventDefault();
-    btn.style.transform='scale(0.88)';
-  },{passive:false});
-  btn.addEventListener('touchend',(e)=>{
-    e.preventDefault();
-    e.stopPropagation();
-    btn.style.transform='scale(1)';
-    captureMedia();
-  },{passive:false});
 }
 
 function exitCameraMode() {
@@ -1514,6 +1500,24 @@ async function uploadPhotoToOneDrive(dataUrl,filename){
 function updatePhotosGallery(){renderFilmstripGrid();}
 
 // ===== FLIP + FLASH + GALERIE =====
+function handleNativeCapture(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const ts=new Date();
+    const filename=formatDateForFilename(ts)+'_'+String(sessionPhotos.length+1).padStart(3,'0')+'.jpg';
+    const photo={dataUrl:ev.target.result,saved:false,filename,oneDriveId:null};
+    sessionPhotos.push(photo);
+    updateFilmstripThumb();
+    updateSavePendingBtn();
+    autoSavePhoto(photo,sessionPhotos.length-1);
+    showToast('📸 Photo ajoutée');
+  };
+  reader.readAsDataURL(file);
+  e.target.value='';
+}
+
 function flipCamera(){cameraFacing=cameraFacing==='environment'?'user':'environment';stopCamera();startCamera();}
 function toggleFlash(){
   flashEnabled=!flashEnabled;
