@@ -413,7 +413,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
         </div>
 
         <!-- DÉCLENCHEUR APPLE -->
-        <button id="shutterBtn" style="width:84px;height:84px;
+        <button id="shutterBtn" ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform='scale(1)';captureMedia();" onclick="captureMedia()" style="width:84px;height:84px;
                 border-radius:50%;background:rgba(255,255,255,0.18);
                 border:4px solid rgba(255,255,255,0.9);
                 cursor:pointer;display:flex;align-items:center;justify-content:center;
