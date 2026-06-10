@@ -213,12 +213,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 .filmstrip-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .filmstrip-item .saved-badge { position: absolute; top: 4px; right: 4px; background: #30D158; color: white; font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 5px; font-family: 'DM Sans', sans-serif; }
 .filmstrip-item .delete-btn { position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; background: rgba(255,69,58,0.85); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; }
-
-/* VIEWER PHOTOS */
-.viewer-strip-thumb { min-width:58px;height:58px;border-radius:8px;overflow:hidden;cursor:pointer;flex-shrink:0;border:2px solid transparent;transition:all 0.2s; }
-.viewer-strip-thumb.active { border-color:white;transform:scale(1.08); }
-/* PELLICULE THUMB */
-#lastPhotoThumb { position:relative;overflow:hidden; }
 </style>
 </head>
 <body>
@@ -1092,6 +1086,11 @@ function navTo(screen,navId) {
 // ===== CAMÉRA =====
 function goToPhotos() {
   if(state.currentClient) setEl('photosClientNameCam', state.currentClient.Title);
+  showPhotoChoiceMenu();
+}
+
+// ===== MENU 2 CHOIX (Appareil photo / Photos) =====
+function showPhotoChoiceMenu() {
   const old = document.getElementById('photoChoiceMenu');
   if(old) old.remove();
   const clientName = state.currentClient ? state.currentClient.Title : '';
@@ -1102,32 +1101,75 @@ function goToPhotos() {
     <div style="width:100%;background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px 16px calc(env(safe-area-inset-bottom,0px)+20px);">
       <div style="width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 18px;"></div>
       <div style="color:white;font-family:'Cormorant Garamond',serif;font-size:19px;text-align:center;margin-bottom:18px;">${clientName} — Photos chantier</div>
-      <button onclick="openNativeCamera();document.getElementById('photoChoiceMenu').remove();"
-        style="width:100%;padding:16px;background:rgba(10,132,255,0.15);border:1px solid rgba(10,132,255,0.3);color:white;border-radius:14px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent;">
+      <button onclick="chooseAppareilPhoto()" style="width:100%;padding:16px;background:rgba(10,132,255,0.15);border:1px solid rgba(10,132,255,0.3);color:white;border-radius:14px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent;">
         <div style="width:48px;height:48px;background:#0A84FF;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </div>
-        <div><div style="font-weight:600;font-size:16px;">Appareil photo</div><div style="color:rgba(255,255,255,0.45);font-size:12px;margin-top:2px;">Prendre une photo ou vidéo</div></div>
+        <div style="text-align:left;"><div style="font-weight:600;font-size:16px;">Appareil photo</div><div style="color:rgba(255,255,255,0.45);font-size:12px;margin-top:2px;">Prendre des photos</div></div>
       </button>
-      <button onclick="openPhotoLibrary();document.getElementById('photoChoiceMenu').remove();"
-        style="width:100%;padding:16px;background:rgba(255,159,10,0.15);border:1px solid rgba(255,159,10,0.3);color:white;border-radius:14px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent;">
+      <button onclick="choosePhotosGallery()" style="width:100%;padding:16px;background:rgba(255,159,10,0.15);border:1px solid rgba(255,159,10,0.3);color:white;border-radius:14px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent;">
         <div style="width:48px;height:48px;background:#FF9F0A;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </div>
-        <div><div style="font-weight:600;font-size:16px;">Photos</div><div style="color:rgba(255,255,255,0.45);font-size:12px;margin-top:2px;">Voir la galerie du client</div></div>
+        <div style="text-align:left;"><div style="font-weight:600;font-size:16px;">Photos</div><div style="color:rgba(255,255,255,0.45);font-size:12px;margin-top:2px;">Galerie OneDrive du client</div></div>
       </button>
-      <button onclick="document.getElementById('photoChoiceMenu').remove();"
-        style="width:100%;padding:14px;background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.5);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;-webkit-tap-highlight-color:transparent;">Annuler</button>
+      <button onclick="document.getElementById('photoChoiceMenu').remove();" style="width:100%;padding:14px;background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.5);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;-webkit-tap-highlight-color:transparent;">Annuler</button>
     </div>`;
   menu.addEventListener('click', e => { if(e.target===menu) menu.remove(); });
   document.body.appendChild(menu);
 }
 
-function openNativeCamera() {
-  document.getElementById('cameraInput').click();
+// CHOIX 1: Appareil photo → sous-menu caméra custom OU photothèque
+function chooseAppareilPhoto() {
+  document.getElementById('photoChoiceMenu')?.remove();
+  const menu = document.createElement('div');
+  menu.id = 'cameraSubMenu';
+  menu.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;display:flex;align-items:flex-end;';
+  menu.innerHTML = `
+    <div style="width:100%;background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px 16px calc(env(safe-area-inset-bottom,0px)+20px);">
+      <div style="width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 18px;"></div>
+      <button onclick="openCustomCamera()" style="width:100%;padding:16px;background:rgba(48,209,88,0.15);border:1px solid rgba(48,209,88,0.3);color:white;border-radius:14px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent;">
+        <div style="width:48px;height:48px;background:#30D158;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <div style="text-align:left;"><div style="font-weight:600;font-size:16px;">Caméra de l'app</div><div style="color:rgba(255,255,255,0.45);font-size:12px;margin-top:2px;">Multi-photos + zoom + grille</div></div>
+      </button>
+      <button onclick="openPhotothèque()" style="width:100%;padding:16px;background:rgba(191,90,242,0.15);border:1px solid rgba(191,90,242,0.3);color:white;border-radius:14px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent;">
+        <div style="width:48px;height:48px;background:#BF5AF2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="2" width="9" height="9" rx="1.5"/><rect x="13" y="2" width="9" height="9" rx="1.5"/><rect x="2" y="13" width="9" height="9" rx="1.5"/><rect x="13" y="13" width="9" height="9" rx="1.5"/></svg>
+        </div>
+        <div style="text-align:left;"><div style="font-weight:600;font-size:16px;">Photothèque</div><div style="color:rgba(255,255,255,0.45);font-size:12px;margin-top:2px;">Importer depuis iPhone/iPad</div></div>
+      </button>
+      <button onclick="document.getElementById('cameraSubMenu').remove();showPhotoChoiceMenu();" style="width:100%;padding:14px;background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.5);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;-webkit-tap-highlight-color:transparent;">Retour</button>
+    </div>`;
+  menu.addEventListener('click', e => { if(e.target===menu) menu.remove(); });
+  document.body.appendChild(menu);
 }
 
-function openPhotoLibrary() {
+// Ouvrir la caméra custom (celle qui fonctionne)
+function openCustomCamera() {
+  document.getElementById('cameraSubMenu')?.remove();
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='';});
+  const screen = document.getElementById('screenPhotos');
+  if(screen){screen.classList.add('active');screen.style.display='flex';}
+  const nav = document.getElementById('bottomNav'); if(nav) nav.classList.add('nav-hidden');
+  document.getElementById('cameraFullscreen').style.display='flex';
+  document.getElementById('photoEditor').style.display='none';
+  document.getElementById('videoEditor').style.display='none';
+  if(document.getElementById('filmstripPanel')) document.getElementById('filmstripPanel').style.display='none';
+  updateLastPhotoThumb();
+  window.scrollTo(0,0);
+  setTimeout(()=>startCamera(),200);
+}
+
+function openPhotothèque() {
+  document.getElementById('cameraSubMenu')?.remove();
+  document.getElementById('galleryFileInput').click();
+}
+
+// CHOIX 2: Photos → galerie OneDrive style app Photos
+function choosePhotosGallery() {
+  document.getElementById('photoChoiceMenu')?.remove();
   openGalleryScreen();
 }
 
@@ -1263,11 +1305,15 @@ function takePhoto(){
   else ctx.drawImage(video,0,0);
   const dataUrl=canvas.toDataURL('image/jpeg',0.93);
   const ts=new Date(),filename=formatDateForFilename(ts)+'_'+String(sessionPhotos.length+1).padStart(3,'0')+'.jpg';
-  const photo={dataUrl,saved:false,filename,oneDriveId:null};
+  const photo={dataUrl,saved:false,filename,oneDriveId:null,date:ts};
   sessionPhotos.push(photo);
-  updateFilmstripThumb(); updateSavePendingBtn();
+  updateLastPhotoThumb();
   autoSavePhoto(photo,sessionPhotos.length-1);
-  showToast('📸 Photo prise');
+  // Animation flash
+  const flash=document.createElement('div');
+  flash.style.cssText='position:absolute;inset:0;background:white;z-index:50;opacity:0.8;pointer-events:none;';
+  document.getElementById('cameraFullscreen').appendChild(flash);
+  setTimeout(()=>flash.remove(),150);
 }
 
 function formatDateForFilename(d){
@@ -1580,9 +1626,8 @@ function openPhotoEditor(dataUrl){
   const editor=document.getElementById('photoEditor');
   editor.style.display='flex';
   editor.style.zIndex='210';
-  // Header pas trop haut sur iPhone
-  const header=document.getElementById('editorHeader');
-  if(header){header.style.paddingTop='calc(env(safe-area-inset-top,44px) + 10px)';header.style.minHeight='62px';}
+  const eh=document.getElementById('editorHeader');
+  if(eh){eh.style.paddingTop='calc(env(safe-area-inset-top,44px) + 10px)';eh.style.minHeight='62px';}
   const nav=document.getElementById('bottomNav');if(nav)nav.classList.add('nav-hidden');
   document.getElementById('cameraFullscreen').style.display='none';
   ['annotToolbar','adjustToolbar','cropToolbar'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
@@ -1617,42 +1662,10 @@ function initEditCanvas(dataUrl){
 }
 
 function setupEditEvents(canvas,ctx){
-  // Nettoyer anciens listeners
-  ['_pd','_pm','_pu'].forEach(k=>{
-    if(canvas[k]){
-      canvas.removeEventListener('pointerdown',canvas._pd);
-      canvas.removeEventListener('pointermove',canvas._pm);
-      canvas.removeEventListener('pointerup',canvas._pu);
-      canvas.removeEventListener('pointercancel',canvas._pu);
-    }
-  });
-  const getPoint=e=>{
-    const r=canvas.getBoundingClientRect();
-    return {x:(e.clientX-r.left)*canvas.width/r.width, y:(e.clientY-r.top)*canvas.height/r.height};
-  };
-  // POINTER EVENTS - supporte Apple Pencil (pression + inclinaison)
-  canvas._pd=e=>{
-    if(!editState.tool) return;
-    e.preventDefault();
-    const p=getPoint(e);
-    // Pression Apple Pencil
-    if(e.pointerType==='pen' && e.pressure>0){
-      editState.pencilSize = Math.max(1, editState.size * e.pressure * 2.2);
-    } else {
-      editState.pencilSize = editState.size;
-    }
-    editStartDraw(ctx,p.x,p.y);
-  };
-  canvas._pm=e=>{
-    if(!editState.drawing) return;
-    e.preventDefault();
-    const p=getPoint(e);
-    // Adapter taille selon pression Pencil en temps réel
-    if(e.pointerType==='pen' && e.pressure>0){
-      editState.pencilSize = Math.max(1, editState.size * e.pressure * 2.2);
-    }
-    editMoveDraw(ctx,p.x,p.y);
-  };
+  ['_pd','_pm','_pu'].forEach(k=>{if(canvas[k]){canvas.removeEventListener('pointerdown',canvas._pd);canvas.removeEventListener('pointermove',canvas._pm);canvas.removeEventListener('pointerup',canvas._pu);canvas.removeEventListener('pointercancel',canvas._pu);}});
+  const getPoint=e=>{const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height};};
+  canvas._pd=e=>{if(!editState.tool)return;e.preventDefault();const p=getPoint(e);if(e.pointerType==='pen'&&e.pressure>0)editState.pencilSize=Math.max(1,editState.size*e.pressure*2.2);else editState.pencilSize=editState.size;editStartDraw(ctx,p.x,p.y);};
+  canvas._pm=e=>{if(!editState.drawing)return;e.preventDefault();const p=getPoint(e);if(e.pointerType==='pen'&&e.pressure>0)editState.pencilSize=Math.max(1,editState.size*e.pressure*2.2);editMoveDraw(ctx,p.x,p.y);};
   canvas._pu=e=>{editEndDraw(ctx);};
   canvas.addEventListener('pointerdown',canvas._pd,{passive:false});
   canvas.addEventListener('pointermove',canvas._pm,{passive:false});
@@ -1666,7 +1679,7 @@ function editStartDraw(ctx,x,y){if(!editState.tool)return;editState.drawing=true
 function editMoveDraw(ctx,x,y){
   if(!editState.drawing||!editState.tool) return;
   ctx.globalAlpha=editState.tool==='marker'?0.45:1.0;
-  const drawSize=editState.pencilSize||editState.size;ctx.strokeStyle=editState.color;ctx.lineWidth=editState.tool==='marker'?drawSize*3.5:drawSize;
+  const ds=editState.pencilSize||editState.size;ctx.strokeStyle=editState.color;ctx.lineWidth=editState.tool==='marker'?ds*3.5:ds;
   ctx.lineCap='round';ctx.lineJoin='round';
   if(editState.tool==='pen'||editState.tool==='marker'){ctx.lineTo(x,y);ctx.stroke();}
   else if(editState.tool==='erase'){ctx.globalCompositeOperation='destination-out';ctx.globalAlpha=1;ctx.lineWidth=editState.size*5;ctx.lineTo(x,y);ctx.stroke();ctx.globalCompositeOperation='source-over';}
@@ -2056,35 +2069,58 @@ function sendToAnna(msg){
 }
 
 
-function handleCameraCapture(e) {
+// ===== MODULE PHOTOS STYLE APPLE =====
+let galleryCurrentIndex = 0;
+
+// Miniature ronde dernière photo (bas gauche caméra)
+function updateLastPhotoThumb() {
+  let thumb = document.getElementById('lastPhotoBtn');
+  if(!thumb) {
+    thumb = document.createElement('button');
+    thumb.id = 'lastPhotoBtn';
+    thumb.onclick = () => openGalleryScreen();
+    thumb.style.cssText = `position:absolute;bottom:calc(env(safe-area-inset-bottom,0px)+30px);left:20px;width:56px;height:56px;border-radius:12px;border:2.5px solid white;overflow:hidden;cursor:pointer;z-index:20;background:#333;padding:0;box-shadow:0 2px 12px rgba(0,0,0,0.5);-webkit-tap-highlight-color:transparent;`;
+    const cam = document.getElementById('cameraFullscreen');
+    if(cam) cam.appendChild(thumb);
+  }
+  if(sessionPhotos.length > 0) {
+    const last = sessionPhotos[sessionPhotos.length-1];
+    const src = last.dataUrl || last.odThumbnail || '';
+    if(src) {
+      thumb.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+      thumb.style.display = 'block';
+    }
+  } else {
+    thumb.style.display = 'none';
+  }
+}
+
+// Import photothèque
+function handleCameraCapture(e) { handleGalleryCapture(e); }
+function handleGalleryCapture(e) {
   const files = Array.from(e.target.files||[]);
   if(!files.length) return;
   let done = 0;
   files.forEach(file => {
     if(file.type.startsWith('video/')) {
-      const ts = new Date(), filename = formatDateForFilename(ts)+'_video.mp4';
-      if(state.accessToken && state.currentClient) saveVideoBlob(file, filename);
-      done++; return;
+      const ts=new Date(),fn=formatDateForFilename(ts)+'_video.mp4';
+      if(state.accessToken && state.currentClient) saveVideoBlob(file,fn);
+      done++; if(done===files.length) openGalleryScreen();
+      return;
     }
     const reader = new FileReader();
     reader.onload = ev => {
       const ts = new Date();
-      const filename = formatDateForFilename(ts)+'_'+String(sessionPhotos.length+1).padStart(3,'0')+'.jpg';
-      const photo = {dataUrl:ev.target.result, saved:false, filename, oneDriveId:null, date:ts};
+      const fn = formatDateForFilename(ts)+'_'+String(sessionPhotos.length+1).padStart(3,'0')+'.jpg';
+      const photo = {dataUrl:ev.target.result, saved:false, filename:fn, oneDriveId:null, date:ts};
       sessionPhotos.push(photo);
-      // Sauvegarde auto OneDrive
       autoSavePhoto(photo, sessionPhotos.length-1);
-      // Mettre à jour la miniature ronde en bas à gauche
-      updateLastPhotoThumb();
       done++;
+      if(done===files.length) openGalleryScreen();
     };
     reader.readAsDataURL(file);
   });
-  e.target.value = '';
-}
-
-function handleGalleryCapture(e) {
-  handleCameraCapture(e); // Même traitement
+  e.target.value='';
 }
 
 async function saveVideoBlob(blob, filename) {
@@ -2092,47 +2128,16 @@ async function saveVideoBlob(blob, filename) {
   showToast('⬆️ Sauvegarde vidéo...');
   try {
     const path = `/me/drive/root:/${CONFIG.oneDriveRoot}/${state.currentClient.Title}/10_Photos/Chantier/${filename}:/content`;
-    const r = await fetch(`https://graph.microsoft.com/v1.0${path}`, {
-      method:'PUT', headers:{'Authorization':`Bearer ${state.accessToken}`,'Content-Type':blob.type||'video/mp4'}, body:blob
-    });
+    const r = await fetch(`https://graph.microsoft.com/v1.0${path}`,{method:'PUT',headers:{'Authorization':`Bearer ${state.accessToken}`,'Content-Type':blob.type||'video/mp4'},body:blob});
     if(r.ok) showToast('✅ Vidéo sauvegardée !');
-  } catch(ex) { showToast('⚠️ Erreur vidéo'); }
+  } catch(e) { showToast('⚠️ Erreur vidéo'); }
 }
 
-// Miniature ronde de la dernière photo (comme Apple)
-function updateLastPhotoThumb() {
-  // Chercher ou créer le bouton miniature flottant
-  let thumb = document.getElementById('lastPhotoBtn');
-  if(!thumb && sessionPhotos.length > 0) {
-    thumb = document.createElement('button');
-    thumb.id = 'lastPhotoBtn';
-    thumb.onclick = () => openGalleryScreen();
-    thumb.style.cssText = `position:fixed;bottom:calc(env(safe-area-inset-bottom,0px)+90px);
-      left:16px;width:54px;height:54px;border-radius:12px;border:2px solid rgba(255,255,255,0.5);
-      overflow:hidden;cursor:pointer;z-index:105;background:#333;padding:0;
-      box-shadow:0 4px 16px rgba(0,0,0,0.4);-webkit-tap-highlight-color:transparent;`;
-    document.body.appendChild(thumb);
-  }
-  if(thumb && sessionPhotos.length > 0) {
-    const last = sessionPhotos[sessionPhotos.length-1];
-    if(last.dataUrl) {
-      thumb.innerHTML = `<img src="${last.dataUrl}" style="width:100%;height:100%;object-fit:cover;display:block;">`;
-    }
-  }
-}
-
-// ===== GALERIE PHOTOS STYLE APP PHOTOS APPLE =====
-let galleryCurrentIndex = 0;
-
+// ÉCRAN GALERIE style app Photos Apple
 function openGalleryScreen() {
-  // Cacher le bouton miniature
   const thumb = document.getElementById('lastPhotoBtn');
   if(thumb) thumb.style.display = 'none';
-
-  // Charger photos OneDrive si pas encore fait
-  if(state.accessToken && state.currentClient && sessionPhotos.filter(p=>p.oneDriveId).length === 0) {
-    loadOneDrivePhotos().then(() => renderGalleryGrid());
-  }
+  stopCamera();
 
   let screen = document.getElementById('galleryScreen');
   if(!screen) {
@@ -2140,75 +2145,36 @@ function openGalleryScreen() {
     screen.id = 'galleryScreen';
     screen.style.cssText = 'position:fixed;inset:0;z-index:200;background:#000;display:flex;flex-direction:column;';
     screen.innerHTML = `
-      <!-- Header style app Photos -->
-      <div style="background:#1c1c1e;padding:calc(env(safe-area-inset-top,44px)+10px) 16px 12px;
-                  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-        <button onclick="closeGalleryScreen()" style="background:none;border:none;
-                color:#0A84FF;font-family:'DM Sans',sans-serif;font-size:16px;
-                cursor:pointer;display:flex;align-items:center;gap:5px;
-                -webkit-tap-highlight-color:transparent;padding:0;">
-          <svg width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="#0A84FF" stroke-width="2.5">
-            <polyline points="7 1 1 7.5 7 14"/></svg>
-          Retour
+      <div style="background:#1c1c1e;padding:calc(env(safe-area-inset-top,44px)+10px) 16px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <button onclick="closeGalleryScreen()" style="background:none;border:none;color:#0A84FF;font-family:'DM Sans',sans-serif;font-size:16px;cursor:pointer;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;padding:0;">
+          <svg width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="#0A84FF" stroke-width="2.5"><polyline points="7 1 1 7.5 7 14"/></svg>Retour
         </button>
-        <div style="color:white;font-family:'Cormorant Garamond',serif;font-size:18px;
-                    font-weight:500;" id="galleryTitle">Photos</div>
-        <button onclick="document.getElementById('galleryFileInput').click()"
-          style="background:none;border:none;color:#0A84FF;
-                 font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;
-                 -webkit-tap-highlight-color:transparent;">
-          + Ajouter
-        </button>
+        <div style="color:white;font-family:'Cormorant Garamond',serif;font-size:18px;" id="galleryTitle">Photos</div>
+        <button onclick="goToPhotos()" style="background:none;border:none;color:#0A84FF;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;">+ Ajouter</button>
       </div>
-
-      <!-- Sous-titre client -->
-      <div id="gallerySubtitle" style="background:#1c1c1e;padding:0 16px 10px;
-           color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:12px;
-           flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.08);"></div>
-
-      <!-- Grille photos style app Photos -->
-      <div id="galleryGrid" style="flex:1;overflow-y:auto;padding:2px;
-           display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
-           align-content:start;-webkit-overflow-scrolling:touch;">
-      </div>
-
-      <!-- Chargement -->
-      <div id="galleryLoading" style="display:none;position:absolute;inset:0;
-           background:rgba(0,0,0,0.7);align-items:center;justify-content:center;
-           flex-direction:column;gap:12px;">
-        <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.2);
-                    border-top-color:#0A84FF;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+      <div id="gallerySubtitle" style="background:#1c1c1e;padding:0 16px 10px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif;font-size:12px;flex-shrink:0;"></div>
+      <div id="galleryGrid" style="flex:1;overflow-y:auto;padding:2px;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;align-content:start;-webkit-overflow-scrolling:touch;"></div>
+      <div id="galleryLoading" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+        <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.2);border-top-color:#0A84FF;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
         <div style="color:white;font-family:'DM Sans',sans-serif;font-size:13px;">Chargement OneDrive...</div>
       </div>`;
     document.body.appendChild(screen);
-
-    const style = document.createElement('style');
-    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}} .gallery-cell{aspect-ratio:1;overflow:hidden;cursor:pointer;background:#1a1a1a;} .gallery-cell img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity 0.2s;} .gallery-cell:active img{opacity:0.7;}';
-    document.head.appendChild(style);
+    const st = document.createElement('style');
+    st.textContent = '@keyframes spin{to{transform:rotate(360deg)}}.gallery-cell{aspect-ratio:1;overflow:hidden;cursor:pointer;background:#1a1a1a;}.gallery-cell img{width:100%;height:100%;object-fit:cover;display:block;}.gallery-cell:active{opacity:0.7;}';
+    document.head.appendChild(st);
   }
-
   screen.style.display = 'flex';
-  const nav = document.getElementById('bottomNav');
-  if(nav) nav.classList.add('nav-hidden');
-
-  // Mettre à jour titre
+  const nav = document.getElementById('bottomNav'); if(nav) nav.classList.add('nav-hidden');
   if(state.currentClient) {
     setEl('galleryTitle', state.currentClient.Title);
-    const sub = document.getElementById('gallerySubtitle');
-    if(sub) sub.textContent = `${sessionPhotos.length} photo${sessionPhotos.length!==1?'s':''} · Chantier`;
   }
-
   renderGalleryGrid();
-
-  // Charger OneDrive si connecté
   if(state.accessToken && state.currentClient) {
     const loading = document.getElementById('galleryLoading');
     if(loading) loading.style.display = 'flex';
     loadOneDrivePhotos().then(() => {
       renderGalleryGrid();
       if(loading) loading.style.display = 'none';
-      const sub = document.getElementById('gallerySubtitle');
-      if(sub) sub.textContent = `${sessionPhotos.length} photo${sessionPhotos.length!==1?'s':''} · Chantier`;
     }).catch(() => { if(loading) loading.style.display = 'none'; });
   }
 }
@@ -2216,39 +2182,26 @@ function openGalleryScreen() {
 function renderGalleryGrid() {
   const grid = document.getElementById('galleryGrid');
   if(!grid) return;
+  const sub = document.getElementById('gallerySubtitle');
+  if(sub) sub.textContent = `${sessionPhotos.length} photo${sessionPhotos.length!==1?'s':''} · Chantier`;
   if(sessionPhotos.length === 0) {
-    grid.innerHTML = `<div style="grid-column:1/-1;padding:60px 20px;text-align:center;">
-      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1">
-        <rect x="3" y="3" width="18" height="18" rx="2"/>
-        <circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-      <div style="color:rgba(255,255,255,0.3);font-family:'DM Sans',sans-serif;font-size:14px;margin-top:12px;">
-        Aucune photo pour ce client</div></div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;padding:60px 20px;text-align:center;"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div style="color:rgba(255,255,255,0.3);font-family:'DM Sans',sans-serif;font-size:14px;margin-top:12px;">Aucune photo</div></div>`;
     return;
   }
-  grid.innerHTML = sessionPhotos.map((p, i) => {
+  grid.innerHTML = sessionPhotos.map((p,i) => {
     const src = p.dataUrl || p.odThumbnail || '';
-    return `<div class="gallery-cell" onclick="openPhotoDetail(${i})">
-      ${src ? `<img src="${src}" loading="lazy" alt="">` :
-        `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5">
-             <rect x="3" y="3" width="18" height="18" rx="2"/>
-             <circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-         </div>`}
-    </div>`;
+    return `<div class="gallery-cell" onclick="openPhotoDetail(${i})">${src?`<img src="${src}" loading="lazy">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>`}</div>`;
   }).join('');
 }
 
 function closeGalleryScreen() {
   const screen = document.getElementById('galleryScreen');
   if(screen) screen.style.display = 'none';
-  const nav = document.getElementById('bottomNav');
-  if(nav) nav.classList.remove('nav-hidden');
-  // Réafficher miniature si photos
-  const thumb = document.getElementById('lastPhotoBtn');
-  if(thumb && sessionPhotos.length > 0) thumb.style.display = 'block';
+  const nav = document.getElementById('bottomNav'); if(nav) nav.classList.remove('nav-hidden');
+  showScreen('screenClient');
 }
 
-// ===== DETAIL PHOTO style app Photos =====
+// DÉTAIL PHOTO plein écran + pellicule + outils
 function openPhotoDetail(index) {
   galleryCurrentIndex = index;
   let detail = document.getElementById('photoDetailScreen');
@@ -2257,100 +2210,42 @@ function openPhotoDetail(index) {
     detail.id = 'photoDetailScreen';
     detail.style.cssText = 'position:fixed;inset:0;z-index:210;background:#000;display:flex;flex-direction:column;';
     detail.innerHTML = `
-      <!-- Header -->
-      <div id="detailHeader" style="position:absolute;top:0;left:0;right:0;z-index:10;
-           padding:calc(env(safe-area-inset-top,44px)+10px) 16px 14px;
-           display:flex;align-items:center;justify-content:space-between;
-           background:linear-gradient(to bottom,rgba(0,0,0,0.75),transparent);">
-        <button onclick="closePhotoDetail()" style="background:none;border:none;
-                color:white;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:16px;
-                display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;">
-          <svg width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="white" stroke-width="2.5">
-            <polyline points="7 1 1 7.5 7 14"/></svg>
-          Photos
+      <div style="position:absolute;top:0;left:0;right:0;z-index:10;padding:calc(env(safe-area-inset-top,44px)+10px) 16px 14px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(0,0,0,0.75),transparent);">
+        <button onclick="closePhotoDetail()" style="background:none;border:none;color:white;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:16px;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;">
+          <svg width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="white" stroke-width="2.5"><polyline points="7 1 1 7.5 7 14"/></svg>Photos
         </button>
-        <div id="detailCounter" style="color:white;font-family:'DM Sans',sans-serif;
-             font-size:13px;opacity:0.85;"></div>
-        <button onclick="shareDetailPhoto()" style="background:none;border:none;
-                color:white;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-            <polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        <div id="detailCounter" style="color:white;font-family:'DM Sans',sans-serif;font-size:13px;opacity:0.85;"></div>
+        <button onclick="shareDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;padding:4px;-webkit-tap-highlight-color:transparent;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
         </button>
       </div>
-
-      <!-- Zone image swipeable -->
       <div id="detailMain" style="flex:1;overflow:hidden;position:relative;display:flex;align-items:center;">
         <div id="detailTrack" style="display:flex;height:100%;will-change:transform;"></div>
       </div>
-
-      <!-- Footer avec actions + pellicule -->
-      <div style="position:absolute;bottom:0;left:0;right:0;
-           background:linear-gradient(to top,rgba(0,0,0,0.85),transparent);
-           padding-bottom:calc(env(safe-area-inset-bottom,0px)+8px);">
-
-        <!-- Boutons actions -->
+      <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.85),transparent);padding-bottom:calc(env(safe-area-inset-bottom,0px)+8px);">
         <div style="display:flex;justify-content:space-around;padding:10px 16px 12px;">
-          <button onclick="annotateDetailPhoto()" style="background:none;border:none;color:white;
-                  cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;
-                  -webkit-tap-highlight-color:transparent;min-width:60px;">
-            <div style="width:46px;height:46px;background:rgba(255,255,255,0.15);border-radius:50%;
-                        display:flex;align-items:center;justify-content:center;">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-            </div>
+          <button onclick="annotateDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;min-width:60px;">
+            <div style="width:46px;height:46px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></div>
             <span style="font-family:'DM Sans',sans-serif;font-size:11px;color:rgba(255,255,255,0.85);">Modifier</span>
           </button>
-
-          <button onclick="saveDetailToOneDrive()" style="background:none;border:none;color:white;
-                  cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;
-                  -webkit-tap-highlight-color:transparent;min-width:60px;">
-            <div style="width:46px;height:46px;background:rgba(255,255,255,0.15);border-radius:50%;
-                        display:flex;align-items:center;justify-content:center;">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            </div>
+          <button onclick="saveDetailToOneDrive()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;min-width:60px;">
+            <div style="width:46px;height:46px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
             <span style="font-family:'DM Sans',sans-serif;font-size:11px;color:rgba(255,255,255,0.85);">OneDrive</span>
           </button>
-
-          <button onclick="deleteDetailPhoto()" style="background:none;border:none;color:white;
-                  cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;
-                  -webkit-tap-highlight-color:transparent;min-width:60px;">
-            <div style="width:46px;height:46px;background:rgba(255,69,58,0.25);border-radius:50%;
-                        display:flex;align-items:center;justify-content:center;">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF453A" stroke-width="2">
-                <polyline points="3 6 5 6 21 6"/>
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                <path d="M10 11v6"/><path d="M14 11v6"/>
-                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-            </div>
+          <button onclick="deleteDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;min-width:60px;">
+            <div style="width:46px;height:46px;background:rgba(255,69,58,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF453A" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
             <span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#FF453A;">Supprimer</span>
           </button>
         </div>
-
-        <!-- Pellicule horizontale -->
-        <div id="detailStrip" style="display:flex;gap:3px;padding:0 8px 6px;
-             overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
-             align-items:center;height:68px;"></div>
+        <div id="detailStrip" style="display:flex;gap:3px;padding:0 8px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center;height:68px;"></div>
       </div>`;
     document.body.appendChild(detail);
-
-    // Swipe
     const main = detail.querySelector('#detailMain');
     let sx=0,sy=0,sw=false;
     main.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;sw=false;},{passive:true});
     main.addEventListener('touchmove',e=>{if(Math.abs(e.touches[0].clientX-sx)>Math.abs(e.touches[0].clientY-sy)&&Math.abs(e.touches[0].clientX-sx)>10)sw=true;},{passive:true});
-    main.addEventListener('touchend',e=>{
-      if(!sw) return;
-      const dx=e.changedTouches[0].clientX-sx;
-      if(Math.abs(dx)>50){
-        if(dx<0&&galleryCurrentIndex<sessionPhotos.length-1) scrollDetailTo(galleryCurrentIndex+1,true);
-        else if(dx>0&&galleryCurrentIndex>0) scrollDetailTo(galleryCurrentIndex-1,true);
-      }
-    },{passive:true});
+    main.addEventListener('touchend',e=>{if(!sw)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50){if(dx<0&&galleryCurrentIndex<sessionPhotos.length-1)scrollDetailTo(galleryCurrentIndex+1,true);else if(dx>0&&galleryCurrentIndex>0)scrollDetailTo(galleryCurrentIndex-1,true);}},{passive:true});
   }
-
   detail.style.display='flex';
   renderDetailPhotos();
   scrollDetailTo(index,false);
@@ -2361,26 +2256,18 @@ function renderDetailPhotos() {
   const track=document.getElementById('detailTrack');
   if(!track) return;
   track.style.transition='none';
-  track.innerHTML=sessionPhotos.map((p,i)=>{
+  track.innerHTML=sessionPhotos.map((p)=>{
     const src=p.dataUrl||p.odUrl||'';
-    return `<div style="min-width:100vw;height:100%;display:flex;align-items:center;justify-content:center;background:#000;">
-      ${src?`<img src="${src}" style="max-width:100%;max-height:100%;object-fit:contain;" loading="lazy">`
-           :`<div style="color:rgba(255,255,255,0.3);font-size:14px;font-family:'DM Sans',sans-serif;text-align:center;padding:20px;">Chargement...</div>`}
-    </div>`;
+    return `<div style="min-width:100vw;height:100%;display:flex;align-items:center;justify-content:center;background:#000;">${src?`<img src="${src}" style="max-width:100%;max-height:100%;object-fit:contain;" loading="lazy">`:`<div style="color:rgba(255,255,255,0.3);font-size:14px;font-family:'DM Sans',sans-serif;">Chargement...</div>`}</div>`;
   }).join('');
 }
 
 function scrollDetailTo(index,animated) {
-  const track=document.getElementById('detailTrack');
-  const counter=document.getElementById('detailCounter');
+  const track=document.getElementById('detailTrack'),counter=document.getElementById('detailCounter');
   if(track){track.style.transition=animated?'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)':'none';track.style.transform=`translateX(${-index*100}vw)`;}
   if(counter) counter.textContent=`${index+1} / ${sessionPhotos.length}`;
   galleryCurrentIndex=index;
-  document.querySelectorAll('.detail-strip-thumb').forEach((el,i)=>{
-    el.classList.toggle('active',i===index);
-    el.style.opacity=i===index?'1':'0.45';
-    el.style.border=i===index?'2px solid white':'2px solid transparent';
-  });
+  document.querySelectorAll('.detail-strip-thumb').forEach((el,i)=>{el.style.opacity=i===index?'1':'0.45';el.style.border=i===index?'2px solid white':'2px solid transparent';});
   const strip=document.getElementById('detailStrip');
   if(strip){const t=strip.querySelectorAll('.detail-strip-thumb')[index];if(t)t.scrollIntoView({behavior:'smooth',inline:'center'});}
 }
@@ -2390,13 +2277,7 @@ function renderDetailStrip() {
   if(!strip) return;
   strip.innerHTML=sessionPhotos.map((p,i)=>{
     const src=p.dataUrl||p.odThumbnail||'';
-    return `<div class="detail-strip-thumb" onclick="scrollDetailTo(${i},true)"
-      style="min-width:56px;height:56px;border-radius:8px;overflow:hidden;cursor:pointer;flex-shrink:0;
-             border:${i===galleryCurrentIndex?'2px solid white':'2px solid transparent'};
-             opacity:${i===galleryCurrentIndex?'1':'0.45'};transition:all 0.2s;">
-      ${src?`<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;">`
-           :`<div style="width:100%;height:100%;background:#2a2a2a;"></div>`}
-    </div>`;
+    return `<div class="detail-strip-thumb" onclick="scrollDetailTo(${i},true)" style="min-width:56px;height:56px;border-radius:8px;overflow:hidden;cursor:pointer;flex-shrink:0;border:${i===galleryCurrentIndex?'2px solid white':'2px solid transparent'};opacity:${i===galleryCurrentIndex?'1':'0.45'};transition:all 0.2s;">${src?`<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;">`:`<div style="width:100%;height:100%;background:#2a2a2a;"></div>`}</div>`;
   }).join('');
 }
 
@@ -2406,17 +2287,16 @@ function closePhotoDetail() {
 }
 
 function annotateDetailPhoto() {
-  const photo=sessionPhotos[galleryCurrentIndex];if(!photo) return;
-  closePhotoDetail();
-  closeGalleryScreen();
+  const photo=sessionPhotos[galleryCurrentIndex];if(!photo)return;
   editingPhotoIndex=galleryCurrentIndex;
-  if(photo.dataUrl) {
+  if(photo.dataUrl){
+    closePhotoDetail();closeGalleryScreen();
     openMarkupForDevice(galleryCurrentIndex,photo.dataUrl);
-  } else if(photo.odUrl) {
+  } else if(photo.odUrl){
     showToast('⏳ Chargement...');
     fetch(photo.odUrl).then(r=>r.blob()).then(blob=>{
       const reader=new FileReader();
-      reader.onload=ev=>{sessionPhotos[galleryCurrentIndex].dataUrl=ev.target.result;openMarkupForDevice(galleryCurrentIndex,ev.target.result);};
+      reader.onload=ev=>{sessionPhotos[galleryCurrentIndex].dataUrl=ev.target.result;closePhotoDetail();closeGalleryScreen();openMarkupForDevice(galleryCurrentIndex,ev.target.result);};
       reader.readAsDataURL(blob);
     }).catch(()=>showToast('⚠️ Impossible de charger'));
   }
@@ -2432,7 +2312,7 @@ async function saveDetailToOneDrive() {
 }
 
 async function deleteDetailPhoto() {
-  if(!confirm('Supprimer cette photo ?')) return;
+  if(!confirm('Supprimer cette photo ?'))return;
   const photo=sessionPhotos[galleryCurrentIndex];
   if(photo?.oneDriveId&&state.accessToken){
     await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${photo.oneDriveId}`,{method:'DELETE',headers:{Authorization:`Bearer ${state.accessToken}`}});
@@ -2442,7 +2322,6 @@ async function deleteDetailPhoto() {
   const ni=Math.min(galleryCurrentIndex,sessionPhotos.length-1);
   renderDetailPhotos();renderDetailStrip();scrollDetailTo(ni,false);
   showToast('🗑️ Photo supprimée');
-  updateLastPhotoThumb();
 }
 
 function shareDetailPhoto() {
@@ -2451,26 +2330,18 @@ function shareDetailPhoto() {
   if(navigator.share){
     fetch(photo.dataUrl).then(r=>r.blob()).then(blob=>{
       const file=new File([blob],photo.filename||'photo.jpg',{type:'image/jpeg'});
-      navigator.share({files:[file],title:state.currentClient?.Title||'Photo chantier'}).catch(()=>{});
+      navigator.share({files:[file],title:state.currentClient?.Title||'Photo'}).catch(()=>{});
     });
   } else showToast('Partage non disponible');
 }
 
-// Détecter iPad/Web pour Markup
+// Détection appareil pour Markup
 function isIPad(){return /iPad/.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/MacIntel/.test(navigator.userAgent));}
-function isWeb(){return !navigator.standalone&&!window.matchMedia('(display-mode: standalone)').matches;}
-
-function openMarkupForDevice(index,src) {
-  // iPad + Web + iPhone → éditeur Markup (avec support Apple Pencil via Pointer Events)
-  openPhotoEditor(src);
-}
+function openMarkupForDevice(index,src){openPhotoEditor(src);}
 
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script>
-  <!-- Inputs fichiers cachés -->
-  <input type="file" id="cameraInput" accept="image/*,video/*"
-    style="display:none;" onchange="handleCameraCapture(event)" multiple>
-  <input type="file" id="galleryFileInput" accept="image/*,video/*"
-    style="display:none;" onchange="handleGalleryCapture(event)" multiple>
+  <input type="file" id="cameraInput" accept="image/*,video/*" style="display:none;" onchange="handleCameraCapture(event)" multiple>
+  <input type="file" id="galleryFileInput" accept="image/*,video/*" style="display:none;" onchange="handleGalleryCapture(event)" multiple>
 </body>
 </html>
