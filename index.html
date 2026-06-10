@@ -1097,7 +1097,14 @@ function goToPhotos() {
   document.getElementById('photoActionMenu').style.display='none';
   updateFilmstripThumb(); updateSavePendingBtn();
   window.scrollTo(0,0);
-  setTimeout(()=>startCamera(),150);
+  setTimeout(()=>{startCamera();bindShutterButton();},150);
+}
+function bindShutterButton(){
+  const btn=document.getElementById('shutterBtn');
+  if(!btn||btn._bound) return;
+  btn._bound=true;
+  btn.addEventListener('touchstart',(e)=>{e.preventDefault();btn.style.transform='scale(0.88)';},{passive:false});
+  btn.addEventListener('touchend',(e)=>{e.preventDefault();btn.style.transform='scale(1)';captureMedia();},{passive:false});
 }
 
 function exitCameraMode() {
@@ -1269,6 +1276,20 @@ window.addEventListener('offline',()=>showToast('📴 Hors ligne — photos en a
 
 // ===== PELLICULE =====
 function updateFilmstripThumb(){
+  const thumb=document.getElementById('filmstripThumb');
+  if(!thumb) return;
+  const pending=sessionPhotos.filter(p=>!p.saved&&p.dataUrl).length;
+  const withSrc=sessionPhotos.filter(p=>p.dataUrl||p.odThumbnail);
+  if(withSrc.length>0){
+    const last=withSrc[withSrc.length-1];
+    const src=last.dataUrl||last.odThumbnail||'';
+    thumb.innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">${pending>0?`<div style="position:absolute;bottom:2px;right:2px;background:#FF9F0A;color:white;font-size:9px;font-weight:700;font-family:'DM Sans',sans-serif;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;">${pending}</div>`:''}`;
+  } else {
+    thumb.innerHTML='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+  }
+  return; // Fonction remplacée ci-dessus
+}
+function updateFilmstripThumb_OLD(){
   const thumb=document.getElementById('filmstripThumb'),countEl=document.getElementById('filmstripCount');
   if(!thumb) return;
   const pending=sessionPhotos.filter(p=>!p.saved).length+offlineQueue.length;
@@ -1497,10 +1518,14 @@ function updatePhotosGallery(){renderFilmstripGrid();}
 
 // ===== FLIP + FLASH + GALERIE =====
 function flipCamera(){cameraFacing=cameraFacing==='environment'?'user':'environment';stopCamera();startCamera();}
+let flashMode='auto';
 function toggleFlash(){
-  flashEnabled=!flashEnabled;
-  const btn=document.getElementById('flashBtn');if(btn)btn.style.background=flashEnabled?'rgba(255,210,0,0.7)':'rgba(0,0,0,0.45)';
-  if(state.cameraStream){const t=state.cameraStream.getVideoTracks()[0];if(t){try{t.applyConstraints({advanced:[{torch:flashEnabled}]});}catch(e){}}}
+  const modes=['auto','on','off'];
+  flashMode=modes[(modes.indexOf(flashMode)+1)%modes.length];
+  const btn=document.getElementById('flashBtn');
+  if(btn){btn.textContent=flashMode==='auto'?'⚡A':flashMode==='on'?'⚡':'🚫';btn.style.background=flashMode==='on'?'rgba(255,210,0,0.7)':flashMode==='off'?'rgba(80,80,80,0.7)':'rgba(0,0,0,0.45)';}
+  if(state.cameraStream){const t=state.cameraStream.getVideoTracks()[0];if(t){try{t.applyConstraints({advanced:[{torch:flashMode==='on'}]});}catch(e){}}}
+  showToast(flashMode==='auto'?'Flash : Auto':flashMode==='on'?'Flash : Activé':'Flash : Désactivé');
 }
 function openGallery(){document.getElementById('galleryInput').click();}
 function handleGalleryFiles(e){
@@ -1548,6 +1573,9 @@ function openPhotoEditorFromFilmstrip(index){closeFilmstrip();editingPhotoIndex=
 function openPhotoEditor(dataUrl){
   const editor=document.getElementById('photoEditor');
   editor.style.display='flex';
+  editor.style.zIndex='210';
+  const header=document.getElementById('editorHeader');
+  if(header){header.style.paddingTop='calc(env(safe-area-inset-top,44px) + 14px)';header.style.minHeight='72px';}
   const nav=document.getElementById('bottomNav');if(nav)nav.classList.add('nav-hidden');
   document.getElementById('cameraFullscreen').style.display='none';
   ['annotToolbar','adjustToolbar','cropToolbar'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
@@ -1801,7 +1829,7 @@ function activateTextTool(){
 function showTextDialog(){
   const dlg=document.getElementById('textDialog');if(dlg)dlg.style.display='flex';
   const input=document.getElementById('textInput'),sizeEl=document.getElementById('textSizeSlider'),sizeVal=document.getElementById('textSizeValue');
-  if(sizeEl&&sizeVal){sizeEl.value=32;sizeVal.textContent='32';sizeEl.oninput=()=>{sizeVal.textContent=sizeEl.value;liveText.size=parseInt(sizeEl.value);updateLiveText();};}
+  if(sizeEl&&sizeVal){sizeEl.value=32;sizeVal.textContent='32';const onSize=()=>{liveText.size=parseInt(sizeEl.value);sizeVal.textContent=sizeEl.value;updateLiveText();};sizeEl.oninput=onSize;sizeEl.addEventListener('change',onSize);sizeEl.addEventListener('touchmove',onSize,{passive:true});}
   if(input){input.value='';input.oninput=()=>{liveText.text=input.value;updateLiveText();};setTimeout(()=>input.focus(),100);}
 }
 
