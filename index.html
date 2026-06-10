@@ -280,10 +280,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 </div>
 
 <!-- ===== SCREEN PHOTOS - CAMÉRA APPLE-STYLE ===== -->
-<div class="screen" id="screenPhotos">
+<div class="screen" id="screenPhotos" style="position:fixed;inset:0;z-index:110;display:none;flex-direction:column;background:#000;">
 
   <!-- CAMÉRA FULLSCREEN -->
-  <div id="cameraFullscreen" style="position:relative;width:100%;background:#000;flex:1;display:flex;flex-direction:column;min-height:100dvh;height:100dvh;overflow:hidden;">
+  <div id="cameraFullscreen" style="position:relative;width:100%;background:#000;flex:1;display:flex;flex-direction:column;min-height:100dvh;height:100dvh;overflow:hidden;-webkit-transform:translateZ(0);transform:translateZ(0);">
 
     <!-- Header overlay -->
     <div style="position:absolute;top:0;left:0;right:0;z-index:20;padding:calc(var(--safe-top)+12px) 16px 12px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(0,0,0,0.7),transparent);">
@@ -293,7 +293,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
     </div>
 
     <!-- Vidéo plein écran -->
-    <video id="cameraVideo" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transform-origin:center center;"></video>
+    <div id="videoWrapper" style="position:absolute;inset:0;overflow:hidden;-webkit-mask-image:-webkit-radial-gradient(white,black);">
+    <video id="cameraVideo" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transform-origin:center center;will-change:transform;-webkit-transform:translateZ(0);transition:none;"></video>
+  </div>
     <canvas id="photoCanvas" style="display:none;"></canvas>
 
     <!-- Indicateur zoom -->
@@ -305,7 +307,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
     </div>
 
     <!-- CONTRÔLES BAS -->
-    <div style="position:absolute;bottom:0;left:0;right:0;padding:0 0 calc(var(--safe-bottom)+24px);background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.4) 65%,transparent 100%);">
+    <div style="position:absolute;bottom:0;left:0;right:0;padding:0 0 calc(var(--safe-bottom)+16px);background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.4) 65%,transparent 100%);">
 
       <!-- Boutons zoom Apple style -->
       <div style="display:flex;justify-content:center;gap:8px;margin-bottom:14px;">
@@ -357,7 +359,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
   </div>
 
   <!-- PANNEAU PELLICULE (bottom sheet) -->
-  <div id="filmstripPanel" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,0.65);" onclick="closeFilmstripOutside(event)">
+  <div id="filmstripPanel" style="display:none;position:fixed;inset:0;z-index:160;background:rgba(0,0,0,0.65);" onclick="closeFilmstripOutside(event)">
     <div style="position:absolute;bottom:0;left:0;right:0;background:#1c1c1e;border-radius:20px 20px 0 0;padding:14px 0 calc(var(--safe-bottom)+16px);">
       <div style="width:40px;height:4px;background:rgba(255,255,255,0.25);border-radius:2px;margin:0 auto 12px;"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px;">
@@ -376,7 +378,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
   </div>
 
   <!-- ÉDITEUR PHOTO -->
-  <div id="photoEditor" style="display:none;position:fixed;inset:0;background:#000;z-index:200;flex-direction:column;">
+  <div id="photoEditor" style="display:none;position:fixed;inset:0;background:#000;z-index:210;flex-direction:column;">
     <div style="background:#1c1c1e;padding:calc(var(--safe-top)+10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;">
       <button onclick="cancelEdit()" style="background:none;border:none;color:#FF453A;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;">Annuler</button>
       <div style="color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;">Modifier la photo</div>
@@ -457,7 +459,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
   </div>
 
   <!-- ÉDITEUR VIDÉO -->
-  <div id="videoEditor" style="display:none;position:fixed;inset:0;background:#000;z-index:200;flex-direction:column;">
+  <div id="videoEditor" style="display:none;position:fixed;inset:0;background:#000;z-index:210;flex-direction:column;">
     <div style="background:#1c1c1e;padding:calc(var(--safe-top)+10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;">
       <button onclick="cancelVideoEdit()" style="background:none;border:none;color:#FF453A;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;">Annuler</button>
       <div style="color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;">Vidéo</div>
@@ -791,10 +793,9 @@ function openClient(id) {
 
 // ===== SCREEN NAV =====
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='';s.style.position='';s.style.inset='';s.style.zIndex='';});
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='';});
   const el=document.getElementById(id);
   if(el){el.classList.add('active');if(id==='screenPhotos')el.style.display='flex';}
-  if(id!=='screenPhotos'){const nav=document.getElementById('bottomNav');if(nav)nav.classList.remove('nav-hidden');}
   window.scrollTo(0,0);
 }
 function navTo(screen,navId) {
@@ -806,16 +807,12 @@ function navTo(screen,navId) {
 // ===== CAMÉRA =====
 function goToPhotos() {
   if(state.currentClient) setEl('photosClientNameCam', state.currentClient.Title);
+  // Cacher toutes les screens normalement
   document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='';});
+  // Afficher la caméra
   const screen=document.getElementById('screenPhotos');
-  if(screen){
-    screen.classList.add('active');
-    screen.style.display='flex';
-    screen.style.position='fixed';
-    screen.style.inset='0';
-    screen.style.zIndex='110';
-  }
-  // Cacher la bottom nav
+  if(screen){screen.classList.add('active');screen.style.display='flex';}
+  // Cacher la bottom nav (elle passerait par-dessus)
   const nav=document.getElementById('bottomNav');
   if(nav) nav.classList.add('nav-hidden');
   document.getElementById('cameraFullscreen').style.display='flex';
@@ -831,8 +828,6 @@ function exitCameraMode() {
   stopCamera();
   const nav=document.getElementById('bottomNav');
   if(nav) nav.classList.remove('nav-hidden');
-  const screen=document.getElementById('screenPhotos');
-  if(screen){screen.style.position='';screen.style.inset='';screen.style.zIndex='';}
   showScreen('screenClient');
 }
 
@@ -858,18 +853,58 @@ function stopCamera() {
 
 // ===== ZOOM =====
 function setupPinchZoom(video) {
-  if(video._pinchStart) video.removeEventListener('touchstart',video._pinchStart);
-  if(video._pinchMove) video.removeEventListener('touchmove',video._pinchMove);
-  if(video._pinchEnd) video.removeEventListener('touchend',video._pinchEnd);
-  video._pinchStart=(e)=>{ if(e.touches.length===2){pinchStartDist=getPinchDist(e);pinchStartZoom=zoomCSS;} };
-  video._pinchMove=(e)=>{ if(e.touches.length===2){e.preventDefault();const d=getPinchDist(e);zoomCSS=Math.min(Math.max(1.0,pinchStartZoom*(d/pinchStartDist)),6.0);applyZoomCSS(zoomCSS);showZoomIndicator(zoomCSS);} };
-  video._pinchEnd=(e)=>{ if(e.touches.length<2) updateZoomButtons(zoomCSS); };
-  video.addEventListener('touchstart',video._pinchStart,{passive:true});
-  video.addEventListener('touchmove',video._pinchMove,{passive:false});
-  video.addEventListener('touchend',video._pinchEnd,{passive:true});
+  // Attacher au container (videoWrapper) pour capturer le pinch même hors vidéo
+  const wrapper = document.getElementById('videoWrapper') || video;
+  // Nettoyer anciens listeners
+  ['_pStart','_pMove','_pEnd'].forEach(k => {
+    if(wrapper[k]) {
+      wrapper.removeEventListener('touchstart', wrapper[k]);
+      wrapper.removeEventListener('touchmove', wrapper[k]);
+      wrapper.removeEventListener('touchend', wrapper[k]);
+    }
+  });
+  wrapper._pStart = (e) => {
+    if(e.touches.length === 2) {
+      pinchStartDist = getPinchDist(e);
+      pinchStartZoom = zoomCSS;
+      e.preventDefault();
+    }
+  };
+  wrapper._pMove = (e) => {
+    if(e.touches.length === 2) {
+      e.preventDefault();
+      let scale;
+      // Safari fournit event.scale nativement
+      if(e.scale !== undefined) {
+        scale = pinchStartZoom * e.scale;
+      } else {
+        const d = getPinchDist(e);
+        scale = pinchStartZoom * (d / pinchStartDist);
+      }
+      zoomCSS = Math.min(Math.max(1.0, scale), 6.0);
+      applyZoomCSS(zoomCSS);
+      showZoomIndicator(zoomCSS);
+    }
+  };
+  wrapper._pEnd = (e) => {
+    if(e.touches.length < 2) updateZoomButtons(zoomCSS);
+    // Reset pinch start pour le prochain geste
+    pinchStartDist = 0;
+  };
+  wrapper.addEventListener('touchstart', wrapper._pStart, {passive:false});
+  wrapper.addEventListener('touchmove', wrapper._pMove, {passive:false});
+  wrapper.addEventListener('touchend', wrapper._pEnd, {passive:true});
 }
 function getPinchDist(e){return Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}
-function applyZoomCSS(scale){const v=document.getElementById('cameraVideo');if(v)v.style.transform=`scale(${scale})`;zoomCSS=scale;}
+function applyZoomCSS(scale) {
+  const v = document.getElementById('cameraVideo');
+  if(v) {
+    // translate3d(0,0,0) force GPU compositing sur iOS
+    v.style.transform = `translate3d(0,0,0) scale(${scale})`;
+    v.style.webkitTransform = `translate3d(0,0,0) scale(${scale})`;
+  }
+  zoomCSS = scale;
+}
 function showZoomIndicator(scale){
   const el=document.getElementById('zoomIndicator');
   el.style.display='block';el.textContent=scale.toFixed(1)+'x';
@@ -1067,8 +1102,7 @@ function openPhotoEditorFromFilmstrip(index){closeFilmstrip();editingPhotoIndex=
 function openPhotoEditor(dataUrl){
   const editor=document.getElementById('photoEditor');
   editor.style.display='flex';
-  editor.style.zIndex='200';
-  // S'assurer que la nav est cachée
+  // Nav cachée pendant édition
   const nav=document.getElementById('bottomNav');
   if(nav) nav.classList.add('nav-hidden');
   document.getElementById('cameraFullscreen').style.display='none';
@@ -1198,7 +1232,10 @@ function rotateCrop(){
   showToast('↺ Photo tournée 90°');
 }
 function cancelEdit(){
-  document.getElementById('photoEditor').style.display='none';document.getElementById('cameraFullscreen').style.display='flex';startCamera();
+  document.getElementById('photoEditor').style.display='none';
+  document.getElementById('cameraFullscreen').style.display='flex';
+  // Nav reste cachée (on est encore en mode caméra)
+  startCamera();
 }
 function confirmEdit(){
   const canvas=document.getElementById('editCanvas');canvas.style.filter='';
@@ -1239,7 +1276,36 @@ function stopAndSaveTimer(){
 // ===== AUTRES FONCTIONS =====
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 function callClient(){if(state.currentClient&&state.currentClient.phone){window.location.href='tel:'+state.currentClient.phone;}else showToast('Aucun numéro pour ce client');}
-function openNavigation(){if(state.currentClient&&state.currentClient.address){if(confirm('Ouvrir dans Plans Apple?'))window.open('http://maps.apple.com/?daddr='+encodeURIComponent(state.currentClient.address));else window.open('https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(state.currentClient.address));}}
+function openNavigation() {
+  if(!state.currentClient || !state.currentClient.address) return;
+  const addr = encodeURIComponent(state.currentClient.address);
+  // Afficher bottom sheet de choix
+  const sheet = document.createElement('div');
+  sheet.id = 'navChoiceSheet';
+  sheet.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;display:flex;align-items:flex-end;';
+  sheet.innerHTML = `
+    <div style="width:100%;background:white;border-radius:20px 20px 0 0;padding:16px 16px calc(var(--safe-bottom)+16px);font-family:'DM Sans',sans-serif;">
+      <div style="text-align:center;margin-bottom:12px;">
+        <div style="width:40px;height:4px;background:#ccc;border-radius:2px;margin:0 auto 12px;"></div>
+        <div style="font-size:13px;color:#888;margin-bottom:4px;">Naviguer vers</div>
+        <div style="font-size:15px;font-weight:600;color:#2A1520;">${state.currentClient.address}</div>
+      </div>
+      <button onclick="window.open('http://maps.apple.com/?daddr=${addr}');document.getElementById('navChoiceSheet').remove();"
+        style="width:100%;padding:15px;background:#6B2D45;color:white;border:none;border-radius:14px;font-size:15px;font-weight:600;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+        🗺️ Plans Apple
+      </button>
+      <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${addr}');document.getElementById('navChoiceSheet').remove();"
+        style="width:100%;padding:15px;background:#4285F4;color:white;border:none;border-radius:14px;font-size:15px;font-weight:600;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+        📍 Google Maps
+      </button>
+      <button onclick="document.getElementById('navChoiceSheet').remove();"
+        style="width:100%;padding:13px;background:#F2D7E0;color:#6B2D45;border:none;border-radius:14px;font-size:15px;font-weight:500;cursor:pointer;">
+        Annuler
+      </button>
+    </div>`;
+  sheet.addEventListener('click', e => { if(e.target === sheet) sheet.remove(); });
+  document.body.appendChild(sheet);
+}
 function showAddClient(){showToast('Utilisez le formulaire Forms pour ajouter un client');}
 function showSuiviProjet(){showToast('Suivi projet — bientôt disponible');}
 function showFacturer(){showToast('Facturation — utilisez Power Automate Flux 2');}
