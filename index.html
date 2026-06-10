@@ -753,6 +753,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 
   <input type="file" id="galleryInput" accept="image/*,video/*" multiple
     style="display:none" onchange="handleGalleryFiles(event)">
+  <input type="file" id="nativeCameraInput" accept="image/*" capture="environment"
+    style="display:none" onchange="handleNativeCapture(event)">
 </div>
 
 <!-- ===== SCREEN NOTE DE CHANTIER ===== -->
@@ -1104,8 +1106,16 @@ function bindShutterButton(){
   const btn=document.getElementById('shutterBtn');
   if(!btn||btn._bound) return;
   btn._bound=true;
-  btn.addEventListener('touchstart',(e)=>{e.preventDefault();btn.style.transform='scale(0.88)';},{passive:false});
-  btn.addEventListener('touchend',(e)=>{e.preventDefault();btn.style.transform='scale(1)';if(window.captureMedia)window.captureMedia();},{passive:false});
+  btn.addEventListener('touchstart',(e)=>{
+    e.preventDefault();
+    btn.style.transform='scale(0.88)';
+  },{passive:false});
+  btn.addEventListener('touchend',(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    btn.style.transform='scale(1)';
+    captureMedia();
+  },{passive:false});
 }
 
 function exitCameraMode() {
@@ -1221,7 +1231,7 @@ function setMode(mode){
 }
 
 // ===== CAPTURE =====
-window.captureMedia=function captureMedia(){
+function captureMedia(){
   const btn=document.getElementById('shutterBtn');
   if(btn){btn.style.transform='scale(0.88)';setTimeout(()=>btn.style.transform='scale(1)',120);}
   if(currentMode==='photo') takePhoto();
