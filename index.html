@@ -1906,6 +1906,155 @@ async function saveVideoToOneDrive() {
   } catch(e) { showToast('⚠️ Erreur réseau'); }
 }
 
+
+// ===== INIT =====
+window.addEventListener('load', async () => {
+  const now = new Date();
+  const days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const dd = document.getElementById('dashDate');
+  if(dd) dd.textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  const nd = document.getElementById('noteDate');
+  if(nd) nd.value = now.toISOString().split('T')[0];
+  // Cacher loading screen après 1.6s
+  setTimeout(() => {
+    const ls = document.getElementById('loadingScreen');
+    if(ls) { ls.style.opacity = '0'; setTimeout(() => ls.style.display = 'none', 500); }
+  }, 1600);
+  await initAuth();
+});
+
+// ===== AUTH MSAL =====
+let msalInstance = null;
+function initMsal() {
+  try {
+    msalInstance = new msal.PublicClientApplication({
+      auth: { clientId: CONFIG.clientId, authority: `https://login.microsoftonline.com/${CONFIG.tenantId}`, redirectUri: CONFIG.redirectUri, navigateToLoginRequestUrl: true },
+      cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
+    });
+    return true;
+  } catch(e) { console.error('MSAL init:', e); return false; }
+}
+
+async function initAuth() {
+  const msalOk = initMsal();
+  if(msalOk) {
+    try {
+      await msalInstance.initialize();
+      const resp = await msalInstance.handleRedirectPromise();
+      if(resp && resp.accessToken) {
+        state.accessToken = resp.accessToken;
+        showToast('✅ Connecté à Microsoft 365 !');
+      } else {
+        const accounts = msalInstance.getAllAccounts();
+        if(accounts.length > 0) {
+          try {
+            const silent = await msalInstance.acquireTokenSilent({ scopes: CONFIG.scopes.split(' '), account: accounts[0] });
+            state.accessToken = silent.accessToken;
+          } catch(e) { console.warn('Silent token failed:', e); }
+        }
+      }
+    } catch(e) { console.error('MSAL auth:', e); }
+  }
+  updateLoginButton();
+  await loadClients();
+}
+
+async function loginToMicrosoft() {
+  if(msalInstance) {
+    try { await msalInstance.loginRedirect({ scopes: CONFIG.scopes.split(' '), loginHint: 'info@emiliepepin.ca' }); }
+    catch(e) { manualLogin(); }
+  } else manualLogin();
+}
+
+function manualLogin() {
+  window.location.href = `https://login.microsoftonline.com/${CONFIG.tenantId}/oauth2/v2.0/authorize?client_id=${CONFIG.clientId}&response_type=token&redirect_uri=${encodeURIComponent(CONFIG.redirectUri)}&scope=${encodeURIComponent(CONFIG.scopes)}&login_hint=info%40emiliepepin.ca&response_mode=fragment`;
+}
+
+function logoutMicrosoft() {
+  try { localStorage.removeItem('ep_token'); if(msalInstance) msalInstance.logoutRedirect({ postLogoutRedirectUri: CONFIG.redirectUri }); } catch(e) {}
+  state.accessToken = null; state.clients = []; state.siteId = null;
+  updateLoginButton(); showConnectBanner(true); renderClients([]);
+  showToast('👋 Déconnecté');
+}
+
+function updateLoginButton() {
+  const btn = document.getElementById('loginBtn');
+  if(!btn) return;
+  if(state.accessToken) { btn.textContent = '✅ Connecté'; btn.classList.add('connected'); }
+  else { btn.textContent = '🔐 Connexion'; btn.classList.remove('connected'); }
+}
+
+function handleLoginBtn() {
+  if(state.accessToken) { if(confirm('Se déconnecter de Microsoft 365?')) logoutMicrosoft(); }
+  else loginToMicrosoft();
+}
+
+function showConnectBanner(show) {
+  const el = document.getElementById('connectBanner');
+  if(el) el.style.display = show ? 'block' : 'none';
+}
+
+// ===== GRAPH API =====
+async function graphGet(url) {
+  if(!state.accessToken) return null;
+  try {
+    const resp = await fetch(`https://graph.microsoft.com/v1.0${url}`, { headers: { Authorization: `Bearer ${state.accessToken}` } });
+    if(resp.status === 401) { state.accessToken = null; updateLoginButton(); showToast('⚠️ Session expirée — reconnectez-vous'); return null; }
+    if(!resp.ok) return null;
+    return await resp.json();
+  } catch(e) { return null; }
+}
+
+async function graphPost(url, body) {
+  if(!state.accessToken) return null;
+  try {
+    const resp = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
+      method: 'POST', headers: { Authorization: `Bearer ${state.accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    return resp.ok ? await resp.json() : null;
+  } catch(e) { return null; }
+}
+
+// ===== SHAREPOINT =====
+async function getSiteId() {
+  if(state.siteId) return state.siteId;
+  const data = await graphGet(`/sites/${CONFIG.sharePointHost}:/sites/${CONFIG.sharePointSiteName}`);
+  if(data) { state.siteId = data.id; return data.id; }
+  return null;
+}
+
+// ===== CLIENTS =====
+async function loadClients() {
+  if(!state.accessToken) { showConnectBanner(true); renderClients([]); return; }
+  showConnectBanner(false);
+  showToast('🔄 Chargement des clients...');
+  const siteId = await getSiteId();
+  if(!siteId) { showToast('⚠️ Impossible de joindre SharePoint'); renderClients([]); return; }
+  const data = await graphGet(`/sites/${siteId}/lists/Clients/items?$expand=fields&$top=200`);
+  if(data && data.value && data.value.length > 0) {
+    state.clients = data.value.map((item, i) => ({
+      id: item.id, numId: i,
+      Title: item.fields.Title || 'Client sans nom',
+      project: item.fields.Projet || item.fields.TypeProjet || 'Projet en cours',
+      status: item.fields.Statut || 'active',
+      email: item.fields.Courriel || item.fields.Email || '',
+      phone: item.fields.Telephone || item.fields.T_x00e9_l_x00e9_phone || '',
+      address: item.fields.Adresse || item.fields.Adresse_x0020_chantier || '',
+      heures: '0h', facture: '0$', photos: 0
+    }));
+    showToast(`✅ ${state.clients.length} client${state.clients.length > 1 ? 's' : ''} chargé${state.clients.length > 1 ? 's' : ''} !`);
+  } else {
+    showToast('ℹ️ Aucun client dans SharePoint');
+    state.clients = [];
+  }
+  renderClients(state.clients);
+  const active = state.clients.filter(c => c.status === 'active').length;
+  setEl('dashClients', active || state.clients.length);
+  setEl('dashSub', `${state.clients.length} clients · Microsoft 365 ✅`);
+  setEl('clientsLabel', `Clients (${state.clients.length})`);
+}
+
 // ===== TIMER =====
 function toggleTimer(){
   if(state.timerRunning){state.timerRunning=false;clearInterval(state.timerInterval);setEl('timerStartBtn','▶ Reprendre');}
