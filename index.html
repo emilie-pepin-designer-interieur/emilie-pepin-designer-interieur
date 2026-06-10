@@ -280,148 +280,315 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 </div>
 
 <!-- ===== SCREEN PHOTOS - CAMÉRA APPLE-STYLE ===== -->
-<div class="screen" id="screenPhotos" style="position:fixed;inset:0;z-index:110;display:none;flex-direction:column;background:#000;">
+<div id="screenPhotos" style="display:none;position:fixed;inset:0;z-index:110;background:#000;flex-direction:column;overflow:hidden;">
 
   <!-- CAMÉRA FULLSCREEN -->
-  <div id="cameraFullscreen" style="position:relative;width:100%;background:#000;flex:1;display:flex;flex-direction:column;min-height:100dvh;height:100dvh;overflow:hidden;-webkit-transform:translateZ(0);transform:translateZ(0);">
+  <div id="cameraFullscreen" style="position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;background:#000;">
 
-    <!-- Header overlay -->
-    <div style="position:absolute;top:0;left:0;right:0;z-index:20;padding:calc(var(--safe-top)+12px) 16px 12px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(0,0,0,0.7),transparent);">
-      <button onclick="exitCameraMode()" style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.5);border:none;color:white;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
-      <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:white;font-weight:500;" id="photosClientNameCam">Client</div>
-      <button onclick="toggleFlash()" id="flashBtn" style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.5);border:none;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">⚡</button>
-    </div>
-
-    <!-- Vidéo plein écran -->
+    <!-- Vidéo + wrapper clip pour zoom CSS -->
     <div id="videoWrapper" style="position:absolute;inset:0;overflow:hidden;-webkit-mask-image:-webkit-radial-gradient(white,black);">
-    <video id="cameraVideo" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transform-origin:center center;will-change:transform;-webkit-transform:translateZ(0);transition:none;"></video>
-  </div>
-    <canvas id="photoCanvas" style="display:none;"></canvas>
-
-    <!-- Indicateur zoom -->
-    <div id="zoomIndicator" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.65);color:#FFD60A;padding:8px 18px;border-radius:20px;font-size:18px;font-weight:700;font-family:'DM Sans',sans-serif;z-index:25;pointer-events:none;"></div>
-
-    <!-- Indicateur enregistrement -->
-    <div id="recordingIndicator" style="display:none;position:absolute;top:calc(var(--safe-top)+65px);left:50%;transform:translateX(-50%);background:rgba(220,0,0,0.85);color:white;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;z-index:25;align-items:center;gap:6px;">
-      <div style="width:8px;height:8px;border-radius:50%;background:white;animation:blink 1s infinite;display:inline-block;margin-right:4px;"></div><span id="recordTimer">00:00</span>
+      <video id="cameraVideo" autoplay playsinline muted
+        style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+               transform-origin:center center;will-change:transform;
+               -webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);"></video>
     </div>
 
-    <!-- CONTRÔLES BAS -->
-    <div style="position:absolute;bottom:0;left:0;right:0;padding:0 0 calc(var(--safe-bottom)+16px);background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.4) 65%,transparent 100%);">
+    <!-- Grille règle des tiers (toggle) -->
+    <div id="cameraGrid" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:5;">
+      <svg width="100%" height="100%" style="position:absolute;inset:0;">
+        <line x1="33.33%" y1="0" x2="33.33%" y2="100%" stroke="rgba(255,255,255,0.35)" stroke-width="0.8"/>
+        <line x1="66.66%" y1="0" x2="66.66%" y2="100%" stroke="rgba(255,255,255,0.35)" stroke-width="0.8"/>
+        <line x1="0" y1="33.33%" x2="100%" y2="33.33%" stroke="rgba(255,255,255,0.35)" stroke-width="0.8"/>
+        <line x1="0" y1="66.66%" x2="100%" y2="66.66%" stroke="rgba(255,255,255,0.35)" stroke-width="0.8"/>
+      </svg>
+    </div>
 
-      <!-- Boutons zoom Apple style -->
-      <div style="display:flex;justify-content:center;gap:8px;margin-bottom:14px;">
-        <button onclick="setZoomLevel(1)" id="zoomBtn1" class="zoom-pill zoom-pill-active">.5x</button>
-        <button onclick="setZoomLevel(2)" id="zoomBtn2" class="zoom-pill">1x</button>
-        <button onclick="setZoomLevel(3)" id="zoomBtn3" class="zoom-pill">2x</button>
+    <!-- HEADER OVERLAY -->
+    <div id="camHeader" style="position:absolute;top:0;left:0;right:0;z-index:10;
+         padding:calc(env(safe-area-inset-top,44px) + 10px) 16px 16px;
+         display:flex;align-items:center;justify-content:space-between;
+         background:linear-gradient(to bottom,rgba(0,0,0,0.65),transparent);">
+      <button onclick="exitCameraMode()" style="width:36px;height:36px;border-radius:50%;
+              background:rgba(0,0,0,0.45);border:none;color:white;font-size:20px;
+              cursor:pointer;display:flex;align-items:center;justify-content:center;
+              -webkit-tap-highlight-color:transparent;">✕</button>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:white;
+                  font-weight:500;text-shadow:0 1px 3px rgba(0,0,0,0.6);" id="photosClientNameCam"></div>
+      <div style="display:flex;gap:8px;">
+        <!-- Grille toggle -->
+        <button onclick="toggleGrid()" id="gridBtn" style="width:36px;height:36px;border-radius:50%;
+                background:rgba(0,0,0,0.45);border:none;color:white;font-size:14px;
+                cursor:pointer;display:flex;align-items:center;justify-content:center;
+                -webkit-tap-highlight-color:transparent;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="1"/>
+            <line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>
+            <line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>
+          </svg>
+        </button>
+        <!-- Flash -->
+        <button onclick="toggleFlash()" id="flashBtn" style="width:36px;height:36px;border-radius:50%;
+                background:rgba(0,0,0,0.45);border:none;color:white;font-size:18px;
+                cursor:pointer;display:flex;align-items:center;justify-content:center;
+                -webkit-tap-highlight-color:transparent;">⚡</button>
+      </div>
+    </div>
+
+    <!-- INDICATEUR ZOOM (centre écran) -->
+    <div id="zoomIndicator" style="display:none;position:absolute;top:50%;left:50%;
+         transform:translate(-50%,-50%);background:rgba(0,0,0,0.65);color:#FFD60A;
+         padding:8px 18px;border-radius:20px;font-size:18px;font-weight:700;
+         font-family:'DM Sans',sans-serif;z-index:15;pointer-events:none;"></div>
+
+    <!-- INDICATEUR ENREGISTREMENT -->
+    <div id="recordingIndicator" style="display:none;position:absolute;z-index:15;
+         top:calc(env(safe-area-inset-top,44px) + 56px);left:50%;transform:translateX(-50%);
+         background:rgba(200,0,0,0.85);color:white;padding:6px 14px;border-radius:20px;
+         font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;
+         align-items:center;gap:6px;">
+      <span style="width:8px;height:8px;border-radius:50%;background:white;
+             animation:blink 1s infinite;display:inline-block;margin-right:4px;"></span>
+      <span id="recordTimer">00:00</span>
+    </div>
+
+    <!-- BOUTON UPLOAD PENDING (flottant haut droite) -->
+    <button id="savePendingBtn" onclick="saveAllPendingPhotos()" style="display:none;
+            position:absolute;z-index:15;
+            top:calc(env(safe-area-inset-top,44px) + 10px);right:60px;
+            background:#0A84FF;border:none;color:white;
+            padding:8px 14px;border-radius:20px;
+            font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
+            cursor:pointer;align-items:center;gap:6px;
+            box-shadow:0 4px 16px rgba(10,132,255,0.5);
+            -webkit-tap-highlight-color:transparent;">
+      ⬆ <span id="savePendingCount">0</span>
+    </button>
+
+    <!-- ======= CONTRÔLES BAS ======= -->
+    <div id="camControlsBar" style="position:absolute;left:0;right:0;bottom:0;z-index:10;
+         padding-bottom:calc(env(safe-area-inset-bottom,0px) + 28px);
+         padding-top:12px;
+         background:linear-gradient(to top,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.55) 55%,transparent 100%);">
+
+      <!-- ZOOM PILLS (générés dynamiquement par JS) -->
+      <div id="zoomPillsRow" style="display:flex;justify-content:center;gap:8px;margin-bottom:14px;min-height:34px;"></div>
+
+      <!-- SÉLECTEUR PHOTO / VIDÉO -->
+      <div style="display:flex;justify-content:center;gap:32px;margin-bottom:18px;">
+        <button id="modePhoto" onclick="setMode('photo')" style="background:none;border:none;
+                color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;
+                cursor:pointer;letter-spacing:0.1em;text-shadow:0 1px 4px rgba(0,0,0,0.6);
+                -webkit-tap-highlight-color:transparent;">PHOTO</button>
+        <button id="modeVideo" onclick="setMode('video')" style="background:none;border:none;
+                color:rgba(255,255,255,0.45);font-family:'DM Sans',sans-serif;font-size:13px;
+                font-weight:500;cursor:pointer;letter-spacing:0.1em;
+                -webkit-tap-highlight-color:transparent;">VIDÉO</button>
       </div>
 
-      <!-- Sélecteur PHOTO / VIDÉO -->
-      <div style="display:flex;justify-content:center;gap:28px;margin-bottom:16px;">
-        <button id="modePhoto" onclick="setMode('photo')" style="background:none;border:none;color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.08em;text-shadow:0 1px 3px rgba(0,0,0,0.5);">PHOTO</button>
-        <button id="modeVideo" onclick="setMode('video')" style="background:none;border:none;color:rgba(255,255,255,0.5);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;letter-spacing:0.08em;">VIDÉO</button>
-      </div>
+      <!-- LIGNE PRINCIPALE: pellicule | shutter | flip -->
+      <div style="display:flex;align-items:center;justify-content:space-around;padding:0 16px;">
 
-      <!-- Ligne principale: pellicule | déclencheur | flip -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 28px;margin-bottom:10px;">
-
-        <!-- Pellicule / galerie iPhone -->
-        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
-          <div id="filmstripThumb" onclick="toggleFilmstrip()" style="width:56px;height:56px;border-radius:10px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.5);overflow:hidden;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <div id="filmstripCount" style="display:none;position:absolute;bottom:2px;right:3px;background:#0A84FF;color:white;font-size:9px;font-weight:700;font-family:'DM Sans',sans-serif;min-width:15px;height:15px;border-radius:8px;align-items:center;justify-content:center;padding:0 3px;"></div>
+        <!-- PELLICULE -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:72px;">
+          <div id="filmstripThumb" onclick="handleFilmstripTap()"
+            style="width:62px;height:62px;border-radius:12px;
+                   background:rgba(255,255,255,0.1);
+                   border:2px solid rgba(255,255,255,0.5);
+                   overflow:hidden;cursor:pointer;position:relative;
+                   display:flex;align-items:center;justify-content:center;
+                   -webkit-tap-highlight-color:transparent;
+                   box-shadow:0 2px 10px rgba(0,0,0,0.5);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="rgba(255,255,255,0.5)" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <div id="filmstripCount" style="display:none;position:absolute;bottom:2px;right:2px;
+                 background:#0A84FF;color:white;font-size:9px;font-weight:700;
+                 font-family:'DM Sans',sans-serif;min-width:16px;height:16px;
+                 border-radius:8px;align-items:center;justify-content:center;padding:0 3px;"></div>
           </div>
-          <span style="color:rgba(255,255,255,0.65);font-size:10px;font-family:'DM Sans',sans-serif;">Pellicule</span>
+          <span style="color:rgba(255,255,255,0.55);font-size:10px;font-family:'DM Sans',sans-serif;">Photos</span>
         </div>
 
-        <!-- Déclencheur Apple -->
-        <button id="shutterBtn" onclick="captureMedia()" style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.25);border:4px solid rgba(255,255,255,0.85);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.1s;flex-shrink:0;">
-          <div id="shutterInner" style="width:66px;height:66px;border-radius:50%;background:white;transition:all 0.15s;"></div>
+        <!-- DÉCLENCHEUR APPLE -->
+        <button id="shutterBtn" onclick="captureMedia()" style="width:84px;height:84px;
+                border-radius:50%;background:rgba(255,255,255,0.18);
+                border:4px solid rgba(255,255,255,0.9);
+                cursor:pointer;display:flex;align-items:center;justify-content:center;
+                transition:transform 0.1s;flex-shrink:0;
+                -webkit-tap-highlight-color:transparent;
+                box-shadow:0 0 0 2px rgba(255,255,255,0.25),0 6px 20px rgba(0,0,0,0.5);">
+          <div id="shutterInner" style="width:70px;height:70px;border-radius:50%;
+               background:white;transition:all 0.15s;"></div>
         </button>
 
-        <!-- Flip + Galerie -->
-        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
-          <button onclick="flipCamera()" style="width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,0.45);border:none;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        <!-- FLIP -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:72px;">
+          <button onclick="flipCamera()" style="width:62px;height:62px;border-radius:50%;
+                  background:rgba(0,0,0,0.42);border:none;color:white;
+                  cursor:pointer;display:flex;align-items:center;justify-content:center;
+                  -webkit-tap-highlight-color:transparent;
+                  box-shadow:0 2px 10px rgba(0,0,0,0.5);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M1 4v6h6"/><path d="M23 20v-6h-6"/>
+              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+            </svg>
           </button>
-          <button onclick="openGallery()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);color:white;padding:5px 12px;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;">Galerie</button>
+          <button onclick="openGallery()" style="background:rgba(255,255,255,0.12);
+                  border:1px solid rgba(255,255,255,0.28);color:white;
+                  padding:4px 14px;border-radius:12px;font-family:'DM Sans',sans-serif;
+                  font-size:11px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+            Galerie
+          </button>
         </div>
-      </div>
-
-      <!-- Bouton SAUVEGARDER ONEDRIVE (visible quand photos en attente) -->
-      <div style="display:flex;justify-content:center;padding:0 28px;">
-        <button id="savePendingBtn" onclick="saveAllPendingPhotos()" style="display:none;background:#0A84FF;border:none;color:white;padding:10px 22px;border-radius:22px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(10,132,255,0.4);">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Sauvegarder <span id="savePendingCount">0</span> photo<span id="savePendingPlural"></span> dans OneDrive
-        </button>
       </div>
     </div>
   </div>
 
-  <!-- PANNEAU PELLICULE (bottom sheet) -->
-  <div id="filmstripPanel" style="display:none;position:fixed;inset:0;z-index:160;background:rgba(0,0,0,0.65);" onclick="closeFilmstripOutside(event)">
-    <div style="position:absolute;bottom:0;left:0;right:0;background:#1c1c1e;border-radius:20px 20px 0 0;padding:14px 0 calc(var(--safe-bottom)+16px);">
-      <div style="width:40px;height:4px;background:rgba(255,255,255,0.25);border-radius:2px;margin:0 auto 12px;"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin-bottom:12px;">
-        <div style="color:white;font-family:'Cormorant Garamond',serif;font-size:18px;" id="filmstripTitle">Session photos</div>
+  <!-- ===== PELLICULE PANEL (bottom sheet) ===== -->
+  <div id="filmstripPanel" style="display:none;position:fixed;inset:0;z-index:160;
+       background:rgba(0,0,0,0.7);" onclick="closeFilmstripOutside(event)">
+    <div style="position:absolute;bottom:0;left:0;right:0;background:#1c1c1e;
+                border-radius:20px 20px 0 0;
+                padding:14px 0 calc(env(safe-area-inset-bottom,0px)+16px);
+                max-height:80vh;display:flex;flex-direction:column;">
+      <!-- Poignée -->
+      <div style="width:40px;height:4px;background:rgba(255,255,255,0.2);
+                  border-radius:2px;margin:0 auto 12px;flex-shrink:0;"></div>
+      <!-- Header pellicule -->
+      <div style="display:flex;align-items:center;justify-content:space-between;
+                  padding:0 16px 12px;flex-shrink:0;">
+        <div style="color:white;font-family:'Cormorant Garamond',serif;font-size:18px;"
+          id="filmstripTitle">Photos</div>
         <div style="display:flex;gap:8px;">
-          <button onclick="saveAllPendingPhotos()" style="background:#0A84FF;border:none;color:white;padding:8px 16px;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            OneDrive
+          <button onclick="saveAllPendingPhotos()" id="filmSaveBtn"
+            style="background:#0A84FF;border:none;color:white;padding:8px 14px;
+                   border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;
+                   font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Sauvegarder
           </button>
-          <button onclick="closeFilmstrip()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+          <button onclick="closeFilmstrip()" style="background:rgba(255,255,255,0.1);
+                  border:none;color:white;width:32px;height:32px;border-radius:50%;
+                  font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
         </div>
       </div>
-      <div id="filmstripGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:0 2px;max-height:55vh;overflow-y:auto;"></div>
-      <div id="filmstripEmpty" style="text-align:center;padding:30px;color:rgba(255,255,255,0.45);font-size:13px;font-family:'DM Sans',sans-serif;">Aucune photo — prenez des photos ou importez depuis la galerie</div>
+      <!-- Grille photos -->
+      <div id="filmstripGrid" style="display:grid;grid-template-columns:repeat(4,1fr);
+           gap:2px;padding:0 2px;overflow-y:auto;flex:1;"></div>
+      <div id="filmstripEmpty" style="text-align:center;padding:30px;
+           color:rgba(255,255,255,0.4);font-size:13px;font-family:'DM Sans',sans-serif;
+           display:none;">Aucune photo dans cette session</div>
+      <!-- Indicateur de chargement OneDrive -->
+      <div id="filmstripLoading" style="display:none;text-align:center;padding:20px;
+           color:rgba(255,255,255,0.5);font-size:13px;font-family:'DM Sans',sans-serif;">
+        🔄 Chargement depuis OneDrive...
+      </div>
     </div>
   </div>
 
-  <!-- ÉDITEUR PHOTO -->
-  <div id="photoEditor" style="display:none;position:fixed;inset:0;background:#000;z-index:210;flex-direction:column;">
-    <div style="background:#1c1c1e;padding:calc(var(--safe-top)+10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;">
-      <button onclick="cancelEdit()" style="background:none;border:none;color:#FF453A;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;">Annuler</button>
-      <div style="color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;">Modifier la photo</div>
-      <button onclick="confirmEdit()" style="background:none;border:none;color:#0A84FF;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;">OK</button>
+  <!-- ===== ÉDITEUR PHOTO APPLE-STYLE ===== -->
+  <div id="photoEditor" style="display:none;position:fixed;inset:0;background:#000;
+       z-index:210;flex-direction:column;">
+
+    <!-- HEADER fixe -->
+    <div id="editorHeader" style="background:#1c1c1e;flex-shrink:0;
+         padding:calc(env(safe-area-inset-top,44px)+8px) 16px 10px;
+         display:flex;align-items:center;justify-content:space-between;
+         min-height:60px;">
+      <button onclick="cancelEdit()" style="background:none;border:none;color:#FF453A;
+              font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;
+              padding:8px 12px;-webkit-tap-highlight-color:transparent;
+              min-width:80px;text-align:left;">Annuler</button>
+      <div style="color:white;font-family:'DM Sans',sans-serif;font-size:15px;
+                  font-weight:600;" id="editorTitle">Modifier</div>
+      <button onclick="confirmEdit()" style="background:none;border:none;color:#0A84FF;
+              font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;
+              cursor:pointer;padding:8px 12px;-webkit-tap-highlight-color:transparent;
+              min-width:80px;text-align:right;">OK</button>
     </div>
-    <div style="flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden;" id="editorImageArea">
-      <canvas id="editCanvas" style="max-width:100%;max-height:100%;touch-action:none;cursor:crosshair;"></canvas>
+
+    <!-- Canvas zone flexible -->
+    <div id="editorImageArea" style="flex:1;position:relative;display:flex;
+         align-items:center;justify-content:center;background:#111;overflow:hidden;
+         min-height:0;">
+      <canvas id="editCanvas" style="max-width:100%;max-height:100%;
+              touch-action:none;display:block;"></canvas>
     </div>
-    <!-- Barre undo + modes + sauvegarder -->
-    <div style="background:#1c1c1e;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;">
-      <div style="display:flex;gap:14px;">
-        <button onclick="undoEdit()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:22px;cursor:pointer;">↩</button>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;">
+
+    <!-- BARRE OUTILS FIXE BAS -->
+    <div style="background:#1c1c1e;flex-shrink:0;
+         padding:8px 12px calc(env(safe-area-inset-bottom,0px)+8px);
+         display:flex;align-items:center;justify-content:space-between;">
+      <button onclick="undoEdit()" style="background:rgba(255,255,255,0.1);
+              border:none;color:white;width:38px;height:38px;border-radius:10px;
+              font-size:18px;cursor:pointer;display:flex;align-items:center;
+              justify-content:center;-webkit-tap-highlight-color:transparent;">↩</button>
+      <div style="display:flex;gap:6px;align-items:center;">
         <button onclick="showAdjust()" id="btnAdjust" class="editor-mode-btn">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-          <span>Ajuster</span>
-        </button>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
+            <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
+            <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/>
+            <line x1="17" y1="16" x2="23" y2="16"/>
+          </svg><span>Ajuster</span></button>
         <button onclick="showCropMode()" id="btnCrop" class="editor-mode-btn">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>
-          <span>Recadrer</span>
-        </button>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 2v14a2 2 0 0 0 2 2h14"/>
+            <path d="M18 22V8a2 2 0 0 0-2-2H2"/>
+          </svg><span>Recadrer</span></button>
         <button onclick="showAnnotMode()" id="btnAnnot" class="editor-mode-btn">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-          <span>Annoter</span>
-        </button>
-        <button onclick="saveCurrentPhotoToOneDrive()" style="background:#0A84FF;border:none;color:white;padding:8px 12px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          OneDrive
-        </button>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+          </svg><span>Annoter</span></button>
+        <button onclick="saveCurrentPhotoToOneDrive()" style="background:#0A84FF;border:none;
+                color:white;padding:8px 12px;border-radius:10px;font-family:'DM Sans',sans-serif;
+                font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;
+                gap:4px;-webkit-tap-highlight-color:transparent;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>OneDrive</button>
       </div>
     </div>
-    <!-- Barre annotation -->
-    <div id="annotToolbar" style="display:none;background:#2c2c2e;padding:10px 12px;">
-      <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:10px;-webkit-overflow-scrolling:touch;">
-        <button class="annot-tool" onclick="setEditTool('pen',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
-        <button class="annot-tool" onclick="setEditTool('marker',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/><path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
-        <button class="annot-tool" onclick="setEditTool('arrow',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="8 5 19 5 19 16"/></svg></button>
-        <button class="annot-tool" onclick="setEditTool('circle',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></button>
-        <button class="annot-tool" onclick="setEditTool('rect',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></button>
-        <button class="annot-tool" onclick="addTextAnnot()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
-        <button class="annot-tool" onclick="setEditTool('erase',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/></svg></button>
+
+    <!-- BARRE ANNOTATION -->
+    <div id="annotToolbar" style="display:none;background:#2c2c2e;flex-shrink:0;
+         padding:10px 12px;">
+      <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:10px;
+                  -webkit-overflow-scrolling:touch;scrollbar-width:none;">
+        <button class="annot-tool" onclick="setEditTool('pen',this)" title="Crayon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+        <button class="annot-tool" onclick="setEditTool('marker',this)" title="Marqueur">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/>
+            <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+        <button class="annot-tool" onclick="setEditTool('arrow',this)" title="Flèche">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <line x1="5" y1="19" x2="19" y2="5"/><polyline points="8 5 19 5 19 16"/></svg></button>
+        <button class="annot-tool" onclick="setEditTool('circle',this)" title="Cercle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <circle cx="12" cy="12" r="9"/></svg></button>
+        <button class="annot-tool" onclick="setEditTool('rect',this)" title="Rectangle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <rect x="3" y="5" width="18" height="14" rx="2"/></svg></button>
+        <button class="annot-tool" onclick="activateTextTool()" id="textToolBtn" title="Texte">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <polyline points="4 7 4 4 20 4 20 7"/>
+            <line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
+        <button class="annot-tool" onclick="setEditTool('erase',this)" title="Effacer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/>
+            <path d="M22 21H7"/></svg></button>
       </div>
+      <!-- Couleurs + taille -->
       <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;">
         <div onclick="setEditColor('#FF453A',this)" class="color-dot active" style="background:#FF453A;border-color:white;"></div>
         <div onclick="setEditColor('#FF9F0A',this)" class="color-dot" style="background:#FF9F0A;"></div>
@@ -429,21 +596,33 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
         <div onclick="setEditColor('#30D158',this)" class="color-dot" style="background:#30D158;"></div>
         <div onclick="setEditColor('#0A84FF',this)" class="color-dot" style="background:#0A84FF;"></div>
         <div onclick="setEditColor('#BF5AF2',this)" class="color-dot" style="background:#BF5AF2;"></div>
-        <div onclick="setEditColor('#FFFFFF',this)" class="color-dot" style="background:white;border:2px solid rgba(255,255,255,0.5);"></div>
+        <div onclick="setEditColor('#FFFFFF',this)" class="color-dot" style="background:white;border:2px solid rgba(255,255,255,0.4)!important;"></div>
         <div onclick="setEditColor('#6B2D45',this)" class="color-dot" style="background:#6B2D45;"></div>
-        <input type="range" id="editBrushSize" min="1" max="24" value="4" style="width:80px;accent-color:#0A84FF;" oninput="editState.size=parseInt(this.value)">
+        <input type="range" id="editBrushSize" min="1" max="24" value="4"
+          style="width:80px;accent-color:#0A84FF;" oninput="editState.size=parseInt(this.value)">
       </div>
     </div>
-    <!-- Barre ajustements -->
-    <div id="adjustToolbar" style="display:none;background:#2c2c2e;padding:14px 16px;">
+
+    <!-- BARRE AJUSTEMENTS -->
+    <div id="adjustToolbar" style="display:none;background:#2c2c2e;flex-shrink:0;padding:14px 16px;">
       <div style="display:flex;flex-direction:column;gap:12px;">
-        <div style="display:flex;align-items:center;gap:10px;"><span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:'DM Sans',sans-serif;width:84px;">☀️ Luminosité</span><input type="range" min="-100" max="100" value="0" style="flex:1;accent-color:#FFD60A;" oninput="applyAdjust('brightness',this.value)" id="sliderBrightness"></div>
-        <div style="display:flex;align-items:center;gap:10px;"><span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:'DM Sans',sans-serif;width:84px;">◑ Contraste</span><input type="range" min="-100" max="100" value="0" style="flex:1;accent-color:#FFD60A;" oninput="applyAdjust('contrast',this.value)" id="sliderContrast"></div>
-        <div style="display:flex;align-items:center;gap:10px;"><span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:'DM Sans',sans-serif;width:84px;">🎨 Saturation</span><input type="range" min="-100" max="100" value="0" style="flex:1;accent-color:#FFD60A;" oninput="applyAdjust('saturation',this.value)" id="sliderSaturation"></div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:'DM Sans',sans-serif;width:84px;">☀️ Luminosité</span>
+          <input type="range" min="-100" max="100" value="0" style="flex:1;accent-color:#FFD60A;"
+            oninput="applyAdjust('brightness',this.value)" id="sliderBrightness"></div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:'DM Sans',sans-serif;width:84px;">◑ Contraste</span>
+          <input type="range" min="-100" max="100" value="0" style="flex:1;accent-color:#FFD60A;"
+            oninput="applyAdjust('contrast',this.value)" id="sliderContrast"></div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:'DM Sans',sans-serif;width:84px;">🎨 Saturation</span>
+          <input type="range" min="-100" max="100" value="0" style="flex:1;accent-color:#FFD60A;"
+            oninput="applyAdjust('saturation',this.value)" id="sliderSaturation"></div>
       </div>
     </div>
-    <!-- Barre recadrage -->
-    <div id="cropToolbar" style="display:none;background:#2c2c2e;padding:12px 16px;">
+
+    <!-- BARRE RECADRAGE avec poignées visuelles -->
+    <div id="cropToolbar" style="display:none;background:#2c2c2e;flex-shrink:0;padding:12px 16px;">
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px;">
         <button onclick="setCropRatioBtn(null,this)" class="crop-ratio-btn active">Libre</button>
         <button onclick="setCropRatioBtn(1,this)" class="crop-ratio-btn">1:1</button>
@@ -451,26 +630,129 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
         <button onclick="setCropRatioBtn(16/9,this)" class="crop-ratio-btn">16:9</button>
         <button onclick="setCropRatioBtn(3/4,this)" class="crop-ratio-btn">3:4</button>
       </div>
-      <div style="display:flex;gap:10px;justify-content:center;">
+      <div style="display:flex;gap:8px;justify-content:center;">
         <button onclick="rotateCrop()" class="crop-ratio-btn">↺ 90°</button>
-        <button onclick="applyCrop()" style="background:#0A84FF;border:none;color:white;padding:9px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">✂️ Recadrer maintenant</button>
+        <button onclick="applyCrop()" style="background:#0A84FF;border:none;color:white;
+                padding:9px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;
+                font-size:13px;font-weight:600;cursor:pointer;">✂️ Appliquer</button>
       </div>
     </div>
   </div>
 
-  <!-- ÉDITEUR VIDÉO -->
-  <div id="videoEditor" style="display:none;position:fixed;inset:0;background:#000;z-index:210;flex-direction:column;">
-    <div style="background:#1c1c1e;padding:calc(var(--safe-top)+10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;">
-      <button onclick="cancelVideoEdit()" style="background:none;border:none;color:#FF453A;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;">Annuler</button>
-      <div style="color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;">Vidéo</div>
-      <button onclick="saveVideoToOneDrive()" style="background:none;border:none;color:#0A84FF;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;">⬆ OneDrive</button>
+  <!-- OVERLAY TEXTE (tap pour positionner) -->
+  <div id="textPlacementOverlay" style="display:none;position:fixed;inset:0;z-index:220;
+       background:rgba(0,0,0,0.01);" onclick="placeTextAtPosition(event)">
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+         background:rgba(0,0,0,0.8);padding:14px 18px;border-radius:14px;
+         text-align:center;pointer-events:none;">
+      <div style="color:white;font-family:'DM Sans',sans-serif;font-size:14px;margin-bottom:8px;">
+        Tapez où placer le texte</div>
+      <div style="color:rgba(255,255,255,0.5);font-size:12px;">ou appuyez ici pour annuler</div>
     </div>
-    <video id="previewVideo" controls style="flex:1;width:100%;background:#000;object-fit:contain;"></video>
-    <div style="background:#1c1c1e;padding:14px;text-align:center;color:rgba(255,255,255,0.5);font-size:12px;font-family:'DM Sans',sans-serif;">Vidéo prête — appuyez sur OneDrive pour sauvegarder</div>
   </div>
 
-  <!-- Input fichier caché -->
-  <input type="file" id="galleryInput" accept="image/*,video/*" multiple style="display:none" onchange="handleGalleryFiles(event)">
+  <!-- DIALOGUE TEXTE -->
+  <div id="textDialog" style="display:none;position:fixed;inset:0;z-index:230;
+       background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;">
+    <div style="background:#2c2c2e;border-radius:16px;padding:20px;width:85%;max-width:340px;">
+      <div style="color:white;font-family:'DM Sans',sans-serif;font-size:16px;
+                  font-weight:600;margin-bottom:14px;">Ajouter du texte</div>
+      <input id="textInput" type="text" placeholder="Votre texte..."
+        style="width:100%;padding:12px;background:#3a3a3c;border:none;border-radius:10px;
+               color:white;font-size:16px;font-family:'DM Sans',sans-serif;
+               box-sizing:border-box;margin-bottom:12px;outline:none;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+        <span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:'DM Sans',sans-serif;">Taille:</span>
+        <input type="range" id="textSizeSlider" min="16" max="80" value="32"
+          style="flex:1;accent-color:#0A84FF;">
+        <span id="textSizeValue" style="color:white;font-size:12px;font-family:'DM Sans',sans-serif;width:30px;">32</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <div onclick="setTextColor('#FFFFFF',this)" class="text-color-dot active" style="background:white;"></div>
+        <div onclick="setTextColor('#FF453A',this)" class="text-color-dot" style="background:#FF453A;"></div>
+        <div onclick="setTextColor('#FFD60A',this)" class="text-color-dot" style="background:#FFD60A;"></div>
+        <div onclick="setTextColor('#30D158',this)" class="text-color-dot" style="background:#30D158;"></div>
+        <div onclick="setTextColor('#0A84FF',this)" class="text-color-dot" style="background:#0A84FF;"></div>
+        <div onclick="setTextColor('#BF5AF2',this)" class="text-color-dot" style="background:#BF5AF2;"></div>
+        <div onclick="setTextColor('#FF9F0A',this)" class="text-color-dot" style="background:#FF9F0A;"></div>
+        <div onclick="setTextColor('#6B2D45',this)" class="text-color-dot" style="background:#6B2D45;"></div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="cancelTextDialog()" style="flex:1;padding:12px;background:rgba(255,255,255,0.1);
+                border:none;color:white;border-radius:10px;font-family:'DM Sans',sans-serif;
+                font-size:14px;cursor:pointer;">Annuler</button>
+        <button onclick="confirmTextDialog()" style="flex:1;padding:12px;background:#0A84FF;
+                border:none;color:white;border-radius:10px;font-family:'DM Sans',sans-serif;
+                font-size:14px;font-weight:600;cursor:pointer;">Placer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENU PHOTO (annoter / supprimer) -->
+  <div id="photoActionMenu" style="display:none;position:fixed;inset:0;z-index:250;
+       background:rgba(0,0,0,0.6);" onclick="closePhotoActionMenu(event)">
+    <div style="position:absolute;bottom:0;left:0;right:0;background:#1c1c1e;
+                border-radius:20px 20px 0 0;
+                padding:16px 16px calc(env(safe-area-inset-bottom,0px)+16px);">
+      <div style="width:40px;height:4px;background:rgba(255,255,255,0.2);
+                  border-radius:2px;margin:0 auto 16px;"></div>
+      <img id="photoMenuPreview" style="width:100%;max-height:200px;object-fit:contain;
+           border-radius:12px;background:#000;display:block;margin-bottom:16px;" src="" alt="">
+      <button onclick="annotateSelectedPhoto()" style="width:100%;padding:15px;background:rgba(255,255,255,0.1);
+              border:none;color:white;border-radius:14px;font-family:'DM Sans',sans-serif;
+              font-size:15px;cursor:pointer;display:flex;align-items:center;gap:10px;
+              margin-bottom:8px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+        Annoter cette photo
+      </button>
+      <button onclick="deleteSelectedPhoto()" style="width:100%;padding:15px;background:rgba(255,69,58,0.15);
+              border:1px solid rgba(255,69,58,0.3);color:#FF453A;border-radius:14px;
+              font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;
+              display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF453A" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/>
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Supprimer de OneDrive
+      </button>
+      <button onclick="closePhotoActionMenu()" style="width:100%;padding:14px;
+              background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.6);
+              border-radius:14px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;">
+        Annuler
+      </button>
+    </div>
+  </div>
+
+  <!-- ÉDITEUR VIDÉO -->
+  <div id="videoEditor" style="display:none;position:fixed;inset:0;background:#000;
+       z-index:210;flex-direction:column;">
+    <div style="background:#1c1c1e;padding:calc(env(safe-area-inset-top,44px)+8px) 16px 10px;
+                display:flex;align-items:center;justify-content:space-between;">
+      <button onclick="cancelVideoEdit()" style="background:none;border:none;color:#FF453A;
+              font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;">Annuler</button>
+      <div style="color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;">Vidéo</div>
+      <button onclick="saveVideoToOneDrive()" style="background:none;border:none;color:#0A84FF;
+              font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;">
+        ⬆ OneDrive</button>
+    </div>
+    <video id="previewVideo" controls style="flex:1;width:100%;background:#000;object-fit:contain;"></video>
+    <div style="background:#1c1c1e;padding:14px;text-align:center;
+                color:rgba(255,255,255,0.45);font-size:12px;font-family:'DM Sans',sans-serif;">
+      Vidéo prête — appuyez sur OneDrive pour sauvegarder</div>
+  </div>
+
+  <!-- CSS supplémentaire caméra -->
+  <style>
+  .text-color-dot {
+    width:28px;height:28px;border-radius:50%;cursor:pointer;
+    border:2px solid transparent;transition:transform 0.15s;flex-shrink:0;
+  }
+  .text-color-dot.active { transform:scale(1.3);border-color:white!important; }
+  </style>
+
+  <input type="file" id="galleryInput" accept="image/*,video/*" multiple
+    style="display:none" onchange="handleGalleryFiles(event)">
 </div>
 
 <!-- ===== SCREEN NOTE DE CHANTIER ===== -->
@@ -613,652 +895,1015 @@ let state = {
 let cameraFacing = 'environment';
 let currentMode = 'photo';
 let zoomCSS = 1.0;
+let zoomLevels = []; // Rempli dynamiquement selon l'appareil
 let pinchStartDist = 0;
 let pinchStartZoom = 1.0;
+let pinchBaseScale = 1.0; // Safari event.scale est relatif au touchstart
 let zoomIndicatorTimer = null;
 let mediaRecorder = null;
 let recordedChunks = [];
-let recordTimer = null;
+let recordTimerInterval = null;
 let recordSeconds = 0;
 let flashEnabled = false;
+let gridVisible = false;
 let currentVideoBlob = null;
-let sessionPhotos = []; // { dataUrl, saved, filename }
+
+// Session photos
+let sessionPhotos = []; // { dataUrl, saved, filename, oneDriveId }
+let offlineQueue = [];   // Photos en attente de connexion
 let editingPhotoIndex = -1;
+let selectedPhotoIndex = -1; // Pour le menu action
 let cropRatioValue = null;
-let editState = { tool:null, color:'#FF453A', size:4, drawing:false, startX:0, startY:0, history:[], baseImage:null, brightness:0, contrast:0, saturation:0 };
+let textColor = '#FFFFFF';
+let textPlacementX = 0.5; // Position relative 0-1
+let textPlacementY = 0.5;
 
-// ===== INIT =====
-window.addEventListener('load', async () => {
-  const now = new Date();
-  const days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-  const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-  const dd = document.getElementById('dashDate');
-  if(dd) dd.textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-  const nd = document.getElementById('noteDate');
-  if(nd) nd.value = now.toISOString().split('T')[0];
-  setTimeout(() => {
-    const ls = document.getElementById('loadingScreen');
-    ls.style.opacity = '0';
-    setTimeout(() => ls.style.display = 'none', 500);
-  }, 1600);
-  await initAuth();
-});
+let editState = {
+  tool: null, color: '#FF453A', size: 4,
+  drawing: false, startX: 0, startY: 0,
+  history: [], baseImage: null,
+  brightness: 0, contrast: 0, saturation: 0
+};
 
-// ===== AUTH MSAL =====
-let msalInstance = null;
-function initMsal() {
-  try {
-    msalInstance = new msal.PublicClientApplication({
-      auth: { clientId: CONFIG.clientId, authority: `https://login.microsoftonline.com/${CONFIG.tenantId}`, redirectUri: CONFIG.redirectUri, navigateToLoginRequestUrl: true },
-      cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
-    });
-    return true;
-  } catch(e) { return false; }
-}
-async function initAuth() {
-  const msalOk = initMsal();
-  if(msalOk) {
-    try {
-      await msalInstance.initialize();
-      const resp = await msalInstance.handleRedirectPromise();
-      if(resp && resp.accessToken) { state.accessToken = resp.accessToken; showToast('✅ Connecté à Microsoft 365 !'); }
-      else {
-        const accounts = msalInstance.getAllAccounts();
-        if(accounts.length > 0) {
-          try { const s = await msalInstance.acquireTokenSilent({ scopes: CONFIG.scopes.split(' '), account: accounts[0] }); state.accessToken = s.accessToken; } catch(e) {}
-        }
-      }
-    } catch(e) { console.error('MSAL:', e); }
-  }
-  updateLoginButton();
-  await loadClients();
-}
-async function loginToMicrosoft() {
-  if(msalInstance) { try { await msalInstance.loginRedirect({ scopes: CONFIG.scopes.split(' '), loginHint: 'info@emiliepepin.ca' }); } catch(e) { manualLogin(); } }
-  else manualLogin();
-}
-function manualLogin() {
-  window.location.href = `https://login.microsoftonline.com/${CONFIG.tenantId}/oauth2/v2.0/authorize?client_id=${CONFIG.clientId}&response_type=token&redirect_uri=${encodeURIComponent(CONFIG.redirectUri)}&scope=${encodeURIComponent(CONFIG.scopes)}&login_hint=info%40emiliepepin.ca&response_mode=fragment`;
-}
-function logoutMicrosoft() {
-  try { localStorage.removeItem('ep_token'); localStorage.removeItem('ep_expiry'); if(msalInstance) msalInstance.logoutRedirect({ postLogoutRedirectUri: CONFIG.redirectUri }); } catch(e) {}
-  state.accessToken = null; state.clients = []; state.siteId = null;
-  updateLoginButton(); showConnectBanner(true); renderClients([]);
-}
-function updateLoginButton() {
-  const btn = document.getElementById('loginBtn');
-  if(!btn) return;
-  if(state.accessToken) { btn.textContent = '✅ Connecté'; btn.classList.add('connected'); }
-  else { btn.textContent = '🔐 Connexion'; btn.classList.remove('connected'); }
-}
-function handleLoginBtn() {
-  if(state.accessToken) { if(confirm('Se déconnecter de Microsoft 365?')) logoutMicrosoft(); }
-  else loginToMicrosoft();
-}
-function showConnectBanner(show) { document.getElementById('connectBanner').style.display = show ? 'block' : 'none'; }
-
-// ===== GRAPH API =====
-async function graphGet(url) {
-  if(!state.accessToken) return null;
-  try {
-    const resp = await fetch(`https://graph.microsoft.com/v1.0${url}`, { headers: { Authorization: `Bearer ${state.accessToken}` } });
-    if(resp.status === 401) { state.accessToken = null; updateLoginButton(); showToast('⚠️ Session expirée'); return null; }
-    if(!resp.ok) return null;
-    return await resp.json();
-  } catch(e) { return null; }
-}
-async function graphPost(url, body) {
-  if(!state.accessToken) return null;
-  try {
-    const resp = await fetch(`https://graph.microsoft.com/v1.0${url}`, { method:'POST', headers:{ Authorization:`Bearer ${state.accessToken}`, 'Content-Type':'application/json' }, body:JSON.stringify(body) });
-    return resp.ok ? await resp.json() : null;
-  } catch(e) { return null; }
-}
-
-// ===== SHAREPOINT SITE =====
-async function getSiteId() {
-  if(state.siteId) return state.siteId;
-  const data = await graphGet(`/sites/${CONFIG.sharePointHost}:/sites/${CONFIG.sharePointSiteName}`);
-  if(data) { state.siteId = data.id; return data.id; }
-  return null;
-}
-
-// ===== CLIENTS =====
-async function loadClients() {
-  if(!state.accessToken) { showConnectBanner(true); renderClients([]); return; }
-  showConnectBanner(false);
-  showToast('🔄 Chargement des clients...');
-  const siteId = await getSiteId();
-  if(!siteId) { showToast('⚠️ Impossible de joindre SharePoint'); return; }
-  const data = await graphGet(`/sites/${siteId}/lists/Clients/items?$expand=fields&$top=200`);
-  if(data && data.value && data.value.length > 0) {
-    state.clients = data.value.map((item,i) => ({
-      id: item.id, numId: i,
-      Title: item.fields.Title || 'Client sans nom',
-      project: item.fields.Projet || item.fields.TypeProjet || 'Projet en cours',
-      status: item.fields.Statut || 'active',
-      email: item.fields.Courriel || item.fields.Email || '',
-      phone: item.fields.Telephone || item.fields.T_x00e9_l_x00e9_phone || '',
-      address: item.fields.Adresse || item.fields.Adresse_x0020_chantier || '',
-      heures: '0h', facture: '0$', photos: 0
-    }));
-    showToast(`✅ ${state.clients.length} client${state.clients.length>1?'s':''} chargé${state.clients.length>1?'s':''}!`);
-  } else { showToast('ℹ️ Aucun client dans SharePoint'); state.clients = []; }
-  renderClients(state.clients);
-  const active = state.clients.filter(c=>c.status==='active').length;
-  setEl('dashClients', active || state.clients.length);
-  setEl('dashSub', `${state.clients.length} clients · Microsoft 365 ✅`);
-  setEl('clientsLabel', `Clients (${state.clients.length})`);
-}
-
-function renderClients(clients) {
-  const list = document.getElementById('clientList');
-  if(clients.length === 0) {
-    list.innerHTML = state.accessToken
-      ? '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">Aucun client</div><div class="empty-desc">Utilisez le formulaire d\'intake pour ajouter vos clients.</div></div>'
-      : '<div class="empty-state"><div class="empty-icon">🌸</div><div class="empty-title">Non connecté</div><div class="empty-desc">Connectez-vous à Microsoft 365 pour voir vos clients.</div></div>';
-    return;
-  }
-  list.innerHTML = clients.map(c => `
-    <div class="client-card" onclick="openClient('${c.id}')">
-      <div class="client-avatar">${getInitials(c.Title)}</div>
-      <div class="client-info">
-        <div class="client-name">${escHtml(c.Title)}</div>
-        <div class="client-project">${escHtml(c.project)}</div>
-        <span class="client-status status-${c.status}">${statusLabel(c.status)}</span>
-      </div>
-      <svg class="client-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-    </div>
-  `).join('');
-}
-function filterClients(q) { renderClients(state.clients.filter(c=>c.Title.toLowerCase().includes(q.toLowerCase()))); }
-function getInitials(n) { return (n||'').split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase()||'?'; }
-function statusLabel(s) { return {active:'● En cours',pending:'○ En attente',completed:'✓ Terminé'}[s]||s; }
-function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-// ===== OPEN CLIENT =====
-function setEl(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
-function openClient(id) {
-  const c = state.clients.find(x=>x.id===id);
-  if(!c) return;
-  state.currentClient = c;
-  setEl('clientHeaderName',c.Title); setEl('clientHeaderProject',c.project);
-  setEl('heroAvatar',getInitials(c.Title)); setEl('heroName',c.Title); setEl('heroProject',c.project);
-  setEl('statHeures',c.heures); setEl('statFacture',c.facture); setEl('statPhotos',c.photos||0);
-  setEl('photosClientNameCam',c.Title); setEl('timerClientName',c.Title);
-  const addrEl = document.getElementById('clientAddress');
-  if(addrEl) { if(c.address){addrEl.textContent='📍 '+c.address;addrEl.style.display='block';}else{addrEl.style.display='none';} }
-  showScreen('screenClient');
-}
-
-// ===== SCREEN NAV =====
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='';});
-  const el=document.getElementById(id);
-  if(el){el.classList.add('active');if(id==='screenPhotos')el.style.display='flex';}
-  window.scrollTo(0,0);
-}
-function navTo(screen,navId) {
-  showScreen(screen);
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  const ni=document.getElementById(navId); if(ni)ni.classList.add('active');
-}
-
-// ===== CAMÉRA =====
+// ===== NAVIGATION CAMÉRA =====
 function goToPhotos() {
   if(state.currentClient) setEl('photosClientNameCam', state.currentClient.Title);
-  // Cacher toutes les screens normalement
-  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='';});
-  // Afficher la caméra
-  const screen=document.getElementById('screenPhotos');
-  if(screen){screen.classList.add('active');screen.style.display='flex';}
-  // Cacher la bottom nav (elle passerait par-dessus)
-  const nav=document.getElementById('bottomNav');
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active'); s.style.display = '';
+  });
+  const screen = document.getElementById('screenPhotos');
+  if(screen) { screen.classList.add('active'); screen.style.display = 'flex'; }
+  // Cacher bottom nav
+  const nav = document.getElementById('bottomNav');
   if(nav) nav.classList.add('nav-hidden');
-  document.getElementById('cameraFullscreen').style.display='flex';
-  document.getElementById('photoEditor').style.display='none';
-  document.getElementById('videoEditor').style.display='none';
+  // Reset vues
+  document.getElementById('cameraFullscreen').style.display = 'flex';
+  document.getElementById('photoEditor').style.display = 'none';
+  document.getElementById('videoEditor').style.display = 'none';
+  document.getElementById('filmstripPanel').style.display = 'none';
+  document.getElementById('photoActionMenu').style.display = 'none';
   updateFilmstripThumb();
   updateSavePendingBtn();
-  window.scrollTo(0,0);
-  setTimeout(()=>startCamera(),200);
+  window.scrollTo(0, 0);
+  setTimeout(() => startCamera(), 150);
 }
 
 function exitCameraMode() {
   stopCamera();
-  const nav=document.getElementById('bottomNav');
+  const nav = document.getElementById('bottomNav');
   if(nav) nav.classList.remove('nav-hidden');
+  const screen = document.getElementById('screenPhotos');
+  if(screen) { screen.style.display = 'none'; screen.classList.remove('active'); }
   showScreen('screenClient');
 }
 
+// ===== CAMÉRA =====
 async function startCamera() {
   try {
     if(state.cameraStream) stopCamera();
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:{ideal:cameraFacing}, width:{ideal:1920}, height:{ideal:1080} },
-      audio: currentMode==='video'
-    });
-    state.cameraStream=stream; state.cameraActive=true;
-    const video=document.getElementById('cameraVideo');
-    video.srcObject=stream; video.style.display='block';
+    const constraints = {
+      video: { facingMode: { ideal: cameraFacing }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: currentMode === 'video'
+    };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    state.cameraStream = stream;
+    state.cameraActive = true;
+    const video = document.getElementById('cameraVideo');
+    video.srcObject = stream;
+    await new Promise(r => video.onloadedmetadata = r);
+    video.play();
     applyZoomCSS(zoomCSS);
-    setupPinchZoom(video);
-  } catch(e) { showToast('⚠️ Accès caméra refusé'); }
+    setupPinchZoom();
+    // Détecter les niveaux de zoom disponibles
+    await detectZoomLevels(stream);
+  } catch(e) {
+    console.error('Camera:', e);
+    showToast('⚠️ Accès caméra refusé — vérifiez les permissions');
+  }
 }
 
 function stopCamera() {
-  if(state.cameraStream){state.cameraStream.getTracks().forEach(t=>t.stop());state.cameraStream=null;}
-  state.cameraActive=false;
+  if(state.cameraStream) {
+    state.cameraStream.getTracks().forEach(t => t.stop());
+    state.cameraStream = null;
+  }
+  state.cameraActive = false;
 }
 
-// ===== ZOOM =====
-function setupPinchZoom(video) {
-  // Attacher au container (videoWrapper) pour capturer le pinch même hors vidéo
-  const wrapper = document.getElementById('videoWrapper') || video;
-  // Nettoyer anciens listeners
-  ['_pStart','_pMove','_pEnd'].forEach(k => {
+// ===== DÉTECTION ZOOM AUTOMATIQUE =====
+async function detectZoomLevels(stream) {
+  // Sur iOS Safari: getCapabilities() ne retourne pas le zoom
+  // On détecte via l'user agent et on adapte
+  const ua = navigator.userAgent;
+  const isIPad = /iPad/.test(ua) || (navigator.maxTouchPoints > 1 && /MacIntel/.test(ua));
+  const isIPhone = /iPhone/.test(ua);
+
+  // Essayer d'obtenir les capacités (fonctionne sur Android/Chrome)
+  let levels = [];
+  try {
+    const track = stream.getVideoTracks()[0];
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    if(caps.zoom && caps.zoom.max > 1) {
+      // Android avec zoom hardware supporté
+      levels = [
+        { label: '1x', scale: 1.0 },
+        { label: '2x', scale: 2.0 },
+        { label: '3x', scale: 3.0 }
+      ];
+    }
+  } catch(e) {}
+
+  // iOS: détection par modèle via résolution caméra
+  if(levels.length === 0) {
+    if(isIPhone) {
+      // iPhone 16 standard, 15, 14 etc. = wide + ultra-wide = .5x et 1x
+      // iPhone Pro = .5x, 1x, 2x ou 3x
+      // On détecte Pro via la résolution max disponible
+      const track = stream.getVideoTracks()[0];
+      const settings = track.getSettings();
+      const maxW = settings.width || 1280;
+      if(maxW >= 3840) {
+        // Très haute résolution = Pro ou iPad Pro
+        levels = [
+          { label: '.5x', scale: 1.0 },  // .5x = caméra ultra-wide (scale 1 = pas de zoom CSS)
+          { label: '1x', scale: 2.0 },   // 1x = wide
+          { label: '2x', scale: 4.0 },   // 2x = télé ou zoom CSS
+          { label: '3x', scale: 6.0 }
+        ];
+      } else if(maxW >= 1920) {
+        // Standard iPhone ou iPad standard
+        levels = [
+          { label: '.5x', scale: 1.0 },
+          { label: '1x', scale: 2.0 },
+          { label: '2x', scale: 4.0 }
+        ];
+      } else {
+        levels = [
+          { label: '1x', scale: 1.0 },
+          { label: '2x', scale: 2.0 }
+        ];
+      }
+    } else if(isIPad) {
+      levels = [
+        { label: '1x', scale: 1.0 },
+        { label: '2x', scale: 2.0 }
+      ];
+    } else {
+      // Défaut universel
+      levels = [
+        { label: '1x', scale: 1.0 },
+        { label: '2x', scale: 2.0 },
+        { label: '3x', scale: 3.0 }
+      ];
+    }
+  }
+
+  zoomLevels = levels;
+  renderZoomPills();
+}
+
+function renderZoomPills() {
+  const row = document.getElementById('zoomPillsRow');
+  if(!row) return;
+  row.innerHTML = zoomLevels.map((l, i) => `
+    <button onclick="setZoomByIndex(${i})" id="zpill_${i}"
+      class="zoom-pill ${i === 0 ? 'zoom-pill-active' : ''}">${l.label}</button>
+  `).join('');
+}
+
+function setZoomByIndex(i) {
+  if(i < 0 || i >= zoomLevels.length) return;
+  zoomCSS = zoomLevels[i].scale;
+  applyZoomCSS(zoomCSS);
+  showZoomIndicator(zoomLevels[i].label);
+  document.querySelectorAll('.zoom-pill').forEach((b, j) => {
+    b.classList.toggle('zoom-pill-active', j === i);
+  });
+}
+
+// ===== ZOOM PINCH =====
+function setupPinchZoom() {
+  const wrapper = document.getElementById('videoWrapper');
+  if(!wrapper) return;
+  ['_pS','_pM','_pE'].forEach(k => {
     if(wrapper[k]) {
       wrapper.removeEventListener('touchstart', wrapper[k]);
       wrapper.removeEventListener('touchmove', wrapper[k]);
       wrapper.removeEventListener('touchend', wrapper[k]);
     }
   });
-  wrapper._pStart = (e) => {
+  wrapper._pS = (e) => {
     if(e.touches.length === 2) {
       pinchStartDist = getPinchDist(e);
       pinchStartZoom = zoomCSS;
-      e.preventDefault();
+      pinchBaseScale = 1.0; // reset pour event.scale Safari
     }
   };
-  wrapper._pMove = (e) => {
-    if(e.touches.length === 2) {
-      e.preventDefault();
-      let scale;
-      // Safari fournit event.scale nativement
-      if(e.scale !== undefined) {
-        scale = pinchStartZoom * e.scale;
-      } else {
-        const d = getPinchDist(e);
-        scale = pinchStartZoom * (d / pinchStartDist);
-      }
-      zoomCSS = Math.min(Math.max(1.0, scale), 6.0);
-      applyZoomCSS(zoomCSS);
-      showZoomIndicator(zoomCSS);
+  wrapper._pM = (e) => {
+    if(e.touches.length !== 2) return;
+    e.preventDefault();
+    let newScale;
+    if(typeof e.scale !== 'undefined') {
+      // Safari native: event.scale relatif au touchstart
+      newScale = pinchStartZoom * e.scale;
+    } else {
+      const d = getPinchDist(e);
+      newScale = pinchStartZoom * (d / pinchStartDist);
     }
+    const minZoom = zoomLevels.length > 0 ? zoomLevels[0].scale : 1.0;
+    const maxZoom = zoomLevels.length > 0 ? zoomLevels[zoomLevels.length-1].scale * 1.5 : 6.0;
+    zoomCSS = Math.min(Math.max(minZoom, newScale), maxZoom);
+    applyZoomCSS(zoomCSS);
+    showZoomIndicator(zoomCSS.toFixed(1) + 'x');
+    updateZoomPillsForScale(zoomCSS);
   };
-  wrapper._pEnd = (e) => {
-    if(e.touches.length < 2) updateZoomButtons(zoomCSS);
-    // Reset pinch start pour le prochain geste
-    pinchStartDist = 0;
-  };
-  wrapper.addEventListener('touchstart', wrapper._pStart, {passive:false});
-  wrapper.addEventListener('touchmove', wrapper._pMove, {passive:false});
-  wrapper.addEventListener('touchend', wrapper._pEnd, {passive:true});
+  wrapper._pE = () => { pinchStartDist = 0; };
+  wrapper.addEventListener('touchstart', wrapper._pS, { passive: true });
+  wrapper.addEventListener('touchmove', wrapper._pM, { passive: false });
+  wrapper.addEventListener('touchend', wrapper._pE, { passive: true });
 }
-function getPinchDist(e){return Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}
+
+function getPinchDist(e) {
+  return Math.hypot(
+    e.touches[0].clientX - e.touches[1].clientX,
+    e.touches[0].clientY - e.touches[1].clientY
+  );
+}
+
 function applyZoomCSS(scale) {
   const v = document.getElementById('cameraVideo');
   if(v) {
-    // translate3d(0,0,0) force GPU compositing sur iOS
     v.style.transform = `translate3d(0,0,0) scale(${scale})`;
     v.style.webkitTransform = `translate3d(0,0,0) scale(${scale})`;
   }
   zoomCSS = scale;
 }
-function showZoomIndicator(scale){
-  const el=document.getElementById('zoomIndicator');
-  el.style.display='block';el.textContent=scale.toFixed(1)+'x';
-  clearTimeout(zoomIndicatorTimer);zoomIndicatorTimer=setTimeout(()=>{el.style.display='none';},1500);
-}
-function setZoomLevel(btnIndex){
-  const levels=[1.0,2.0,4.0];
-  zoomCSS=levels[btnIndex-1];applyZoomCSS(zoomCSS);updateZoomButtons(zoomCSS);showZoomIndicator(zoomCSS);
-}
-function updateZoomButtons(scale){
-  const ids=['zoomBtn1','zoomBtn2','zoomBtn3'],levels=[1.0,2.0,4.0];
-  ids.forEach((id,i)=>{const b=document.getElementById(id);if(b){b.classList.remove('zoom-pill-active');if(Math.abs(scale-levels[i])<0.5)b.classList.add('zoom-pill-active');}});
+
+function showZoomIndicator(label) {
+  const el = document.getElementById('zoomIndicator');
+  if(!el) return;
+  el.style.display = 'block';
+  el.textContent = label;
+  clearTimeout(zoomIndicatorTimer);
+  zoomIndicatorTimer = setTimeout(() => { el.style.display = 'none'; }, 1400);
 }
 
-// ===== MODE =====
-function setMode(mode){
-  currentMode=mode;
-  const mP=document.getElementById('modePhoto'),mV=document.getElementById('modeVideo');
-  mP.style.color=mode==='photo'?'white':'rgba(255,255,255,0.5)';mP.style.fontWeight=mode==='photo'?'700':'500';
-  mV.style.color=mode==='video'?'white':'rgba(255,255,255,0.5)';mV.style.fontWeight=mode==='video'?'700':'500';
-  const inner=document.getElementById('shutterInner');
-  if(mode==='video'){inner.style.borderRadius='8px';inner.style.background='#FF453A';inner.style.width='34px';inner.style.height='34px';inner.style.margin='auto';}
-  else{inner.style.borderRadius='50%';inner.style.background='white';inner.style.width='66px';inner.style.height='66px';inner.style.margin='0';}
+function updateZoomPillsForScale(scale) {
+  // Mettre en surbrillance la pill la plus proche
+  if(!zoomLevels.length) return;
+  let closest = 0;
+  let minDiff = Math.abs(scale - zoomLevels[0].scale);
+  zoomLevels.forEach((l, i) => {
+    const diff = Math.abs(scale - l.scale);
+    if(diff < minDiff) { minDiff = diff; closest = i; }
+  });
+  document.querySelectorAll('.zoom-pill').forEach((b, i) => {
+    b.classList.toggle('zoom-pill-active', i === closest);
+  });
+}
+
+// ===== GRILLE =====
+function toggleGrid() {
+  gridVisible = !gridVisible;
+  const grid = document.getElementById('cameraGrid');
+  const btn = document.getElementById('gridBtn');
+  if(grid) grid.style.display = gridVisible ? 'block' : 'none';
+  if(btn) btn.style.background = gridVisible ? 'rgba(255,214,10,0.5)' : 'rgba(0,0,0,0.45)';
+}
+
+// ===== MODE PHOTO/VIDÉO =====
+function setMode(mode) {
+  currentMode = mode;
+  const mP = document.getElementById('modePhoto');
+  const mV = document.getElementById('modeVideo');
+  if(mP) { mP.style.color = mode === 'photo' ? 'white' : 'rgba(255,255,255,0.45)'; mP.style.fontWeight = mode === 'photo' ? '700' : '500'; }
+  if(mV) { mV.style.color = mode === 'video' ? 'white' : 'rgba(255,255,255,0.45)'; mV.style.fontWeight = mode === 'video' ? '700' : '500'; }
+  const inner = document.getElementById('shutterInner');
+  if(inner) {
+    if(mode === 'video') {
+      inner.style.borderRadius = '8px';
+      inner.style.background = '#FF453A';
+      inner.style.width = '34px';
+      inner.style.height = '34px';
+      inner.style.margin = 'auto';
+    } else {
+      inner.style.borderRadius = '50%';
+      inner.style.background = 'white';
+      inner.style.width = '70px';
+      inner.style.height = '70px';
+      inner.style.margin = '0';
+    }
+  }
 }
 
 // ===== CAPTURE =====
-function captureMedia(){
-  const btn=document.getElementById('shutterBtn');
-  btn.style.transform='scale(0.88)';setTimeout(()=>btn.style.transform='scale(1)',120);
-  if(currentMode==='photo') takePhoto();
-  else if(mediaRecorder&&mediaRecorder.state==='recording') stopRecording();
+function captureMedia() {
+  const btn = document.getElementById('shutterBtn');
+  if(btn) { btn.style.transform = 'scale(0.88)'; setTimeout(() => btn.style.transform = 'scale(1)', 120); }
+  if(currentMode === 'photo') takePhoto();
+  else if(mediaRecorder && mediaRecorder.state === 'recording') stopRecording();
   else startRecording();
 }
-function takePhoto(){
-  const video=document.getElementById('cameraVideo'),canvas=document.getElementById('photoCanvas');
-  const w=video.videoWidth||1280,h=video.videoHeight||720;
-  canvas.width=w;canvas.height=h;
-  const ctx=canvas.getContext('2d');
-  if(zoomCSS>1){const cx=w/2,cy=h/2,sw=w/zoomCSS,sh=h/zoomCSS;ctx.drawImage(video,cx-sw/2,cy-sh/2,sw,sh,0,0,w,h);}
-  else ctx.drawImage(video,0,0);
-  const dataUrl=canvas.toDataURL('image/jpeg',0.93);
-  const ts=new Date(),filename=formatDateForFilename(ts)+'_'+(sessionPhotos.length+1).toString().padStart(2,'0')+'.jpg';
-  sessionPhotos.push({dataUrl,saved:false,filename});
-  updateFilmstripThumb();updateSavePendingBtn();renderFilmstripGrid();
-  showToast('📸 Photo ajoutée à la pellicule');
+
+function takePhoto() {
+  const video = document.getElementById('cameraVideo');
+  const canvas = document.getElementById('photoCanvas');
+  if(!video || !canvas) return;
+  const w = video.videoWidth || 1280;
+  const h = video.videoHeight || 720;
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  // Appliquer le zoom: on crop le centre
+  if(zoomCSS > 1) {
+    const sw = w / zoomCSS, sh = h / zoomCSS;
+    const sx = (w - sw) / 2, sy = (h - sh) / 2;
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+  } else {
+    ctx.drawImage(video, 0, 0);
+  }
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.93);
+  const ts = new Date();
+  const filename = formatDateForFilename(ts) + '_' + String(sessionPhotos.length + 1).padStart(3, '0') + '.jpg';
+  const photo = { dataUrl, saved: false, filename, oneDriveId: null };
+  sessionPhotos.push(photo);
+  updateFilmstripThumb();
+  updateSavePendingBtn();
+  // Sauvegarde automatique
+  autoSavePhoto(photo, sessionPhotos.length - 1);
+  showToast('📸 Photo prise');
 }
-function formatDateForFilename(d){
+
+// ===== SAUVEGARDE AUTO =====
+async function autoSavePhoto(photo, index) {
+  if(!navigator.onLine) {
+    // Mode offline: ajouter à la queue
+    offlineQueue.push(index);
+    showToast('📴 Hors ligne — photo en attente');
+    return;
+  }
+  if(!state.accessToken || !state.currentClient) return;
+  const ok = await uploadPhotoToOneDrive(photo.dataUrl, photo.filename);
+  if(ok) {
+    sessionPhotos[index].saved = true;
+    updateFilmstripThumb();
+    updateSavePendingBtn();
+  }
+}
+
+// Écouter le retour en ligne pour vider la queue
+window.addEventListener('online', async () => {
+  if(offlineQueue.length === 0) return;
+  showToast(`📶 Connexion rétablie — upload de ${offlineQueue.length} photo${offlineQueue.length > 1 ? 's' : ''}...`);
+  const queue = [...offlineQueue];
+  offlineQueue = [];
+  for(const idx of queue) {
+    if(sessionPhotos[idx] && !sessionPhotos[idx].saved) {
+      const ok = await uploadPhotoToOneDrive(sessionPhotos[idx].dataUrl, sessionPhotos[idx].filename);
+      if(ok) {
+        sessionPhotos[idx].saved = true;
+      } else {
+        offlineQueue.push(idx); // Remettre en queue si échoué
+      }
+    }
+  }
+  updateFilmstripThumb();
+  updateSavePendingBtn();
+  const savedCount = queue.length - offlineQueue.length;
+  if(savedCount > 0) showToast(`✅ ${savedCount} photo${savedCount > 1 ? 's' : ''} synchronisée${savedCount > 1 ? 's' : ''}`);
+});
+
+window.addEventListener('offline', () => {
+  showToast('📴 Hors ligne — les photos seront sync au retour');
+});
+
+function formatDateForFilename(d) {
   return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`;
 }
 
 // ===== PELLICULE =====
-function updateFilmstripThumb(){
-  const thumb=document.getElementById('filmstripThumb'),countEl=document.getElementById('filmstripCount');
+function updateFilmstripThumb() {
+  const thumb = document.getElementById('filmstripThumb');
+  const countEl = document.getElementById('filmstripCount');
   if(!thumb) return;
-  const pending=sessionPhotos.filter(p=>!p.saved).length;
-  if(sessionPhotos.length>0){
-    const last=sessionPhotos[sessionPhotos.length-1];
-    thumb.innerHTML=`<img src="${last.dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
-    if(countEl){countEl.style.display=pending>0?'flex':'none';countEl.textContent=pending;}
+  const pending = sessionPhotos.filter(p => !p.saved).length + offlineQueue.length;
+  if(sessionPhotos.length > 0) {
+    const last = sessionPhotos[sessionPhotos.length - 1];
+    thumb.innerHTML = `<img src="${last.dataUrl}" style="width:100%;height:100%;object-fit:cover;">
+      ${pending > 0 ? `<div style="position:absolute;bottom:2px;right:2px;background:#FF9F0A;color:white;font-size:9px;font-weight:700;font-family:'DM Sans',sans-serif;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;">${pending}</div>` : ''}`;
   } else {
-    thumb.innerHTML=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
-    if(countEl) countEl.style.display='none';
+    thumb.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
   }
 }
-function toggleFilmstrip(){
-  const panel=document.getElementById('filmstripPanel');
-  if(!panel.style.display||panel.style.display==='none') openFilmstrip();
+
+function handleFilmstripTap() {
+  openFilmstrip();
+}
+
+function toggleFilmstrip() {
+  const panel = document.getElementById('filmstripPanel');
+  if(!panel) return;
+  if(panel.style.display === 'none' || !panel.style.display) openFilmstrip();
   else closeFilmstrip();
 }
-function openFilmstrip(){
+
+async function openFilmstrip() {
+  const panel = document.getElementById('filmstripPanel');
+  if(!panel) return;
+  const client = state.currentClient ? state.currentClient.Title : 'Session';
+  setEl('filmstripTitle', client);
+  panel.style.display = 'block';
   renderFilmstripGrid();
-  const client=state.currentClient?state.currentClient.Title:'Session';
-  setEl('filmstripTitle',`${client} — ${sessionPhotos.length} photo${sessionPhotos.length!==1?'s':''}`);
-  document.getElementById('filmstripPanel').style.display='block';
-}
-function closeFilmstrip(){document.getElementById('filmstripPanel').style.display='none';}
-function closeFilmstripOutside(e){if(e.target===document.getElementById('filmstripPanel'))closeFilmstrip();}
-function renderFilmstripGrid(){
-  const grid=document.getElementById('filmstripGrid'),empty=document.getElementById('filmstripEmpty');
-  if(!grid) return;
-  if(sessionPhotos.length===0){grid.innerHTML='';if(empty)empty.style.display='block';return;}
-  if(empty) empty.style.display='none';
-  grid.innerHTML=sessionPhotos.map((p,i)=>`
-    <div class="filmstrip-item" onclick="openPhotoEditorFromFilmstrip(${i})">
-      <img src="${p.dataUrl}" alt="Photo ${i+1}" loading="lazy">
-      ${p.saved?'<div class="saved-badge">✓</div>':''}
-    </div>
-  `).join('');
-}
-function updateSavePendingBtn(){
-  const btn=document.getElementById('savePendingBtn'),countEl=document.getElementById('savePendingCount'),pluralEl=document.getElementById('savePendingPlural');
-  if(!btn) return;
-  const pending=sessionPhotos.filter(p=>!p.saved).length;
-  if(pending>0){btn.style.display='flex';if(countEl)countEl.textContent=pending;if(pluralEl)pluralEl.textContent=pending>1?'s':'';}
-  else btn.style.display='none';
-}
-function updatePhotosGallery(){
-  const gallery=document.getElementById('photosGallery');
-  if(!gallery) return;
-  if(sessionPhotos.length===0){gallery.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Aucune photo dans cette session</div>';return;}
-  gallery.innerHTML=sessionPhotos.map((p,i)=>`<div class="gallery-thumb" onclick="openPhotoEditorFromFilmstrip(${i})"><img src="${p.dataUrl}" alt="Photo ${i+1}"></div>`).join('');
+  // Option B: charger les photos OneDrive seulement à l'ouverture
+  if(state.accessToken && state.currentClient) {
+    await loadOneDrivePhotos();
+  }
 }
 
-// ===== SAUVEGARDE ONEDRIVE =====
-async function saveAllPendingPhotos(){
-  const pending=sessionPhotos.filter(p=>!p.saved);
-  if(pending.length===0){showToast('Aucune photo à sauvegarder');return;}
-  if(!state.currentClient){showToast('⚠️ Sélectionnez un client d\'abord');return;}
-  closeFilmstrip();
-  showToast(`⬆️ Sauvegarde de ${pending.length} photo${pending.length>1?'s':''}...`);
-  let saved=0;
-  for(const photo of pending){
-    const ok=await uploadPhotoToOneDrive(photo.dataUrl,photo.filename);
-    if(ok){photo.saved=true;saved++;}
-  }
-  updateFilmstripThumb();updateSavePendingBtn();renderFilmstripGrid();
-  if(saved>0){
-    showToast(`✅ ${saved} photo${saved>1?'s':''} sauvegardée${saved>1?'s':''} dans OneDrive !`);
-    setEl('statPhotos',sessionPhotos.filter(p=>p.saved).length);
-  } else showToast('⚠️ Connexion Microsoft 365 requise pour sauvegarder');
+function closeFilmstrip() {
+  const panel = document.getElementById('filmstripPanel');
+  if(panel) panel.style.display = 'none';
 }
-async function saveCurrentPhotoToOneDrive(){
-  if(editingPhotoIndex<0||editingPhotoIndex>=sessionPhotos.length){showToast('Aucune photo sélectionnée');return;}
-  const canvas=document.getElementById('editCanvas');
-  canvas.style.filter='';
-  const dataUrl=canvas.toDataURL('image/jpeg',0.93);
-  sessionPhotos[editingPhotoIndex].dataUrl=dataUrl;
-  showToast('⬆️ Sauvegarde en cours...');
-  const ok=await uploadPhotoToOneDrive(dataUrl,sessionPhotos[editingPhotoIndex].filename);
-  if(ok){sessionPhotos[editingPhotoIndex].saved=true;showToast('✅ Photo sauvegardée dans OneDrive !');updateFilmstripThumb();updateSavePendingBtn();renderFilmstripGrid();}
+
+function closeFilmstripOutside(e) {
+  if(e.target === document.getElementById('filmstripPanel')) closeFilmstrip();
+}
+
+async function loadOneDrivePhotos() {
+  const loading = document.getElementById('filmstripLoading');
+  const empty = document.getElementById('filmstripEmpty');
+  if(loading) loading.style.display = 'block';
+  if(empty) empty.style.display = 'none';
+  try {
+    const clientName = state.currentClient.Title;
+    const path = `/me/drive/root:/${CONFIG.oneDriveRoot}/${clientName}/10_Photos/Chantier`;
+    const data = await graphGet(`${path}:/children?$orderby=lastModifiedDateTime desc&$top=50`);
+    if(data && data.value && data.value.length > 0) {
+      // Fusionner avec les photos de session (éviter doublons par filename)
+      const odPhotos = data.value
+        .filter(f => f.name.match(/\.(jpg|jpeg|png|heic)/i))
+        .map(f => ({
+          dataUrl: null,
+          odUrl: f['@microsoft.graph.downloadUrl'] || null,
+          odThumbnail: f.thumbnails?.[0]?.medium?.url || null,
+          filename: f.name,
+          saved: true,
+          oneDriveId: f.id
+        }));
+      // Ajouter les photos OneDrive qui ne sont pas déjà dans la session
+      const sessionFilenames = new Set(sessionPhotos.map(p => p.filename));
+      for(const p of odPhotos) {
+        if(!sessionFilenames.has(p.filename)) sessionPhotos.push(p);
+      }
+      renderFilmstripGrid();
+    }
+  } catch(e) { console.error('OneDrive load:', e); }
+  finally { if(loading) loading.style.display = 'none'; }
+}
+
+function renderFilmstripGrid() {
+  const grid = document.getElementById('filmstripGrid');
+  const empty = document.getElementById('filmstripEmpty');
+  if(!grid) return;
+  if(sessionPhotos.length === 0) {
+    grid.innerHTML = '';
+    if(empty) empty.style.display = 'block';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+  grid.innerHTML = sessionPhotos.map((p, i) => {
+    const src = p.dataUrl || p.odThumbnail || p.odUrl || '';
+    return `
+      <div class="filmstrip-item" onclick="openPhotoActionMenu(${i})" style="position:relative;aspect-ratio:1;overflow:hidden;background:#333;cursor:pointer;">
+        ${src ? `<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">` : 
+          `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:10px;font-family:'DM Sans',sans-serif;">OneDrive</div>`}
+        ${p.saved ? '<div style="position:absolute;top:3px;right:3px;background:#30D158;color:white;font-size:9px;font-weight:700;padding:2px 5px;border-radius:5px;font-family:\'DM Sans\',sans-serif;">✓</div>' : 
+          '<div style="position:absolute;top:3px;right:3px;background:#FF9F0A;color:white;font-size:9px;font-weight:700;padding:2px 5px;border-radius:5px;font-family:\'DM Sans\',sans-serif;">↑</div>'}
+      </div>`;
+  }).join('');
+}
+
+// ===== MENU ACTION PHOTO =====
+function openPhotoActionMenu(index) {
+  selectedPhotoIndex = index;
+  const photo = sessionPhotos[index];
+  if(!photo) return;
+  const menu = document.getElementById('photoActionMenu');
+  const preview = document.getElementById('photoMenuPreview');
+  if(preview) {
+    preview.src = photo.dataUrl || photo.odThumbnail || photo.odUrl || '';
+    preview.style.display = (preview.src && preview.src !== window.location.href) ? 'block' : 'none';
+  }
+  if(menu) menu.style.display = 'block';
+}
+
+function closePhotoActionMenu(e) {
+  const menu = document.getElementById('photoActionMenu');
+  if(!menu) return;
+  if(!e || e.target === menu || e.target.tagName === 'BUTTON') {
+    menu.style.display = 'none';
+  }
+}
+
+function annotateSelectedPhoto() {
+  document.getElementById('photoActionMenu').style.display = 'none';
+  closeFilmstrip();
+  if(selectedPhotoIndex < 0) return;
+  const photo = sessionPhotos[selectedPhotoIndex];
+  editingPhotoIndex = selectedPhotoIndex;
+  if(photo.dataUrl) {
+    openPhotoEditor(photo.dataUrl);
+  } else if(photo.odUrl) {
+    // Charger depuis OneDrive
+    showToast('⏳ Chargement...');
+    fetch(photo.odUrl)
+      .then(r => r.blob())
+      .then(blob => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          sessionPhotos[selectedPhotoIndex].dataUrl = ev.target.result;
+          openPhotoEditor(ev.target.result);
+        };
+        reader.readAsDataURL(blob);
+      })
+      .catch(() => showToast('⚠️ Impossible de charger la photo'));
+  }
+}
+
+async function deleteSelectedPhoto() {
+  document.getElementById('photoActionMenu').style.display = 'none';
+  if(selectedPhotoIndex < 0) return;
+  const photo = sessionPhotos[selectedPhotoIndex];
+  if(!confirm('Supprimer cette photo de OneDrive ?')) return;
+  if(photo.oneDriveId && state.accessToken) {
+    const resp = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${photo.oneDriveId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${state.accessToken}` }
+    });
+    if(resp.ok || resp.status === 204) {
+      sessionPhotos.splice(selectedPhotoIndex, 1);
+      renderFilmstripGrid();
+      updateFilmstripThumb();
+      showToast('🗑️ Photo supprimée de OneDrive');
+    } else {
+      showToast('⚠️ Erreur lors de la suppression');
+    }
+  } else {
+    sessionPhotos.splice(selectedPhotoIndex, 1);
+    renderFilmstripGrid();
+    updateFilmstripThumb();
+    showToast('🗑️ Photo supprimée');
+  }
+}
+
+// ===== SAUVEGARDE =====
+function updateSavePendingBtn() {
+  const btn = document.getElementById('savePendingBtn');
+  const countEl = document.getElementById('savePendingCount');
+  if(!btn) return;
+  const pending = sessionPhotos.filter(p => !p.saved).length;
+  if(pending > 0) {
+    btn.style.display = 'flex';
+    if(countEl) countEl.textContent = pending;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+async function saveAllPendingPhotos() {
+  const pending = sessionPhotos.filter((p, i) => !p.saved && p.dataUrl);
+  if(pending.length === 0) { showToast('Toutes les photos sont sauvegardées ✅'); return; }
+  if(!state.currentClient) { showToast('⚠️ Sélectionnez un client d\'abord'); return; }
+  closeFilmstrip();
+  showToast(`⬆️ ${pending.length} photo${pending.length > 1 ? 's' : ''} en cours...`);
+  let saved = 0;
+  for(const photo of pending) {
+    const ok = await uploadPhotoToOneDrive(photo.dataUrl, photo.filename);
+    if(ok) { photo.saved = true; saved++; }
+  }
+  updateFilmstripThumb();
+  updateSavePendingBtn();
+  renderFilmstripGrid();
+  showToast(saved === pending.length
+    ? `✅ ${saved} photo${saved > 1 ? 's' : ''} sauvegardée${saved > 1 ? 's' : ''} dans OneDrive`
+    : `⚠️ ${saved}/${pending.length} sauvegardées — vérifiez la connexion`);
+}
+
+async function saveCurrentPhotoToOneDrive() {
+  if(editingPhotoIndex < 0 || editingPhotoIndex >= sessionPhotos.length) { showToast('Aucune photo sélectionnée'); return; }
+  const canvas = document.getElementById('editCanvas');
+  canvas.style.filter = '';
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.93);
+  sessionPhotos[editingPhotoIndex].dataUrl = dataUrl;
+  showToast('⬆️ Sauvegarde...');
+  const ok = await uploadPhotoToOneDrive(dataUrl, sessionPhotos[editingPhotoIndex].filename);
+  if(ok) { sessionPhotos[editingPhotoIndex].saved = true; showToast('✅ Photo sauvegardée dans OneDrive !'); updateFilmstripThumb(); updateSavePendingBtn(); renderFilmstripGrid(); }
   else showToast('⚠️ Connexion Microsoft 365 requise');
 }
-async function uploadPhotoToOneDrive(dataUrl,filename){
-  if(!state.accessToken||!state.currentClient) return false;
-  try{
-    const res=await fetch(dataUrl);const blob=await res.blob();
-    const clientName=state.currentClient.Title;
-    const path=`/me/drive/root:/${CONFIG.oneDriveRoot}/${clientName}/10_Photos/Chantier/${filename}:/content`;
-    const resp=await fetch(`https://graph.microsoft.com/v1.0${path}`,{method:'PUT',headers:{'Authorization':`Bearer ${state.accessToken}`,'Content-Type':'image/jpeg'},body:blob});
+
+async function uploadPhotoToOneDrive(dataUrl, filename) {
+  if(!state.accessToken || !state.currentClient) return false;
+  try {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const clientName = state.currentClient.Title;
+    const path = `/me/drive/root:/${CONFIG.oneDriveRoot}/${clientName}/10_Photos/Chantier/${filename}:/content`;
+    const resp = await fetch(`https://graph.microsoft.com/v1.0${path}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${state.accessToken}`, 'Content-Type': 'image/jpeg' },
+      body: blob
+    });
     return resp.ok;
-  }catch(e){return false;}
+  } catch(e) { return false; }
 }
 
-// ===== FLIP + FLASH =====
-function flipCamera(){cameraFacing=cameraFacing==='environment'?'user':'environment';stopCamera();startCamera();}
-function toggleFlash(){
-  flashEnabled=!flashEnabled;
-  document.getElementById('flashBtn').style.background=flashEnabled?'rgba(255,210,0,0.7)':'rgba(0,0,0,0.5)';
-  if(state.cameraStream){const track=state.cameraStream.getVideoTracks()[0];if(track){try{track.applyConstraints({advanced:[{torch:flashEnabled}]});}catch(e){}}}
+function updatePhotosGallery() {
+  renderFilmstripGrid();
 }
 
-// ===== GALERIE IPHONE =====
-function openGallery(){document.getElementById('galleryInput').click();}
-function handleGalleryFiles(e){
-  const files=Array.from(e.target.files||[]);
+// ===== FLIP + FLASH + GALERIE =====
+function flipCamera() { cameraFacing = cameraFacing === 'environment' ? 'user' : 'environment'; stopCamera(); startCamera(); }
+
+function toggleFlash() {
+  flashEnabled = !flashEnabled;
+  const btn = document.getElementById('flashBtn');
+  if(btn) btn.style.background = flashEnabled ? 'rgba(255,210,0,0.7)' : 'rgba(0,0,0,0.45)';
+  if(state.cameraStream) {
+    const track = state.cameraStream.getVideoTracks()[0];
+    if(track) { try { track.applyConstraints({ advanced: [{ torch: flashEnabled }] }); } catch(e) {} }
+  }
+}
+
+function openGallery() { document.getElementById('galleryInput').click(); }
+
+function handleGalleryFiles(e) {
+  const files = Array.from(e.target.files || []);
   if(!files.length) return;
-  let imgCount=0;
-  files.forEach(file=>{
-    if(file.type.startsWith('video/')){currentVideoBlob=file;openVideoEditor(file);return;}
+  files.forEach(file => {
+    if(file.type.startsWith('video/')) { currentVideoBlob = file; openVideoEditor(file); return; }
     if(!file.type.startsWith('image/')) return;
-    imgCount++;
-    const reader=new FileReader();
-    reader.onload=(ev)=>{
-      const ts=new Date(),filename=formatDateForFilename(ts)+'_gal_'+(sessionPhotos.length+1).toString().padStart(2,'0')+'.jpg';
-      sessionPhotos.push({dataUrl:ev.target.result,saved:false,filename});
-      updateFilmstripThumb();updateSavePendingBtn();renderFilmstripGrid();
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const ts = new Date();
+      const filename = formatDateForFilename(ts) + '_gal_' + String(sessionPhotos.length + 1).padStart(3, '0') + '.jpg';
+      const photo = { dataUrl: ev.target.result, saved: false, filename, oneDriveId: null };
+      sessionPhotos.push(photo);
+      updateFilmstripThumb();
+      updateSavePendingBtn();
+      autoSavePhoto(photo, sessionPhotos.length - 1);
     };
     reader.readAsDataURL(file);
   });
-  if(imgCount>0) setTimeout(()=>showToast(`📷 ${imgCount} photo${imgCount>1?'s':''} importée${imgCount>1?'s':''} dans la pellicule`),300);
-  e.target.value='';
+  setTimeout(() => showToast(`📷 ${files.filter(f=>f.type.startsWith('image/')).length} photo${files.length > 1 ? 's' : ''} importée${files.length > 1 ? 's' : ''}`), 300);
+  e.target.value = '';
 }
 
 // ===== ENREGISTREMENT VIDÉO =====
-function startRecording(){
+function startRecording() {
   if(!state.cameraStream) return;
-  recordedChunks=[];
-  const opts=['video/webm;codecs=vp9','video/webm','video/mp4'].find(t=>{try{return MediaRecorder.isTypeSupported(t);}catch(e){return false;}})||'';
-  try{mediaRecorder=opts?new MediaRecorder(state.cameraStream,{mimeType:opts}):new MediaRecorder(state.cameraStream);}catch(e){mediaRecorder=new MediaRecorder(state.cameraStream);}
-  mediaRecorder.ondataavailable=(e)=>{if(e.data.size>0)recordedChunks.push(e.data);};
-  mediaRecorder.onstop=()=>{currentVideoBlob=new Blob(recordedChunks,{type:'video/webm'});openVideoEditor(currentVideoBlob);};
+  recordedChunks = [];
+  const opts = ['video/webm;codecs=vp9','video/webm','video/mp4'].find(t => { try { return MediaRecorder.isTypeSupported(t); } catch(e) { return false; } }) || '';
+  try { mediaRecorder = opts ? new MediaRecorder(state.cameraStream, { mimeType: opts }) : new MediaRecorder(state.cameraStream); }
+  catch(e) { mediaRecorder = new MediaRecorder(state.cameraStream); }
+  mediaRecorder.ondataavailable = e => { if(e.data.size > 0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = () => { currentVideoBlob = new Blob(recordedChunks, { type: 'video/webm' }); openVideoEditor(currentVideoBlob); };
   mediaRecorder.start();
-  document.getElementById('recordingIndicator').style.display='flex';
-  recordSeconds=0;
-  recordTimer=setInterval(()=>{recordSeconds++;const m=Math.floor(recordSeconds/60).toString().padStart(2,'0'),s=(recordSeconds%60).toString().padStart(2,'0');setEl('recordTimer',m+':'+s);},1000);
-  document.getElementById('shutterInner').style.borderRadius='8px';
+  const ri = document.getElementById('recordingIndicator');
+  if(ri) ri.style.display = 'flex';
+  recordSeconds = 0;
+  recordTimerInterval = setInterval(() => {
+    recordSeconds++;
+    const m = Math.floor(recordSeconds / 60).toString().padStart(2, '0');
+    const s = (recordSeconds % 60).toString().padStart(2, '0');
+    setEl('recordTimer', m + ':' + s);
+  }, 1000);
+  const inner = document.getElementById('shutterInner');
+  if(inner) inner.style.borderRadius = '8px';
 }
-function stopRecording(){
-  if(mediaRecorder&&mediaRecorder.state==='recording')mediaRecorder.stop();
-  clearInterval(recordTimer);document.getElementById('recordingIndicator').style.display='none';setMode('video');
+
+function stopRecording() {
+  if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  clearInterval(recordTimerInterval);
+  const ri = document.getElementById('recordingIndicator');
+  if(ri) ri.style.display = 'none';
+  setMode('video');
 }
 
 // ===== ÉDITEUR PHOTO =====
-function openPhotoEditorFromFilmstrip(index){closeFilmstrip();editingPhotoIndex=index;openPhotoEditor(sessionPhotos[index].dataUrl);}
-function openPhotoEditor(dataUrl){
-  const editor=document.getElementById('photoEditor');
-  editor.style.display='flex';
-  // Nav cachée pendant édition
-  const nav=document.getElementById('bottomNav');
+function openPhotoEditorFromFilmstrip(index) { closeFilmstrip(); editingPhotoIndex = index; if(sessionPhotos[index]?.dataUrl) openPhotoEditor(sessionPhotos[index].dataUrl); }
+
+function openPhotoEditor(dataUrl) {
+  const editor = document.getElementById('photoEditor');
+  editor.style.display = 'flex';
+  const nav = document.getElementById('bottomNav');
   if(nav) nav.classList.add('nav-hidden');
-  document.getElementById('cameraFullscreen').style.display='none';
-  document.getElementById('annotToolbar').style.display='none';
-  document.getElementById('adjustToolbar').style.display='none';
-  document.getElementById('cropToolbar').style.display='none';
-  editState={tool:null,color:'#FF453A',size:4,drawing:false,startX:0,startY:0,history:[],baseImage:null,brightness:0,contrast:0,saturation:0};
-  cropRatioValue=null;
-  ['sliderBrightness','sliderContrast','sliderSaturation'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=0;});
-  document.querySelectorAll('.editor-mode-btn').forEach(b=>b.classList.remove('active'));
-  setTimeout(()=>initEditCanvas(dataUrl),80);
+  document.getElementById('cameraFullscreen').style.display = 'none';
+  document.getElementById('annotToolbar').style.display = 'none';
+  document.getElementById('adjustToolbar').style.display = 'none';
+  document.getElementById('cropToolbar').style.display = 'none';
+  editState = { tool: null, color: '#FF453A', size: 4, drawing: false, startX: 0, startY: 0, history: [], baseImage: null, brightness: 0, contrast: 0, saturation: 0 };
+  cropRatioValue = null;
+  ['sliderBrightness','sliderContrast','sliderSaturation'].forEach(id => { const el = document.getElementById(id); if(el) el.value = 0; });
+  document.querySelectorAll('.editor-mode-btn').forEach(b => b.classList.remove('active'));
+  setTimeout(() => initEditCanvas(dataUrl), 80);
 }
-function initEditCanvas(dataUrl){
-  const canvas=document.getElementById('editCanvas'),area=document.getElementById('editorImageArea'),ctx=canvas.getContext('2d'),img=new Image();
-  img.onload=()=>{
-    const maxW=area.offsetWidth||window.innerWidth,maxH=Math.max(area.offsetHeight||300,window.innerHeight*0.55);
-    const ratio=Math.min(maxW/img.width,maxH/img.height,1);
-    canvas.width=img.width;canvas.height=img.height;
-    canvas.style.width=Math.round(img.width*ratio)+'px';canvas.style.height=Math.round(img.height*ratio)+'px';
-    canvas.style.filter='';
-    ctx.drawImage(img,0,0);
-    editState.baseImage=ctx.getImageData(0,0,canvas.width,canvas.height);
-    editState.history=[ctx.getImageData(0,0,canvas.width,canvas.height)];
-    setupEditEvents(canvas,ctx);
+
+function initEditCanvas(dataUrl) {
+  const canvas = document.getElementById('editCanvas');
+  const area = document.getElementById('editorImageArea');
+  if(!canvas || !area) return;
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.onload = () => {
+    // Calcul taille max en tenant compte du header et toolbar bas
+    const headerH = document.getElementById('editorHeader')?.offsetHeight || 60;
+    const toolbarH = 56; // barre outils bas
+    const availH = window.innerHeight - headerH - toolbarH - 20;
+    const availW = window.innerWidth;
+    const ratio = Math.min(availW / img.width, availH / img.height, 1);
+    canvas.width = img.width; canvas.height = img.height;
+    canvas.style.width = Math.round(img.width * ratio) + 'px';
+    canvas.style.height = Math.round(img.height * ratio) + 'px';
+    canvas.style.filter = '';
+    ctx.drawImage(img, 0, 0);
+    editState.baseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    editState.history = [ctx.getImageData(0, 0, canvas.width, canvas.height)];
+    setupEditEvents(canvas, ctx);
   };
-  img.src=dataUrl;
+  img.src = dataUrl;
 }
-function setupEditEvents(canvas,ctx){
-  ['_ts','_tm','_te','_md','_mm','_mu'].forEach(k=>{if(canvas[k]){canvas.removeEventListener(k==='_ts'?'touchstart':k==='_tm'?'touchmove':k==='_te'?'touchend':k==='_md'?'mousedown':k==='_mm'?'mousemove':'mouseup',canvas[k]);}});
-  const getTP=(touch)=>{const r=canvas.getBoundingClientRect();return{x:(touch.clientX-r.left)*canvas.width/r.width,y:(touch.clientY-r.top)*canvas.height/r.height};};
-  const getMP=(e)=>{const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height};};
-  canvas._ts=(e)=>{if(e.touches.length!==1||!editState.tool)return;e.preventDefault();const p=getTP(e.touches[0]);editStartDraw(ctx,p.x,p.y);};
-  canvas._tm=(e)=>{if(e.touches.length!==1||!editState.drawing)return;e.preventDefault();const p=getTP(e.touches[0]);editMoveDraw(ctx,p.x,p.y);};
-  canvas._te=(e)=>{e.preventDefault();editEndDraw(ctx);};
-  canvas._md=(e)=>{if(!editState.tool)return;const p=getMP(e);editStartDraw(ctx,p.x,p.y);};
-  canvas._mm=(e)=>{if(!editState.drawing)return;const p=getMP(e);editMoveDraw(ctx,p.x,p.y);};
-  canvas._mu=()=>editEndDraw(ctx);
-  canvas.addEventListener('touchstart',canvas._ts,{passive:false});
-  canvas.addEventListener('touchmove',canvas._tm,{passive:false});
-  canvas.addEventListener('touchend',canvas._te,{passive:false});
-  canvas.addEventListener('mousedown',canvas._md);
-  canvas.addEventListener('mousemove',canvas._mm);
-  canvas.addEventListener('mouseup',canvas._mu);
+
+function setupEditEvents(canvas, ctx) {
+  ['_et','_em','_ee','_ed','_emm','_eu'].forEach(k => {
+    if(canvas[k]) {
+      canvas.removeEventListener('touchstart', canvas[k]);
+      canvas.removeEventListener('touchmove', canvas[k]);
+      canvas.removeEventListener('touchend', canvas[k]);
+      canvas.removeEventListener('mousedown', canvas[k]);
+      canvas.removeEventListener('mousemove', canvas[k]);
+      canvas.removeEventListener('mouseup', canvas[k]);
+    }
+  });
+  const pt = (touch) => {
+    const r = canvas.getBoundingClientRect();
+    return { x: (touch.clientX - r.left) * canvas.width / r.width, y: (touch.clientY - r.top) * canvas.height / r.height };
+  };
+  const pm = (e) => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * canvas.width / r.width, y: (e.clientY - r.top) * canvas.height / r.height }; };
+  canvas._et = e => { if(e.touches.length !== 1 || !editState.tool) return; e.preventDefault(); const p = pt(e.touches[0]); editStartDraw(ctx, p.x, p.y); };
+  canvas._em = e => { if(e.touches.length !== 1 || !editState.drawing) return; e.preventDefault(); const p = pt(e.touches[0]); editMoveDraw(ctx, p.x, p.y); };
+  canvas._ee = e => { e.preventDefault(); editEndDraw(ctx); };
+  canvas._ed = e => { if(!editState.tool) return; const p = pm(e); editStartDraw(ctx, p.x, p.y); };
+  canvas._emm = e => { if(!editState.drawing) return; const p = pm(e); editMoveDraw(ctx, p.x, p.y); };
+  canvas._eu = () => editEndDraw(ctx);
+  canvas.addEventListener('touchstart', canvas._et, { passive: false });
+  canvas.addEventListener('touchmove', canvas._em, { passive: false });
+  canvas.addEventListener('touchend', canvas._ee, { passive: false });
+  canvas.addEventListener('mousedown', canvas._ed);
+  canvas.addEventListener('mousemove', canvas._emm);
+  canvas.addEventListener('mouseup', canvas._eu);
 }
-function editStartDraw(ctx,x,y){if(!editState.tool)return;editState.drawing=true;editState.startX=x;editState.startY=y;if(['pen','marker','erase'].includes(editState.tool)){ctx.beginPath();ctx.moveTo(x,y);}}
-function editMoveDraw(ctx,x,y){
-  if(!editState.drawing||!editState.tool) return;
-  ctx.globalAlpha=editState.tool==='marker'?0.45:1.0;
-  ctx.strokeStyle=editState.color;ctx.lineWidth=editState.tool==='marker'?editState.size*3.5:editState.size;
-  ctx.lineCap='round';ctx.lineJoin='round';
-  if(editState.tool==='pen'||editState.tool==='marker'){ctx.lineTo(x,y);ctx.stroke();}
-  else if(editState.tool==='erase'){ctx.globalCompositeOperation='destination-out';ctx.globalAlpha=1;ctx.lineWidth=editState.size*5;ctx.lineTo(x,y);ctx.stroke();ctx.globalCompositeOperation='source-over';}
-  else if(['arrow','circle','rect'].includes(editState.tool)){
-    ctx.globalAlpha=1;
-    if(editState.history.length>0)ctx.putImageData(editState.history[editState.history.length-1],0,0);
-    ctx.fillStyle=editState.color;ctx.lineWidth=Math.max(editState.size,2);
-    if(editState.tool==='arrow')drawArrow(ctx,editState.startX,editState.startY,x,y);
-    else if(editState.tool==='circle'){const rx=Math.abs(x-editState.startX)/2,ry=Math.abs(y-editState.startY)/2;ctx.beginPath();ctx.ellipse((editState.startX+x)/2,(editState.startY+y)/2,Math.max(rx,4),Math.max(ry,4),0,0,Math.PI*2);ctx.stroke();}
-    else if(editState.tool==='rect'){ctx.strokeRect(editState.startX,editState.startY,x-editState.startX,y-editState.startY);}
+
+function editStartDraw(ctx, x, y) {
+  if(!editState.tool) return;
+  editState.drawing = true; editState.startX = x; editState.startY = y;
+  if(['pen','marker','erase'].includes(editState.tool)) { ctx.beginPath(); ctx.moveTo(x, y); }
+}
+
+function editMoveDraw(ctx, x, y) {
+  if(!editState.drawing || !editState.tool) return;
+  ctx.globalAlpha = editState.tool === 'marker' ? 0.45 : 1.0;
+  ctx.strokeStyle = editState.color;
+  ctx.lineWidth = editState.tool === 'marker' ? editState.size * 3.5 : editState.size;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if(editState.tool === 'pen' || editState.tool === 'marker') { ctx.lineTo(x, y); ctx.stroke(); }
+  else if(editState.tool === 'erase') { ctx.globalCompositeOperation = 'destination-out'; ctx.globalAlpha = 1; ctx.lineWidth = editState.size * 5; ctx.lineTo(x, y); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
+  else if(['arrow','circle','rect'].includes(editState.tool)) {
+    ctx.globalAlpha = 1;
+    if(editState.history.length > 0) ctx.putImageData(editState.history[editState.history.length-1], 0, 0);
+    ctx.fillStyle = editState.color; ctx.lineWidth = Math.max(editState.size, 2);
+    if(editState.tool === 'arrow') drawArrow(ctx, editState.startX, editState.startY, x, y);
+    else if(editState.tool === 'circle') { const rx = Math.abs(x-editState.startX)/2, ry = Math.abs(y-editState.startY)/2; ctx.beginPath(); ctx.ellipse((editState.startX+x)/2, (editState.startY+y)/2, Math.max(rx,4), Math.max(ry,4), 0, 0, Math.PI*2); ctx.stroke(); }
+    else if(editState.tool === 'rect') { ctx.strokeRect(editState.startX, editState.startY, x-editState.startX, y-editState.startY); }
   }
 }
-function editEndDraw(ctx){if(!editState.drawing)return;editState.drawing=false;ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.beginPath();editState.history.push(ctx.getImageData(0,0,ctx.canvas.width,ctx.canvas.height));}
-function drawArrow(ctx,x1,y1,x2,y2){
-  const headLen=Math.max(14,editState.size*4),angle=Math.atan2(y2-y1,x2-x1);
-  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-headLen*Math.cos(angle-Math.PI/6),y2-headLen*Math.sin(angle-Math.PI/6));ctx.lineTo(x2-headLen*Math.cos(angle+Math.PI/6),y2-headLen*Math.sin(angle+Math.PI/6));ctx.closePath();ctx.fill();
+
+function editEndDraw(ctx) {
+  if(!editState.drawing) return;
+  editState.drawing = false; ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.beginPath();
+  editState.history.push(ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height));
 }
-function setEditTool(tool,btn){
-  if(editState.tool===tool){editState.tool=null;document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));return;}
-  editState.tool=tool;document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+
+function drawArrow(ctx, x1, y1, x2, y2) {
+  const headLen = Math.max(14, editState.size * 4), angle = Math.atan2(y2-y1, x2-x1);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-headLen*Math.cos(angle-Math.PI/6), y2-headLen*Math.sin(angle-Math.PI/6));
+  ctx.lineTo(x2-headLen*Math.cos(angle+Math.PI/6), y2-headLen*Math.sin(angle+Math.PI/6));
+  ctx.closePath(); ctx.fill();
 }
-function setEditColor(color,el){
-  editState.color=color;document.querySelectorAll('.color-dot').forEach(e=>e.classList.remove('active'));el.classList.add('active');
-}
-function addTextAnnot(){
-  const text=prompt('Texte à ajouter sur la photo :');if(!text||!text.trim())return;
-  const canvas=document.getElementById('editCanvas'),ctx=canvas.getContext('2d');
-  const size=Math.max(24,editState.size*7);
-  ctx.font=`bold ${size}px 'DM Sans',Arial,sans-serif`;ctx.fillStyle=editState.color;ctx.strokeStyle='rgba(0,0,0,0.6)';ctx.lineWidth=3;
-  const tw=ctx.measureText(text).width;ctx.strokeText(text,(canvas.width-tw)/2,canvas.height/2);ctx.fillText(text,(canvas.width-tw)/2,canvas.height/2);
-  editState.history.push(ctx.getImageData(0,0,canvas.width,canvas.height));
-}
-function undoEdit(){if(editState.history.length<=1){showToast('Rien à annuler');return;}editState.history.pop();const ctx=document.getElementById('editCanvas').getContext('2d');ctx.putImageData(editState.history[editState.history.length-1],0,0);}
-function showAnnotMode(){document.getElementById('annotToolbar').style.display='block';document.getElementById('adjustToolbar').style.display='none';document.getElementById('cropToolbar').style.display='none';setActiveEditorBtn('btnAnnot');}
-function showAdjust(){document.getElementById('annotToolbar').style.display='none';document.getElementById('adjustToolbar').style.display='block';document.getElementById('cropToolbar').style.display='none';setActiveEditorBtn('btnAdjust');}
-function showCropMode(){document.getElementById('annotToolbar').style.display='none';document.getElementById('adjustToolbar').style.display='none';document.getElementById('cropToolbar').style.display='block';setActiveEditorBtn('btnCrop');}
-function setActiveEditorBtn(id){document.querySelectorAll('.editor-mode-btn').forEach(b=>b.classList.remove('active'));const el=document.getElementById(id);if(el)el.classList.add('active');}
-function applyAdjust(type,val){
-  editState[type]=parseInt(val);
-  const canvas=document.getElementById('editCanvas');
-  let f='';
-  if(editState.brightness!==0)f+=`brightness(${1+editState.brightness/100}) `;
-  if(editState.contrast!==0)f+=`contrast(${1+editState.contrast/100}) `;
-  if(editState.saturation!==0)f+=`saturate(${1+editState.saturation/100}) `;
-  canvas.style.filter=f.trim();
-}
-function setCropRatioBtn(ratio,btn){
-  cropRatioValue=ratio;
-  document.querySelectorAll('.crop-ratio-btn').forEach(b=>b.classList.remove('active'));
+
+function setEditTool(tool, btn) {
+  if(editState.tool === tool) { editState.tool = null; document.querySelectorAll('.annot-tool').forEach(b => b.classList.remove('active')); return; }
+  editState.tool = tool;
+  document.querySelectorAll('.annot-tool').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
-function applyCrop(){
-  const canvas=document.getElementById('editCanvas'),ctx=canvas.getContext('2d');
-  const filter=canvas.style.filter;canvas.style.filter='';
-  const w=canvas.width,h=canvas.height;
-  let cropX=0,cropY=0,cropW=w,cropH=h;
-  if(cropRatioValue){const curr=w/h;if(curr>cropRatioValue){cropW=Math.round(h*cropRatioValue);cropX=Math.round((w-cropW)/2);}else{cropH=Math.round(w/cropRatioValue);cropY=Math.round((h-cropH)/2);}}
-  const temp=document.createElement('canvas');temp.width=cropW;temp.height=cropH;
-  const tCtx=temp.getContext('2d');if(filter)tCtx.filter=filter;
-  tCtx.drawImage(canvas,cropX,cropY,cropW,cropH,0,0,cropW,cropH);tCtx.filter='none';
-  canvas.width=cropW;canvas.height=cropH;ctx.drawImage(temp,0,0);
-  const area=document.getElementById('editorImageArea'),maxW=area.offsetWidth,maxH=area.offsetHeight-60;
-  const ratio=Math.min(maxW/cropW,maxH/cropH,1);
-  canvas.style.width=Math.round(cropW*ratio)+'px';canvas.style.height=Math.round(cropH*ratio)+'px';canvas.style.filter='';
-  editState.history.push(ctx.getImageData(0,0,cropW,cropH));editState.baseImage=ctx.getImageData(0,0,cropW,cropH);
+
+function setEditColor(color, el) {
+  editState.color = color;
+  document.querySelectorAll('.color-dot').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ===== OUTIL TEXTE POSITIONNABLE =====
+function activateTextTool() {
+  const btn = document.getElementById('textToolBtn');
+  document.querySelectorAll('.annot-tool').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  editState.tool = 'text';
+  // Afficher d'abord le dialogue de texte
+  showTextDialog();
+}
+
+function showTextDialog() {
+  const dlg = document.getElementById('textDialog');
+  const sizeEl = document.getElementById('textSizeSlider');
+  const sizeVal = document.getElementById('textSizeValue');
+  if(dlg) dlg.style.display = 'flex';
+  if(sizeEl) {
+    sizeEl.oninput = () => { if(sizeVal) sizeVal.textContent = sizeEl.value; };
+  }
+  const input = document.getElementById('textInput');
+  if(input) { input.value = ''; setTimeout(() => input.focus(), 100); }
+}
+
+function setTextColor(color, el) {
+  textColor = color;
+  document.querySelectorAll('.text-color-dot').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function cancelTextDialog() {
+  const dlg = document.getElementById('textDialog');
+  if(dlg) dlg.style.display = 'none';
+  editState.tool = null;
+  document.querySelectorAll('.annot-tool').forEach(b => b.classList.remove('active'));
+}
+
+function confirmTextDialog() {
+  const input = document.getElementById('textInput');
+  const text = input ? input.value.trim() : '';
+  if(!text) { cancelTextDialog(); return; }
+  const dlg = document.getElementById('textDialog');
+  if(dlg) dlg.style.display = 'none';
+  // Maintenant afficher l'overlay pour choisir la position
+  const overlay = document.getElementById('textPlacementOverlay');
+  if(overlay) overlay.style.display = 'block';
+}
+
+function placeTextAtPosition(e) {
+  const overlay = document.getElementById('textPlacementOverlay');
+  if(overlay) overlay.style.display = 'none';
+  // Calculer position relative au canvas
+  const canvas = document.getElementById('editCanvas');
+  const input = document.getElementById('textInput');
+  const sizeEl = document.getElementById('textSizeSlider');
+  if(!canvas || !input) return;
+  const rect = canvas.getBoundingClientRect();
+  const clickX = e.clientX;
+  const clickY = e.clientY;
+  // Convertir en coordonnées canvas
+  const cx = (clickX - rect.left) * canvas.width / rect.width;
+  const cy = (clickY - rect.top) * canvas.height / rect.height;
+  const text = input.value.trim();
+  if(!text) return;
+  const fontSize = parseInt(sizeEl?.value || 32) * (canvas.width / rect.width);
+  const ctx = canvas.getContext('2d');
+  ctx.font = `bold ${fontSize}px 'DM Sans', Arial, sans-serif`;
+  ctx.fillStyle = textColor;
+  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+  ctx.lineWidth = fontSize * 0.08;
+  ctx.strokeText(text, cx, cy);
+  ctx.fillText(text, cx, cy);
+  editState.history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+  editState.tool = null;
+  document.querySelectorAll('.annot-tool').forEach(b => b.classList.remove('active'));
+}
+
+function addTextAnnot() { activateTextTool(); }
+
+function undoEdit() {
+  if(editState.history.length <= 1) { showToast('Rien à annuler'); return; }
+  editState.history.pop();
+  const ctx = document.getElementById('editCanvas').getContext('2d');
+  ctx.putImageData(editState.history[editState.history.length-1], 0, 0);
+}
+
+// ===== MODES ÉDITEUR =====
+function showAnnotMode() { document.getElementById('annotToolbar').style.display='block'; document.getElementById('adjustToolbar').style.display='none'; document.getElementById('cropToolbar').style.display='none'; setActiveEditorBtn('btnAnnot'); }
+function showAdjust() { document.getElementById('annotToolbar').style.display='none'; document.getElementById('adjustToolbar').style.display='block'; document.getElementById('cropToolbar').style.display='none'; setActiveEditorBtn('btnAdjust'); }
+function showCropMode() { document.getElementById('annotToolbar').style.display='none'; document.getElementById('adjustToolbar').style.display='none'; document.getElementById('cropToolbar').style.display='block'; setActiveEditorBtn('btnCrop'); }
+function setActiveEditorBtn(id) { document.querySelectorAll('.editor-mode-btn').forEach(b => b.classList.remove('active')); const el = document.getElementById(id); if(el) el.classList.add('active'); }
+
+function applyAdjust(type, val) {
+  editState[type] = parseInt(val);
+  const canvas = document.getElementById('editCanvas');
+  let f = '';
+  if(editState.brightness !== 0) f += `brightness(${1 + editState.brightness/100}) `;
+  if(editState.contrast !== 0) f += `contrast(${1 + editState.contrast/100}) `;
+  if(editState.saturation !== 0) f += `saturate(${1 + editState.saturation/100}) `;
+  canvas.style.filter = f.trim();
+}
+
+function setCropRatioBtn(ratio, btn) {
+  cropRatioValue = ratio;
+  document.querySelectorAll('.crop-ratio-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+
+function applyCrop() {
+  const canvas = document.getElementById('editCanvas'), ctx = canvas.getContext('2d');
+  const filter = canvas.style.filter; canvas.style.filter = '';
+  const w = canvas.width, h = canvas.height;
+  let cropX = 0, cropY = 0, cropW = w, cropH = h;
+  if(cropRatioValue) {
+    const curr = w / h;
+    if(curr > cropRatioValue) { cropW = Math.round(h * cropRatioValue); cropX = Math.round((w - cropW) / 2); }
+    else { cropH = Math.round(w / cropRatioValue); cropY = Math.round((h - cropH) / 2); }
+  }
+  const temp = document.createElement('canvas'); temp.width = cropW; temp.height = cropH;
+  const tCtx = temp.getContext('2d'); if(filter) tCtx.filter = filter;
+  tCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH); tCtx.filter = 'none';
+  canvas.width = cropW; canvas.height = cropH; ctx.drawImage(temp, 0, 0);
+  const area = document.getElementById('editorImageArea');
+  const headerH = document.getElementById('editorHeader')?.offsetHeight || 60;
+  const maxW = area.offsetWidth, maxH = window.innerHeight - headerH - 56 - 20;
+  const ratio = Math.min(maxW/cropW, maxH/cropH, 1);
+  canvas.style.width = Math.round(cropW*ratio)+'px'; canvas.style.height = Math.round(cropH*ratio)+'px'; canvas.style.filter = '';
+  editState.history.push(ctx.getImageData(0,0,cropW,cropH)); editState.baseImage = ctx.getImageData(0,0,cropW,cropH);
   showToast('✂️ Recadrage appliqué');
 }
-function rotateCrop(){
-  const canvas=document.getElementById('editCanvas'),ctx=canvas.getContext('2d');canvas.style.filter='';
-  const temp=document.createElement('canvas');temp.width=canvas.height;temp.height=canvas.width;
-  const tCtx=temp.getContext('2d');tCtx.translate(temp.width/2,temp.height/2);tCtx.rotate(Math.PI/2);tCtx.drawImage(canvas,-canvas.width/2,-canvas.height/2);
-  canvas.width=temp.width;canvas.height=temp.height;ctx.drawImage(temp,0,0);
-  const area=document.getElementById('editorImageArea'),maxW=area.offsetWidth,maxH=area.offsetHeight-60;
-  const ratio=Math.min(maxW/canvas.width,maxH/canvas.height,1);
-  canvas.style.width=Math.round(canvas.width*ratio)+'px';canvas.style.height=Math.round(canvas.height*ratio)+'px';
-  editState.history.push(ctx.getImageData(0,0,canvas.width,canvas.height));editState.baseImage=ctx.getImageData(0,0,canvas.width,canvas.height);
-  showToast('↺ Photo tournée 90°');
+
+function rotateCrop() {
+  const canvas = document.getElementById('editCanvas'), ctx = canvas.getContext('2d'); canvas.style.filter = '';
+  const temp = document.createElement('canvas'); temp.width = canvas.height; temp.height = canvas.width;
+  const tCtx = temp.getContext('2d'); tCtx.translate(temp.width/2, temp.height/2); tCtx.rotate(Math.PI/2); tCtx.drawImage(canvas, -canvas.width/2, -canvas.height/2);
+  canvas.width = temp.width; canvas.height = temp.height; ctx.drawImage(temp, 0, 0);
+  const area = document.getElementById('editorImageArea');
+  const headerH = document.getElementById('editorHeader')?.offsetHeight || 60;
+  const maxW = area.offsetWidth, maxH = window.innerHeight - headerH - 56 - 20;
+  const ratio = Math.min(maxW/canvas.width, maxH/canvas.height, 1);
+  canvas.style.width = Math.round(canvas.width*ratio)+'px'; canvas.style.height = Math.round(canvas.height*ratio)+'px';
+  editState.history.push(ctx.getImageData(0,0,canvas.width,canvas.height)); editState.baseImage = ctx.getImageData(0,0,canvas.width,canvas.height);
+  showToast('↺ Rotation 90°');
 }
-function cancelEdit(){
-  document.getElementById('photoEditor').style.display='none';
-  document.getElementById('cameraFullscreen').style.display='flex';
-  // Nav reste cachée (on est encore en mode caméra)
+
+function cancelEdit() {
+  // Fermer tous les overlays texte
+  const overlay = document.getElementById('textPlacementOverlay');
+  const dlg = document.getElementById('textDialog');
+  if(overlay) overlay.style.display = 'none';
+  if(dlg) dlg.style.display = 'none';
+  document.getElementById('photoEditor').style.display = 'none';
+  document.getElementById('cameraFullscreen').style.display = 'flex';
   startCamera();
 }
-function confirmEdit(){
-  const canvas=document.getElementById('editCanvas');canvas.style.filter='';
-  const dataUrl=canvas.toDataURL('image/jpeg',0.93);
-  if(editingPhotoIndex>=0&&editingPhotoIndex<sessionPhotos.length){sessionPhotos[editingPhotoIndex].dataUrl=dataUrl;sessionPhotos[editingPhotoIndex].saved=false;}
-  updateFilmstripThumb();updateSavePendingBtn();renderFilmstripGrid();
-  document.getElementById('photoEditor').style.display='none';document.getElementById('cameraFullscreen').style.display='flex';
-  startCamera();showToast('✅ Modifications appliquées');
+
+function confirmEdit() {
+  const overlay = document.getElementById('textPlacementOverlay');
+  const dlg = document.getElementById('textDialog');
+  if(overlay) overlay.style.display = 'none';
+  if(dlg) dlg.style.display = 'none';
+  const canvas = document.getElementById('editCanvas'); canvas.style.filter = '';
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.93);
+  if(editingPhotoIndex >= 0 && editingPhotoIndex < sessionPhotos.length) {
+    sessionPhotos[editingPhotoIndex].dataUrl = dataUrl;
+    sessionPhotos[editingPhotoIndex].saved = false;
+  }
+  updateFilmstripThumb(); updateSavePendingBtn(); renderFilmstripGrid();
+  document.getElementById('photoEditor').style.display = 'none';
+  document.getElementById('cameraFullscreen').style.display = 'flex';
+  startCamera();
+  showToast('✅ Modifications enregistrées');
 }
 
 // ===== ÉDITEUR VIDÉO =====
-function openVideoEditor(blob){document.getElementById('videoEditor').style.display='flex';document.getElementById('cameraFullscreen').style.display='none';document.getElementById('previewVideo').src=URL.createObjectURL(blob);}
-function cancelVideoEdit(){document.getElementById('videoEditor').style.display='none';document.getElementById('cameraFullscreen').style.display='flex';startCamera();}
-async function saveVideoToOneDrive(){
-  if(!currentVideoBlob||!state.currentClient){showToast('Aucune vidéo ou client');return;}
-  if(!state.accessToken){showToast('⚠️ Connexion Microsoft 365 requise');return;}
+function openVideoEditor(blob) {
+  document.getElementById('videoEditor').style.display = 'flex';
+  document.getElementById('cameraFullscreen').style.display = 'none';
+  document.getElementById('previewVideo').src = URL.createObjectURL(blob);
+}
+function cancelVideoEdit() { document.getElementById('videoEditor').style.display='none'; document.getElementById('cameraFullscreen').style.display='flex'; startCamera(); }
+async function saveVideoToOneDrive() {
+  if(!currentVideoBlob || !state.currentClient) { showToast('Aucune vidéo ou client'); return; }
+  if(!state.accessToken) { showToast('⚠️ Connexion Microsoft 365 requise'); return; }
   showToast('⬆️ Sauvegarde vidéo...');
-  const ts=new Date(),filename=formatDateForFilename(ts)+'_video.webm',clientName=state.currentClient.Title;
-  try{
-    const path=`/me/drive/root:/${CONFIG.oneDriveRoot}/${clientName}/10_Photos/Chantier/${filename}:/content`;
-    const resp=await fetch(`https://graph.microsoft.com/v1.0${path}`,{method:'PUT',headers:{'Authorization':`Bearer ${state.accessToken}`,'Content-Type':'video/webm'},body:currentVideoBlob});
-    if(resp.ok){showToast('✅ Vidéo sauvegardée dans OneDrive !');cancelVideoEdit();}else showToast('⚠️ Erreur de sauvegarde');
-  }catch(e){showToast('⚠️ Erreur réseau');}
+  const ts = new Date(), filename = formatDateForFilename(ts) + '_video.webm', clientName = state.currentClient.Title;
+  try {
+    const path = `/me/drive/root:/${CONFIG.oneDriveRoot}/${clientName}/10_Photos/Chantier/${filename}:/content`;
+    const resp = await fetch(`https://graph.microsoft.com/v1.0${path}`, { method:'PUT', headers:{'Authorization':`Bearer ${state.accessToken}`,'Content-Type':'video/webm'}, body:currentVideoBlob });
+    if(resp.ok) { showToast('✅ Vidéo sauvegardée !'); cancelVideoEdit(); }
+    else showToast('⚠️ Erreur de sauvegarde');
+  } catch(e) { showToast('⚠️ Erreur réseau'); }
 }
 
 // ===== TIMER =====
