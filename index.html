@@ -1238,14 +1238,16 @@ window.setMode = function(mode){
 window.captureMedia = function(){
   const btn=document.getElementById('shutterBtn');
   if(btn){btn.style.transform='scale(0.88)';setTimeout(()=>btn.style.transform='scale(1)',120);}
-  if(currentMode==='photo') takePhoto();
+  if(currentMode==='photo') window.takePhoto();
   else if(mediaRecorder&&mediaRecorder.state==='recording') stopRecording();
   else startRecording();
 }
 
 window.takePhoto = function(){
   const video=document.getElementById('cameraVideo'),canvas=document.getElementById('photoCanvas');
-  if(!video||!canvas) return;
+  if(!video||!canvas) { showToast('⚠️ Caméra non disponible'); return; }
+  if(!video.srcObject) { showToast('⚠️ Flux caméra absent'); return; }
+  if(video.readyState < 2) { showToast('⚠️ Caméra pas prête'); return; }
   const w=video.videoWidth||1280,h=video.videoHeight||720;
   canvas.width=w; canvas.height=h;
   const ctx=canvas.getContext('2d');
