@@ -44,3 +44,16 @@ let liveText = { el:null, text:'', x:0, y:0, size:32, color:'#FFFFFF', dragging:
 let viewerCurrentIndex = 0;
 let viewerStartX = 0;
 
+
+// ===== FONCTIONS DE BASE (disponibles immédiatement) =====
+function showToast(msg){
+  const t=document.getElementById('toast');
+  if(!t) return;
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+function setEl(id,val){
+  const el=document.getElementById(id);
+  if(el) el.textContent=val;
+}
