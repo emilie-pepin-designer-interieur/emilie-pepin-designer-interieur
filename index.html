@@ -1295,25 +1295,25 @@ function captureMedia(){
 }
 
 function takePhoto(){
-  const video=document.getElementById('cameraVideo'),canvas=document.getElementById('photoCanvas');
-  if(!video||!canvas) return;
-  const w=video.videoWidth||1280,h=video.videoHeight||720;
+  const video=document.getElementById('cameraVideo'),canvas=document.getElementById('photoCanvas')||document.createElement('canvas');
+  if(!video) return;
+  const w=video.videoWidth||1920,h=video.videoHeight||1080;
   canvas.width=w; canvas.height=h;
   const ctx=canvas.getContext('2d');
-  if(zoomCSS>1){const sw=w/zoomCSS,sh=h/zoomCSS;ctx.drawImage(video,(w-sw)/2,(h-sh)/2,sw,sh,0,0,w,h);}
-  else if(zoomCSS<1){const sw=w/zoomCSS,sh=h/zoomCSS;ctx.drawImage(video,(w-sw)/2,(h-sh)/2,sw,sh,0,0,w,h);}
-  else ctx.drawImage(video,0,0);
+  if(zoomCSS!==1.0){const sw=w/zoomCSS,sh=h/zoomCSS;ctx.drawImage(video,(w-sw)/2,(h-sh)/2,sw,sh,0,0,w,h);}
+  else ctx.drawImage(video,0,0,w,h);
   const dataUrl=canvas.toDataURL('image/jpeg',0.93);
   const ts=new Date(),filename=formatDateForFilename(ts)+'_'+String(sessionPhotos.length+1).padStart(3,'0')+'.jpg';
   const photo={dataUrl,saved:false,filename,oneDriveId:null,date:ts};
   sessionPhotos.push(photo);
+  // Caméra reste active - rafale chantier
   updateLastPhotoThumb();
   autoSavePhoto(photo,sessionPhotos.length-1);
-  // Animation flash
+  // Flash blanc iOS avec fade
   const flash=document.createElement('div');
-  flash.style.cssText='position:absolute;inset:0;background:white;z-index:50;opacity:0.8;pointer-events:none;';
+  flash.style.cssText='position:absolute;inset:0;background:white;z-index:99;opacity:0.85;pointer-events:none;transition:opacity 0.1s ease-out;';
   document.getElementById('cameraFullscreen').appendChild(flash);
-  setTimeout(()=>flash.remove(),150);
+  setTimeout(()=>{flash.style.opacity='0';setTimeout(()=>flash.remove(),100);},30);
 }
 
 function formatDateForFilename(d){
@@ -1563,11 +1563,20 @@ async function saveCurrentPhotoToOneDrive(){
 async function uploadPhotoToOneDrive(dataUrl,filename){
   if(!state.accessToken||!state.currentClient) return false;
   try {
-    const res=await fetch(dataUrl);const blob=await res.blob();
-    const path=`/me/drive/root:/${CONFIG.oneDriveRoot}/${state.currentClient.Title}/10_Photos/Chantier/${filename}:/content`;
-    const r=await fetch(`https://graph.microsoft.com/v1.0${path}`,{method:'PUT',headers:{Authorization:`Bearer ${state.accessToken}`,'Content-Type':'image/jpeg'},body:blob});
-    return r.ok;
-  } catch(e){return false;}
+    const safeFolder=state.currentClient.Title.replace(/[/\\?%*:|"<>]/g,'_');
+    const response=await fetch(dataUrl);
+    const blob=await response.blob();
+    const targetPath=`${CONFIG.oneDriveRoot}/${safeFolder}/10_Photos/Chantier/${filename}`;
+    const url=`https://graph.microsoft.com/v1.0/me/drive/root:/${targetPath}:/content`;
+    const request=await fetch(url,{method:'PUT',headers:{'Authorization':`Bearer ${state.accessToken}`,'Content-Type':'image/jpeg'},body:blob});
+    if(request.ok){
+      const data=await request.json();
+      const idx=sessionPhotos.findIndex(p=>p.filename===filename);
+      if(idx>=0) sessionPhotos[idx].oneDriveId=data.id;
+      return true;
+    }
+    return false;
+  } catch(e){ console.error('Graph API:',e); return false; }
 }
 
 function updatePhotosGallery(){renderFilmstripGrid();}
