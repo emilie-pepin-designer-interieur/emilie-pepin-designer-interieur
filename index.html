@@ -1339,8 +1339,18 @@ function updateFilmstripThumb(){
   if(countEl) countEl.textContent=pending;
 }
 
-function handleFilmstripTap(){
-  openFilmstrip();
+async function handleFilmstripTap(){
+  // Ouvre le viewer sur la dernière photo prise (style Apple)
+  const startIdx = sessionPhotos.length > 0 ? sessionPhotos.length - 1 : 0;
+  openPhotoViewer(startIdx);
+  // Charge les photos OneDrive en arrière-plan et met à jour la pellicule
+  if(state.accessToken && state.currentClient){
+    await loadOneDrivePhotos();
+    renderViewerPhotos();
+    renderViewerStrip();
+    // Reste positionné sur la dernière photo de session
+    scrollViewerTo(startIdx, false);
+  }
 }
 
 function toggleFilmstrip(){
@@ -1442,7 +1452,10 @@ function scrollViewerTo(index,animated){
   if(track){track.style.transition=animated?'transform 0.3s ease':'none';track.style.transform=`translateX(${-index*100}vw)`;}
   if(counter) counter.textContent=`${index+1} / ${sessionPhotos.length}`;
   viewerCurrentIndex=index;
-  document.querySelectorAll('.viewer-strip-item').forEach((el,i)=>el.style.border=i===index?'2px solid white':'2px solid transparent');
+  document.querySelectorAll('.viewer-strip-item').forEach((el,i)=>{
+    el.style.border=i===index?'2px solid white':'2px solid transparent';
+    if(i===index){el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});}
+  });
 }
 
 function renderViewerStrip(){
