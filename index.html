@@ -1375,7 +1375,7 @@ async function loadOneDrivePhotos(){
   if(loading) loading.style.display='block';
   try {
     const clientName=state.currentClient.Title;
-    const data=await graphGet(`/me/drive/root:/${CONFIG.oneDriveRoot}/${clientName}/10_Photos/Chantier:/children?$orderby=lastModifiedDateTime desc&$top=50`);
+    const data=await graphGet(`/me/drive/root:/${CONFIG.oneDriveRoot}/${clientName}/10_Photos/Chantier:/children?$expand=thumbnails&$orderby=lastModifiedDateTime desc&$top=50`);
     if(data?.value?.length>0){
       const sessionFilenames=new Set(sessionPhotos.map(p=>p.filename));
       for(const f of data.value){
@@ -1462,10 +1462,10 @@ function renderViewerStrip(){
   const strip=document.getElementById('viewerStrip');
   if(!strip) return;
   strip.innerHTML=sessionPhotos.map((p,i)=>{
-    const src=p.dataUrl||p.odThumbnail||'';
+    const src=p.dataUrl||p.odThumbnail||p.odUrl||'';
     return `<div class="viewer-strip-item" onclick="scrollViewerTo(${i},true)"
       style="min-width:60px;height:60px;border-radius:8px;overflow:hidden;cursor:pointer;flex-shrink:0;border:${i===viewerCurrentIndex?'2px solid white':'2px solid transparent'};">
-      ${src?`<img src="${src}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;background:#333;"></div>`}
+      ${src?`<img src="${src}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`:`<div style="width:100%;height:100%;background:#333;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:9px;">...</div>`}
     </div>`;
   }).join('');
 }
