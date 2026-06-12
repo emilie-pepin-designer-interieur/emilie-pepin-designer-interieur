@@ -1119,31 +1119,10 @@ function showPhotoChoiceMenu() {
   document.body.appendChild(menu);
 }
 
-// CHOIX 1: Appareil photo → sous-menu caméra custom OU photothèque
+// CHOIX 1: Appareil photo → ouvre directement la caméra de l'app
 function chooseAppareilPhoto() {
   document.getElementById('photoChoiceMenu')?.remove();
-  const menu = document.createElement('div');
-  menu.id = 'cameraSubMenu';
-  menu.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;display:flex;align-items:flex-end;';
-  menu.innerHTML = `
-    <div style="width:100%;background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px 16px calc(env(safe-area-inset-bottom,0px)+20px);">
-      <div style="width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 18px;"></div>
-      <button onclick="openCustomCamera()" style="width:100%;padding:16px;background:rgba(48,209,88,0.15);border:1px solid rgba(48,209,88,0.3);color:white;border-radius:14px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent;">
-        <div style="width:48px;height:48px;background:#30D158;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        </div>
-        <div style="text-align:left;"><div style="font-weight:600;font-size:16px;">Caméra de l'app</div><div style="color:rgba(255,255,255,0.45);font-size:12px;margin-top:2px;">Multi-photos + zoom + grille</div></div>
-      </button>
-      <button onclick="openPhotothèque()" style="width:100%;padding:16px;background:rgba(191,90,242,0.15);border:1px solid rgba(191,90,242,0.3);color:white;border-radius:14px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent;">
-        <div style="width:48px;height:48px;background:#BF5AF2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="2" width="9" height="9" rx="1.5"/><rect x="13" y="2" width="9" height="9" rx="1.5"/><rect x="2" y="13" width="9" height="9" rx="1.5"/><rect x="13" y="13" width="9" height="9" rx="1.5"/></svg>
-        </div>
-        <div style="text-align:left;"><div style="font-weight:600;font-size:16px;">Photothèque</div><div style="color:rgba(255,255,255,0.45);font-size:12px;margin-top:2px;">Importer depuis iPhone/iPad</div></div>
-      </button>
-      <button onclick="document.getElementById('cameraSubMenu').remove();showPhotoChoiceMenu();" style="width:100%;padding:14px;background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.5);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;-webkit-tap-highlight-color:transparent;">Retour</button>
-    </div>`;
-  menu.addEventListener('click', e => { if(e.target===menu) menu.remove(); });
-  document.body.appendChild(menu);
+  openCustomCamera();
 }
 
 // Ouvrir la caméra custom (celle qui fonctionne)
