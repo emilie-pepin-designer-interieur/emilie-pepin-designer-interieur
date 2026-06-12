@@ -1406,48 +1406,47 @@ function renderFilmstripGrid(){
 // ===== LECTEUR PHOTO APPLE-STYLE =====
 function openPhotoViewer(index){
   viewerCurrentIndex=index;
-  let viewer=document.getElementById('photoViewer');
-  if(!viewer){
-    viewer=document.createElement('div');
-    viewer.id='photoViewer';
-    viewer.style.cssText='position:fixed;inset:0;z-index:300;background:#000;display:flex;flex-direction:column;';
-    viewer.innerHTML=`
-      <!-- HEADER : ← caméra | compteur | galerie -->
-      <div style="padding:calc(env(safe-area-inset-top,44px)+90px) 20px 14px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.75);flex-shrink:0;">
-        <button onclick="closePhotoViewer()" style="width:52px;height:52px;background:rgba(255,255,255,0.18);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <span id="viewerCounter" style="color:white;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;"></span>
-        <button onclick="openGalleryFromViewer()" style="width:52px;height:52px;background:rgba(255,255,255,0.18);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        </button>
-      </div>
-      <!-- PHOTO PRINCIPALE -->
-      <div id="viewerMain" style="flex:1;position:relative;overflow:hidden;display:flex;align-items:center;min-height:0;">
-        <div id="viewerTrack" style="display:flex;height:100%;will-change:transform;"></div>
-      </div>
-      <!-- PELLICULE MINIATURES -->
-      <div id="viewerStrip" style="height:80px;display:flex;gap:3px;padding:6px 8px;overflow-x:auto;background:rgba(0,0,0,0.85);-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center;flex-shrink:0;"></div>
-      <!-- BARRE ACTIONS : poubelle | modifier -->
-      <div style="display:flex;justify-content:space-around;align-items:center;background:rgba(0,0,0,0.85);padding:10px 40px calc(env(safe-area-inset-bottom,0px)+12px);flex-shrink:0;border-top:1px solid rgba(255,255,255,0.08);">
-        <button onclick="deleteFromViewer()" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;color:rgba(255,255,255,0.75);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:6px 20px;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-          <span style="font-size:10px;font-family:'DM Sans',sans-serif;">Supprimer</span>
-        </button>
-        <button onclick="annotateFromViewer()" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;color:#0A84FF;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:6px 20px;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-          <span style="font-size:10px;font-family:'DM Sans',sans-serif;">Modifier</span>
-        </button>
-      </div>`;
-    document.body.appendChild(viewer);
-    const main=viewer.querySelector('#viewerMain');
-    main.addEventListener('touchstart',e=>{viewerStartX=e.touches[0].clientX;},{passive:true});
-    main.addEventListener('touchend',e=>{
-      const dx=e.changedTouches[0].clientX-viewerStartX;
-      if(Math.abs(dx)>50){if(dx<0)viewerNav(1);else viewerNav(-1);}
-    },{passive:true});
-  }
-  viewer.style.display='flex';
+  // Toujours recréer pour que les changements de style soient pris en compte
+  const old=document.getElementById('photoViewer');
+  if(old) old.remove();
+  const viewer=document.createElement('div');
+  viewer.id='photoViewer';
+  viewer.style.cssText='position:fixed;inset:0;z-index:300;background:#000;display:flex;flex-direction:column;';
+  viewer.innerHTML=`
+    <!-- HEADER : ← caméra | compteur | galerie -->
+    <div style="padding:calc(env(safe-area-inset-top,44px)+90px) 20px 14px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.75);flex-shrink:0;">
+      <button onclick="closePhotoViewer()" style="width:52px;height:52px;background:rgba(255,255,255,0.18);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span id="viewerCounter" style="color:white;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;"></span>
+      <button onclick="openGalleryFromViewer()" style="width:52px;height:52px;background:rgba(255,255,255,0.18);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </button>
+    </div>
+    <!-- PHOTO PRINCIPALE -->
+    <div id="viewerMain" style="flex:1;position:relative;overflow:hidden;display:flex;align-items:center;min-height:0;">
+      <div id="viewerTrack" style="display:flex;height:100%;will-change:transform;"></div>
+    </div>
+    <!-- PELLICULE MINIATURES -->
+    <div id="viewerStrip" style="height:80px;display:flex;gap:3px;padding:6px 8px;overflow-x:auto;background:rgba(0,0,0,0.85);-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center;flex-shrink:0;"></div>
+    <!-- BARRE ACTIONS : poubelle | modifier -->
+    <div style="display:flex;justify-content:space-around;align-items:center;background:rgba(0,0,0,0.85);padding:10px 40px calc(env(safe-area-inset-bottom,0px)+12px);flex-shrink:0;border-top:1px solid rgba(255,255,255,0.08);">
+      <button onclick="deleteFromViewer()" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;color:rgba(255,255,255,0.75);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:6px 20px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        <span style="font-size:10px;font-family:'DM Sans',sans-serif;">Supprimer</span>
+      </button>
+      <button onclick="annotateFromViewer()" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;color:#0A84FF;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:6px 20px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+        <span style="font-size:10px;font-family:'DM Sans',sans-serif;">Modifier</span>
+      </button>
+    </div>`;
+  document.body.appendChild(viewer);
+  const main=viewer.querySelector('#viewerMain');
+  main.addEventListener('touchstart',e=>{viewerStartX=e.touches[0].clientX;},{passive:true});
+  main.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-viewerStartX;
+    if(Math.abs(dx)>50){if(dx<0)viewerNav(1);else viewerNav(-1);}
+  },{passive:true});
   renderViewerPhotos();
   scrollViewerTo(index,false);
   renderViewerStrip();
