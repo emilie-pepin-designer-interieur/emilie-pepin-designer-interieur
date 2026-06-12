@@ -1413,7 +1413,7 @@ function openPhotoViewer(index){
     viewer.style.cssText='position:fixed;inset:0;z-index:300;background:#000;display:flex;flex-direction:column;';
     viewer.innerHTML=`
       <!-- HEADER : ← caméra | compteur | galerie -->
-      <div style="padding:calc(env(safe-area-inset-top,44px)+40px) 20px 14px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.75);flex-shrink:0;">
+      <div style="padding:calc(env(safe-area-inset-top,44px)+90px) 20px 14px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.75);flex-shrink:0;">
         <button onclick="closePhotoViewer()" style="width:52px;height:52px;background:rgba(255,255,255,0.18);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
