@@ -639,54 +639,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
     </div>
   </div>
 
-  <!-- OVERLAY TEXTE (tap pour positionner) -->
-  <div id="textPlacementOverlay" style="display:none;position:fixed;inset:0;z-index:220;
-       background:rgba(0,0,0,0.01);" onclick="placeTextAtPosition(event)">
-    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-         background:rgba(0,0,0,0.8);padding:14px 18px;border-radius:14px;
-         text-align:center;pointer-events:none;">
-      <div style="color:white;font-family:'DM Sans',sans-serif;font-size:14px;margin-bottom:8px;">
-        Tapez où placer le texte</div>
-      <div style="color:rgba(255,255,255,0.5);font-size:12px;">ou appuyez ici pour annuler</div>
-    </div>
-  </div>
-
-  <!-- DIALOGUE TEXTE -->
-  <div id="textDialog" style="display:none;position:fixed;inset:0;z-index:230;
-       background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;">
-    <div style="background:#2c2c2e;border-radius:16px;padding:20px;width:85%;max-width:340px;">
-      <div style="color:white;font-family:'DM Sans',sans-serif;font-size:16px;
-                  font-weight:600;margin-bottom:14px;">Ajouter du texte</div>
-      <input id="textInput" type="text" placeholder="Votre texte..."
-        style="width:100%;padding:12px;background:#3a3a3c;border:none;border-radius:10px;
-               color:white;font-size:16px;font-family:'DM Sans',sans-serif;
-               box-sizing:border-box;margin-bottom:12px;outline:none;">
-      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
-        <span style="color:rgba(255,255,255,0.6);font-size:12px;font-family:'DM Sans',sans-serif;">Taille:</span>
-        <input type="range" id="textSizeSlider" min="16" max="80" value="32"
-          style="flex:1;accent-color:#0A84FF;">
-        <span id="textSizeValue" style="color:white;font-size:12px;font-family:'DM Sans',sans-serif;width:30px;">32</span>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-        <div onclick="setTextColor('#FFFFFF',this)" class="text-color-dot active" style="background:white;"></div>
-        <div onclick="setTextColor('#FF453A',this)" class="text-color-dot" style="background:#FF453A;"></div>
-        <div onclick="setTextColor('#FFD60A',this)" class="text-color-dot" style="background:#FFD60A;"></div>
-        <div onclick="setTextColor('#30D158',this)" class="text-color-dot" style="background:#30D158;"></div>
-        <div onclick="setTextColor('#0A84FF',this)" class="text-color-dot" style="background:#0A84FF;"></div>
-        <div onclick="setTextColor('#BF5AF2',this)" class="text-color-dot" style="background:#BF5AF2;"></div>
-        <div onclick="setTextColor('#FF9F0A',this)" class="text-color-dot" style="background:#FF9F0A;"></div>
-        <div onclick="setTextColor('#6B2D45',this)" class="text-color-dot" style="background:#6B2D45;"></div>
-      </div>
-      <div style="display:flex;gap:10px;">
-        <button onclick="cancelTextDialog()" style="flex:1;padding:12px;background:rgba(255,255,255,0.1);
-                border:none;color:white;border-radius:10px;font-family:'DM Sans',sans-serif;
-                font-size:14px;cursor:pointer;">Annuler</button>
-        <button onclick="confirmTextDialog()" style="flex:1;padding:12px;background:#0A84FF;
-                border:none;color:white;border-radius:10px;font-family:'DM Sans',sans-serif;
-                font-size:14px;font-weight:600;cursor:pointer;">Placer</button>
-      </div>
-    </div>
-  </div>
 
   <!-- MENU PHOTO (annoter / supprimer) -->
   <div id="photoActionMenu" style="display:none;position:fixed;inset:0;z-index:250;
@@ -906,6 +858,8 @@ let textColor = '#FFFFFF';
 let editState = { tool:null, color:'#FF453A', size:4, drawing:false, startX:0, startY:0, history:[], baseImage:null, brightness:0, contrast:0, saturation:0 };
 let cropHandles = { active:false, handle:null, startX:0, startY:0, startRect:{x:0,y:0,w:1,h:1}, rect:{x:0,y:0,w:1,h:1} };
 let liveText = { el:null, text:'', x:0, y:0, size:32, color:'#FFFFFF', dragging:false, startX:0, startY:0 };
+let textItems = [];
+let activeTextId = null;
 let viewerCurrentIndex = 0;
 let viewerStartX = 0;
 
@@ -1920,109 +1874,219 @@ function rotateCrop(){
   showToast('↺ Rotation 90°');
 }
 
-// ===== TEXTE LIVE DÉPLAÇABLE =====
+// ===== TEXTE STYLE APPLE — toolbar au-dessus du clavier =====
 function activateTextTool(){
-  const btn=document.getElementById('textToolBtn');
   document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');
+  document.getElementById('textToolBtn')?.classList.add('active');
   editState.tool='text';
-  showTextDialog();
+  textItems=[];activeTextId=null;
+  _showTextToolbar();
+  _addTextItem();
 }
 
-function showTextDialog(){
-  const dlg=document.getElementById('textDialog');if(dlg)dlg.style.display='flex';
-  const input=document.getElementById('textInput'),sizeEl=document.getElementById('textSizeSlider'),sizeVal=document.getElementById('textSizeValue');
-  if(sizeEl&&sizeVal){sizeEl.value=32;sizeVal.textContent='32';sizeEl.oninput=()=>{sizeVal.textContent=sizeEl.value;liveText.size=parseInt(sizeEl.value);updateLiveText();};}
-  if(input){input.value='';input.oninput=()=>{liveText.text=input.value;updateLiveText();};setTimeout(()=>input.focus(),100);}
-}
-
-function confirmTextDialog(){
-  const input=document.getElementById('textInput'),text=input?input.value.trim():'';
-  if(!text){cancelTextDialog();return;}
-  liveText.text=text;liveText.color=textColor;liveText.size=parseInt(document.getElementById('textSizeSlider')?.value||32);
-  const dlg=document.getElementById('textDialog');if(dlg)dlg.style.display='none';
-  placeLiveTextOnCanvas();
-}
-
-function placeLiveTextOnCanvas(){
-  const canvas=document.getElementById('editCanvas'),area=document.getElementById('editorImageArea');
-  if(!canvas||!area) return;
-  const old=document.getElementById('liveTextEl');if(old)old.remove();
-  const cr=canvas.getBoundingClientRect(),ar=area.getBoundingClientRect();
-  const div=document.createElement('div');
-  div.id='liveTextEl';
-  liveText.x=cr.left-ar.left+cr.width/2-50;liveText.y=cr.top-ar.top+cr.height/2-20;
-  div.style.cssText=`position:absolute;left:${liveText.x}px;top:${liveText.y}px;color:${liveText.color};font-size:${liveText.size}px;font-family:'DM Sans',Arial,sans-serif;font-weight:bold;cursor:grab;user-select:none;white-space:nowrap;z-index:20;text-shadow:0 1px 3px rgba(0,0,0,0.8);touch-action:none;border:1.5px dashed rgba(255,255,255,0.6);padding:4px 8px;border-radius:4px;`;
-  div.textContent=liveText.text;
-  area.style.position='relative';
-  area.appendChild(div);
-  liveText.el=div;
-  div.addEventListener('touchstart',e=>{e.preventDefault();liveText.dragging=true;liveText.startX=e.touches[0].clientX-liveText.x;liveText.startY=e.touches[0].clientY-liveText.y;div.style.cursor='grabbing';},{passive:false});
-  div.addEventListener('mousedown',e=>{liveText.dragging=true;liveText.startX=e.clientX-liveText.x;liveText.startY=e.clientY-liveText.y;div.style.cursor='grabbing';});
-  document.addEventListener('touchmove',e=>{if(!liveText.dragging)return;e.preventDefault();liveText.x=e.touches[0].clientX-liveText.startX;liveText.y=e.touches[0].clientY-liveText.startY;div.style.left=liveText.x+'px';div.style.top=liveText.y+'px';},{passive:false});
-  document.addEventListener('mousemove',e=>{if(!liveText.dragging)return;liveText.x=e.clientX-liveText.startX;liveText.y=e.clientY-liveText.startY;div.style.left=liveText.x+'px';div.style.top=liveText.y+'px';});
-  document.addEventListener('touchend',()=>{liveText.dragging=false;div.style.cursor='grab';},{passive:true});
-  document.addEventListener('mouseup',()=>{liveText.dragging=false;div.style.cursor='grab';});
-  showLiveTextConfirmBtn();
-}
-
-function updateLiveText(){
-  const div=document.getElementById('liveTextEl');if(!div)return;
-  div.textContent=liveText.text;div.style.fontSize=liveText.size+'px';div.style.color=liveText.color;
-}
-
-function showLiveTextConfirmBtn(){
-  const old=document.getElementById('liveTextConfirmBtn');if(old)old.remove();
-  const btn=document.createElement('button');
-  btn.id='liveTextConfirmBtn';
-  btn.textContent='✓ Graver le texte';
-  btn.style.cssText="position:fixed;bottom:calc(env(safe-area-inset-bottom,0px)+170px);left:50%;transform:translateX(-50%);background:#30D158;border:none;color:white;padding:10px 24px;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;z-index:250;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.3);";
-  btn.onclick=commitLiveText;
-  document.body.appendChild(btn);
-}
-
-function commitLiveText(){
-  const div=document.getElementById('liveTextEl'),btn=document.getElementById('liveTextConfirmBtn');
-  if(btn)btn.remove();if(!div)return;
+function _addTextItem(){
   const canvas=document.getElementById('editCanvas'),area=document.getElementById('editorImageArea');
   if(!canvas||!area)return;
-  const cr=canvas.getBoundingClientRect(),divRect=div.getBoundingClientRect();
-  const cx=(divRect.left-cr.left+divRect.width/2)*canvas.width/cr.width;
-  const cy=(divRect.top-cr.top+divRect.height*0.75)*canvas.height/cr.height;
-  const scaledSize=liveText.size*(canvas.width/cr.width);
-  const ctx=canvas.getContext('2d');
-  ctx.font=`bold ${scaledSize}px 'DM Sans',Arial,sans-serif`;
-  ctx.fillStyle=liveText.color;ctx.strokeStyle='rgba(0,0,0,0.7)';ctx.lineWidth=scaledSize*0.06;
-  const tw=ctx.measureText(liveText.text).width;
-  ctx.strokeText(liveText.text,cx-tw/2,cy);ctx.fillText(liveText.text,cx-tw/2,cy);
-  editState.history.push(ctx.getImageData(0,0,canvas.width,canvas.height));
-  div.remove();editState.tool=null;
+  const cr=canvas.getBoundingClientRect(),ar=area.getBoundingClientRect();
+  const id='ti_'+Date.now();
+  const item={id,text:'',x:cr.left-ar.left+cr.width/2-60,y:cr.top-ar.top+cr.height*0.35,
+    size:36,color:textColor||'#FFFFFF',font:"'DM Sans'",bold:true,italic:false,underline:false,el:null};
+  textItems.push(item);
+  _renderTextEl(item);
+  _selectText(id);
+}
+
+function _renderTextEl(item){
+  const area=document.getElementById('editorImageArea');if(!area)return;
+  const old=document.getElementById(item.id);if(old)old.remove();
+  const el=document.createElement('div');
+  el.id=item.id;
+  _applyTextElStyle(el,item,false);
+  el.textContent=item.text||'';
+  area.appendChild(el);
+  item.el=el;
+  // Drag
+  let sx=0,sy=0,ox=0,oy=0,moved=false;
+  el.addEventListener('touchstart',e=>{
+    if(activeTextId!==item.id){_selectText(item.id);return;}
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;ox=item.x;oy=item.y;moved=false;
+    e.stopPropagation();
+  },{passive:true});
+  el.addEventListener('touchmove',e=>{
+    e.preventDefault();e.stopPropagation();moved=true;
+    item.x=ox+e.touches[0].clientX-sx;item.y=oy+e.touches[0].clientY-sy;
+    el.style.left=item.x+'px';el.style.top=item.y+'px';
+  },{passive:false});
+  el.addEventListener('touchend',e=>{if(!moved)_selectText(item.id);e.stopPropagation();},{passive:true});
+  el.addEventListener('click',e=>{_selectText(item.id);e.stopPropagation();});
+}
+
+function _applyTextElStyle(el,item,active){
+  el.style.cssText='position:absolute;left:'+item.x+'px;top:'+item.y+'px;'
+    +'color:'+item.color+';font-size:'+item.size+'px;font-family:'+item.font+',Arial,sans-serif;'
+    +'font-weight:'+(item.bold?'bold':'normal')+';font-style:'+(item.italic?'italic':'normal')+';'
+    +'text-decoration:'+(item.underline?'underline':'none')+';'
+    +'cursor:grab;user-select:none;white-space:pre-wrap;max-width:85%;z-index:20;'
+    +'text-shadow:1px 1px 4px rgba(0,0,0,0.85);touch-action:none;padding:4px 8px;border-radius:6px;'
+    +(active?'border:2px solid rgba(255,255,255,0.85);background:rgba(255,255,255,0.08);':'border:2px solid transparent;');
+}
+
+function _selectText(id){
+  activeTextId=id;
+  textItems.forEach(it=>{if(it.el)_applyTextElStyle(it.el,it,it.id===id);});
+  const item=textItems.find(t=>t.id===id);if(!item)return;
+  const inp=document.getElementById('txtInlineInput');
+  if(inp){inp.value=item.text;inp.focus();}
+  _syncToolbarState(item);
+}
+
+function _showTextToolbar(){
+  const old=document.getElementById('textEditToolbar');if(old)old.remove();
+  const tb=document.createElement('div');
+  tb.id='textEditToolbar';
+  tb.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:500;background:#1c1c1e;border-top:1px solid rgba(255,255,255,0.12);';
+  const colors=['#FFFFFF','#FF453A','#FFD60A','#30D158','#0A84FF','#BF5AF2','#FF9F0A','#000000'];
+  const dots=colors.map(c=>'<div onclick="setTxtColor(\''+c+'\',this)" class="txc" style="width:26px;height:26px;border-radius:50%;background:'+c+';cursor:pointer;flex-shrink:0;border:2px solid '+(c===textColor?'white':'transparent')+';box-sizing:border-box;transition:transform .15s;"></div>').join('');
+  tb.innerHTML=
+    '<div style="display:flex;align-items:center;gap:6px;padding:10px 10px 6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;">'
+    +dots
+    +'<div style="width:1px;height:24px;background:rgba(255,255,255,0.2);flex-shrink:0;"></div>'
+    +'<button onclick="setTxtFont(\'\\\'DM Sans\\\'\',this)" class="txf" style="font-family:\'DM Sans\',sans-serif;padding:5px 9px;border:1.5px solid white;border-radius:7px;background:transparent;color:white;font-size:14px;cursor:pointer;flex-shrink:0;">Aa</button>'
+    +'<button onclick="setTxtFont(\'Georgia\',this)" class="txf" style="font-family:Georgia,serif;padding:5px 9px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:rgba(255,255,255,0.6);font-size:14px;font-style:italic;cursor:pointer;flex-shrink:0;">Aa</button>'
+    +'<button onclick="setTxtFont(\'monospace\',this)" class="txf" style="font-family:monospace;padding:5px 9px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:rgba(255,255,255,0.6);font-size:13px;cursor:pointer;flex-shrink:0;">Aa</button>'
+    +'<div style="width:1px;height:24px;background:rgba(255,255,255,0.2);flex-shrink:0;"></div>'
+    +'<button id="txtBBtn" onclick="toggleTxtBold()" style="width:33px;height:33px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:rgba(255,255,255,0.15);color:white;font-weight:bold;font-size:15px;cursor:pointer;flex-shrink:0;">B</button>'
+    +'<button id="txtIBtn" onclick="toggleTxtItalic()" style="width:33px;height:33px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:white;font-style:italic;font-size:15px;cursor:pointer;flex-shrink:0;">I</button>'
+    +'<button id="txtUBtn" onclick="toggleTxtUnderline()" style="width:33px;height:33px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:white;text-decoration:underline;font-size:14px;cursor:pointer;flex-shrink:0;">U</button>'
+    +'<div style="width:1px;height:24px;background:rgba(255,255,255,0.2);flex-shrink:0;"></div>'
+    +'<button onclick="changeTxtSize(-5)" style="width:33px;height:33px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:white;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;">A-</button>'
+    +'<button onclick="changeTxtSize(5)" style="width:33px;height:33px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:white;font-size:16px;font-weight:600;cursor:pointer;flex-shrink:0;">A+</button>'
+    +'<div style="width:1px;height:24px;background:rgba(255,255,255,0.2);flex-shrink:0;"></div>'
+    +'<button onclick="_addTextItem()" style="width:33px;height:33px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:white;font-size:20px;line-height:1;cursor:pointer;flex-shrink:0;">+</button>'
+    +'<button onclick="deleteTxtItem()" style="width:33px;height:33px;border:1.5px solid rgba(255,69,58,0.5);border-radius:7px;background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">'
+    +'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FF453A" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'
+    +'<button onclick="commitAllText()" style="margin-left:4px;padding:7px 14px;background:#0A84FF;border:none;border-radius:8px;color:white;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap;">Terminer</button>'
+    +'</div>'
+    +'<input id="txtInlineInput" type="text" placeholder="Tapez votre texte..." autocomplete="off" autocorrect="off"'
+    +' style="width:calc(100% - 24px);margin:0 12px 10px;padding:11px 14px;background:#3a3a3c;border:none;border-radius:10px;color:white;font-size:16px;font-family:\'DM Sans\',sans-serif;outline:none;box-sizing:border-box;display:block;"'
+    +' oninput="onTxtInput(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();_addTextItem();}">';
+  document.body.appendChild(tb);
+  // Repositionner au-dessus du clavier via visualViewport
+  if(window.visualViewport){
+    const vp=window.visualViewport;
+    const upd=()=>{const kbH=Math.max(0,window.innerHeight-vp.height-vp.offsetTop);tb.style.bottom=kbH+'px';};
+    vp.addEventListener('resize',upd);vp.addEventListener('scroll',upd);
+    tb._cleanup=()=>{vp.removeEventListener('resize',upd);vp.removeEventListener('scroll',upd);};
+  }
+  setTimeout(()=>document.getElementById('txtInlineInput')?.focus(),120);
+}
+
+function onTxtInput(val){
+  const item=textItems.find(t=>t.id===activeTextId);if(!item)return;
+  item.text=val;
+  if(item.el){item.el.textContent=val;}
+}
+
+function setTxtColor(c,el){
+  textColor=c;
+  document.querySelectorAll('.txc').forEach(d=>{d.style.border='2px solid transparent';d.style.transform='';});
+  if(el){el.style.border='2px solid white';el.style.transform='scale(1.25)';}
+  const item=textItems.find(t=>t.id===activeTextId);
+  if(item){item.color=c;if(item.el)item.el.style.color=c;}
+}
+
+function setTxtFont(f,el){
+  document.querySelectorAll('.txf').forEach(b=>{b.style.borderColor='rgba(255,255,255,0.3)';b.style.color='rgba(255,255,255,0.6)';});
+  if(el){el.style.borderColor='white';el.style.color='white';}
+  const item=textItems.find(t=>t.id===activeTextId);
+  if(item){item.font=f;if(item.el)item.el.style.fontFamily=f+',Arial,sans-serif';}
+}
+
+function toggleTxtBold(){
+  const item=textItems.find(t=>t.id===activeTextId);if(!item)return;
+  item.bold=!item.bold;
+  if(item.el)item.el.style.fontWeight=item.bold?'bold':'normal';
+  const b=document.getElementById('txtBBtn');if(b)b.style.background=item.bold?'rgba(255,255,255,0.25)':'transparent';
+}
+
+function toggleTxtItalic(){
+  const item=textItems.find(t=>t.id===activeTextId);if(!item)return;
+  item.italic=!item.italic;
+  if(item.el)item.el.style.fontStyle=item.italic?'italic':'normal';
+  const b=document.getElementById('txtIBtn');if(b)b.style.background=item.italic?'rgba(255,255,255,0.25)':'transparent';
+}
+
+function toggleTxtUnderline(){
+  const item=textItems.find(t=>t.id===activeTextId);if(!item)return;
+  item.underline=!item.underline;
+  if(item.el)item.el.style.textDecoration=item.underline?'underline':'none';
+  const b=document.getElementById('txtUBtn');if(b)b.style.background=item.underline?'rgba(255,255,255,0.25)':'transparent';
+}
+
+function changeTxtSize(d){
+  const item=textItems.find(t=>t.id===activeTextId);if(!item)return;
+  item.size=Math.max(12,Math.min(96,item.size+d));
+  if(item.el)item.el.style.fontSize=item.size+'px';
+}
+
+function deleteTxtItem(){
+  const idx=textItems.findIndex(t=>t.id===activeTextId);if(idx===-1)return;
+  textItems[idx].el?.remove();textItems.splice(idx,1);activeTextId=null;
+  if(textItems.length)_selectText(textItems[textItems.length-1].id);
+}
+
+function _syncToolbarState(item){
+  const bb=document.getElementById('txtBBtn'),ib=document.getElementById('txtIBtn'),ub=document.getElementById('txtUBtn');
+  if(bb)bb.style.background=item.bold?'rgba(255,255,255,0.25)':'transparent';
+  if(ib)ib.style.background=item.italic?'rgba(255,255,255,0.25)':'transparent';
+  if(ub)ub.style.background=item.underline?'rgba(255,255,255,0.25)':'transparent';
+  const inp=document.getElementById('txtInlineInput');if(inp)inp.value=item.text;
+}
+
+function commitAllText(){
+  const canvas=document.getElementById('editCanvas'),area=document.getElementById('editorImageArea');
+  if(!canvas||!area){_closeTextToolbar();return;}
+  const cr=canvas.getBoundingClientRect(),ctx=canvas.getContext('2d');
+  const sx=canvas.width/cr.width,sy=canvas.height/cr.height;
+  let changed=false;
+  for(const item of textItems){
+    if(!item.text||!item.el)continue;
+    changed=true;
+    const r=item.el.getBoundingClientRect();
+    const cx=(r.left-cr.left)*sx,cy=(r.top-cr.top+r.height*0.78)*sy;
+    const fs=item.size*sx;
+    ctx.font=(item.italic?'italic ':'')+(item.bold?'bold ':'')+fs+'px '+item.font+',Arial,sans-serif';
+    ctx.lineJoin='round';ctx.strokeStyle='rgba(0,0,0,0.75)';ctx.lineWidth=fs*0.07;
+    ctx.strokeText(item.text,cx,cy);ctx.fillStyle=item.color;ctx.fillText(item.text,cx,cy);
+    if(item.underline){const tw=ctx.measureText(item.text).width;ctx.strokeStyle=item.color;ctx.lineWidth=fs*0.05;ctx.beginPath();ctx.moveTo(cx,cy+fs*0.15);ctx.lineTo(cx+tw,cy+fs*0.15);ctx.stroke();}
+    item.el.remove();
+  }
+  if(changed)editState.history.push(ctx.getImageData(0,0,canvas.width,canvas.height));
+  textItems=[];activeTextId=null;
+  _closeTextToolbar();
   document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));
-  showToast('Texte gravé ✅');
+  editState.tool=null;
+  if(changed)showToast('Textes gravés ✅');
 }
 
-function setTextColor(color,el){
-  textColor=color;liveText.color=color;
-  document.querySelectorAll('.text-color-dot').forEach(e=>e.classList.remove('active'));
-  el.classList.add('active');updateLiveText();
+function _closeTextToolbar(){
+  const tb=document.getElementById('textEditToolbar');
+  if(tb){if(tb._cleanup)tb._cleanup();tb.remove();}
 }
 
+function setTextColor(color,el){setTxtColor(color,el);}
 function cancelTextDialog(){
-  const dlg=document.getElementById('textDialog');if(dlg)dlg.style.display='none';
-  const div=document.getElementById('liveTextEl');if(div)div.remove();
-  const btn=document.getElementById('liveTextConfirmBtn');if(btn)btn.remove();
-  editState.tool=null;document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));
+  textItems.forEach(it=>it.el?.remove());textItems=[];activeTextId=null;
+  _closeTextToolbar();editState.tool=null;
+  document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));
 }
-
-function placeTextAtPosition(){commitLiveText();}
+function placeTextAtPosition(){commitAllText();}
 function addTextAnnot(){activateTextTool();}
 
 // ===== ANNULER / CONFIRMER ÉDITEUR =====
 function cancelEdit(){
-  const overlay=document.getElementById('textPlacementOverlay'),dlg=document.getElementById('textDialog');
-  if(overlay)overlay.style.display='none';if(dlg)dlg.style.display='none';
-  const div=document.getElementById('liveTextEl');if(div)div.remove();
-  const btn=document.getElementById('liveTextConfirmBtn');if(btn)btn.remove();
+  textItems.forEach(it=>it.el?.remove());textItems=[];activeTextId=null;
+  _closeTextToolbar();
   const oldCrop=document.getElementById('cropOverlayDiv');if(oldCrop)oldCrop.remove();
   document.removeEventListener('touchmove',cropHandleMove);document.removeEventListener('touchend',cropHandleEnd);
   document.removeEventListener('mousemove',cropHandleMove);document.removeEventListener('mouseup',cropHandleEnd);
