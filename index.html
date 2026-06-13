@@ -2057,10 +2057,17 @@ function rotateCrop(){
 
 // ===== TEXTE STYLE APPLE — toolbar au-dessus du clavier =====
 function activateTextTool(){
+  if(editState.tool==='text'){
+    // Déjà en mode texte — ajouter un nouveau bloc
+    _addTextItem();
+    return;
+  }
   document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));
   document.getElementById('textToolBtn')?.classList.add('active');
   editState.tool='text';
   textItems=[];activeTextId=null;
+  // Cacher editorBottom — plein écran Apple-style
+  const eb=document.getElementById('editorBottom');if(eb)eb.style.display='none';
   _showTextToolbar();
   _addTextItem();
 }
@@ -2089,9 +2096,9 @@ function _renderTextEl(item){
   // Drag
   let sx=0,sy=0,ox=0,oy=0,moved=false;
   el.addEventListener('touchstart',e=>{
+    e.stopPropagation();
     if(activeTextId!==item.id){_selectText(item.id);return;}
     sx=e.touches[0].clientX;sy=e.touches[0].clientY;ox=item.x;oy=item.y;moved=false;
-    e.stopPropagation();
   },{passive:true});
   el.addEventListener('touchmove',e=>{
     e.preventDefault();e.stopPropagation();moved=true;
@@ -2162,14 +2169,22 @@ function _showTextToolbar(){
     +'<button onclick="setTxtFont(\'monospace\',this)" class="txf" style="flex:1;font-family:monospace;padding:8px;border:2px solid rgba(255,255,255,0.3);border-radius:8px;background:transparent;color:rgba(255,255,255,0.7);font-size:13px;cursor:pointer;">Mono</button>'
     +'</div>';
   document.body.appendChild(tb);
-  // Repositionner au-dessus du clavier via visualViewport
+  // Positionnement Apple-style : barre flotte AU-DESSUS du clavier, photo reste plein écran
+  const _reposTb=()=>{
+    if(window.visualViewport){
+      const vp=window.visualViewport;
+      const kbH=Math.max(0,window.innerHeight-vp.height-vp.offsetTop);
+      tb.style.bottom=kbH+'px';
+      tb.style.transform='translateY(0)';
+    }
+  };
   if(window.visualViewport){
-    const vp=window.visualViewport;
-    const upd=()=>{const kbH=Math.max(0,window.innerHeight-vp.height-vp.offsetTop);tb.style.bottom=kbH+'px';};
-    vp.addEventListener('resize',upd);vp.addEventListener('scroll',upd);
-    tb._cleanup=()=>{vp.removeEventListener('resize',upd);vp.removeEventListener('scroll',upd);};
+    window.visualViewport.addEventListener('resize',_reposTb);
+    window.visualViewport.addEventListener('scroll',_reposTb);
+    tb._cleanup=()=>{window.visualViewport.removeEventListener('resize',_reposTb);window.visualViewport.removeEventListener('scroll',_reposTb);};
   }
-  setTimeout(()=>document.getElementById('txtInlineInput')?.focus(),120);
+  _reposTb();
+  setTimeout(()=>{document.getElementById('txtInlineInput')?.focus();_reposTb();},80);
 }
 
 function toggleTxtColorPicker(){
@@ -2282,6 +2297,7 @@ function commitAllText(){
   _closeTextToolbar();
   document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));
   editState.tool=null;
+  const eb=document.getElementById('editorBottom');if(eb)eb.style.display='';
   if(changed)showToast('Textes gravés ✅');
 }
 
@@ -2295,6 +2311,7 @@ function cancelTextDialog(){
   textItems.forEach(it=>it.el?.remove());textItems=[];activeTextId=null;
   _closeTextToolbar();editState.tool=null;
   document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));
+  const eb=document.getElementById('editorBottom');if(eb)eb.style.display='';
 }
 function placeTextAtPosition(){commitAllText();}
 function addTextAnnot(){activateTextTool();}

@@ -1,5 +1,5 @@
-// Service Worker v18 - Apple Markup tools
-const CACHE_NAME = 'emilie-pepin-v18';
+// Service Worker v19 - Text tool fixes
+const CACHE_NAME = 'emilie-pepin-v19';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
