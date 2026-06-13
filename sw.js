@@ -1,5 +1,5 @@
-// Service Worker v20 - Text overlay + size bar + tools
-const CACHE_NAME = 'emilie-pepin-v20';
+// Service Worker v21 - Annotation Apple-style redesign
+const CACHE_NAME = 'emilie-pepin-v21';
 
 self.addEventListener('install', e => {
   self.skipWaiting();

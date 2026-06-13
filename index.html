@@ -525,7 +525,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
     <div id="editorBottom" style="background:#1c1c1e;flex-shrink:0;border-top:1px solid rgba(255,255,255,0.08);">
 
       <!-- Rangée modes + undo + OneDrive -->
-      <div style="display:flex;align-items:center;gap:6px;padding:7px 12px 5px;">
+      <div id="editorModeRow" style="display:flex;align-items:center;gap:6px;padding:7px 12px 5px;">
         <button onclick="undoEdit()" style="background:rgba(255,255,255,0.08);border:none;color:white;width:36px;height:36px;border-radius:10px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;">↩</button>
         <div style="flex:1;display:flex;justify-content:center;gap:3px;">
           <button onclick="showAnnotMode()" id="btnAnnot" class="editor-mode-btn" title="Annoter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
@@ -570,130 +570,100 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
           </div>
         </div>
 
-        <!-- Outils Apple Markup -->
-        <div style="display:flex;align-items:flex-end;justify-content:center;gap:4px;padding:8px 8px;padding-bottom:calc(env(safe-area-inset-bottom,0px)+10px);">
+        <!-- Carte blanche Apple-style -->
+        <div id="mkCard" style="background:white;border-radius:20px;margin:0 12px 8px;box-shadow:0 2px 20px rgba(0,0,0,0.12);padding:6px 12px 10px;display:flex;align-items:flex-end;justify-content:center;gap:6px;overflow:hidden;padding-bottom:calc(env(safe-area-inset-bottom,0px)+10px);">
 
           <!-- Stylo fin -->
-          <button class="mk-tool" id="mkt-pen" onclick="selectMkTool('pen',this)">
+          <button class="mk-tool" id="mkt-pen" onclick="selectMkTool('pen',this)" style="display:flex;flex-direction:column;align-items:center;gap:0;background:none;border:none;cursor:pointer;padding:4px 2px;transition:transform 0.18s;">
             <svg width="22" height="42" viewBox="0 0 22 42" fill="none">
-              <!-- Corps métallique effilé -->
-              <rect x="7" y="1" width="8" height="26" rx="4" fill="url(#penGrad)" stroke="rgba(255,255,255,0.25)" stroke-width="0.8"/>
-              <defs><linearGradient id="penGrad" x1="7" y1="0" x2="15" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5a5a5e"/><stop offset="50%" stop-color="#8a8a8e"/><stop offset="100%" stop-color="#4a4a4e"/></linearGradient></defs>
-              <!-- Clip métal -->
-              <rect x="13.5" y="4" width="2" height="18" rx="1" fill="rgba(255,255,255,0.18)"/>
-              <!-- Pointe conique -->
-              <polygon points="7,27 11,40 15,27" fill="#9a9a9e" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
-              <!-- Bille -->
-              <circle cx="11" cy="40" r="1.2" fill="#d0d0d4"/>
+              <rect x="7" y="1" width="8" height="26" rx="4" fill="url(#penGrad2)" stroke="rgba(0,0,0,0.15)" stroke-width="0.8"/>
+              <defs><linearGradient id="penGrad2" x1="7" y1="0" x2="15" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#888"/><stop offset="50%" stop-color="#bbb"/><stop offset="100%" stop-color="#777"/></linearGradient></defs>
+              <rect x="13.5" y="4" width="2" height="18" rx="1" fill="rgba(255,255,255,0.5)"/>
+              <polygon points="7,27 11,40 15,27" fill="#aaa" stroke="rgba(0,0,0,0.1)" stroke-width="0.5"/>
+              <circle cx="11" cy="40" r="1.2" fill="#666"/>
             </svg>
-            <div class="mk-ink" id="mki-pen"></div>
+            <div class="mk-ink" id="mki-pen" style="width:24px;height:5px;border-radius:3px;background:#0A84FF;margin-top:4px;"></div>
           </button>
 
-          <!-- Marqueur large -->
-          <button class="mk-tool" id="mkt-marker" onclick="selectMkTool('marker',this)">
+          <!-- Marqueur -->
+          <button class="mk-tool" id="mkt-marker" onclick="selectMkTool('marker',this)" style="display:flex;flex-direction:column;align-items:center;gap:0;background:none;border:none;cursor:pointer;padding:4px 2px;transition:transform 0.18s;">
             <svg width="22" height="42" viewBox="0 0 22 42" fill="none">
-              <defs><linearGradient id="mkGrad" x1="4" y1="0" x2="18" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3a3a3e"/><stop offset="50%" stop-color="#5a5a5e"/><stop offset="100%" stop-color="#2e2e32"/></linearGradient></defs>
-              <!-- Corps large -->
-              <rect x="4" y="1" width="14" height="24" rx="5" fill="url(#mkGrad)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
-              <!-- Reflet -->
-              <rect x="6" y="4" width="5" height="14" rx="2.5" fill="rgba(255,255,255,0.12)"/>
-              <!-- Réduction -->
-              <path d="M6 25 L5 31 L17 31 L16 25 Z" fill="#4a4a4e" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
-              <!-- Pointe biseautée -->
-              <rect x="6" y="31" width="10" height="7" rx="1.5" fill="#666" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
-              <!-- Trait biseau -->
-              <line x1="6" y1="35" x2="16" y2="35" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+              <defs><linearGradient id="mkGrad2" x1="4" y1="0" x2="18" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#666"/><stop offset="50%" stop-color="#999"/><stop offset="100%" stop-color="#555"/></linearGradient></defs>
+              <rect x="4" y="1" width="14" height="24" rx="5" fill="url(#mkGrad2)" stroke="rgba(0,0,0,0.12)" stroke-width="0.8"/>
+              <rect x="6" y="4" width="5" height="14" rx="2.5" fill="rgba(255,255,255,0.3)"/>
+              <path d="M6 25 L5 31 L17 31 L16 25 Z" fill="#777" stroke="rgba(0,0,0,0.1)" stroke-width="0.8"/>
+              <rect x="6" y="31" width="10" height="7" rx="1.5" fill="#999" stroke="rgba(0,0,0,0.08)" stroke-width="0.5"/>
+              <line x1="6" y1="35" x2="16" y2="35" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
             </svg>
-            <div class="mk-ink mk-ink-thick" id="mki-marker" style="opacity:0.65;"></div>
+            <div class="mk-ink mk-ink-thick" id="mki-marker" style="width:24px;height:5px;border-radius:3px;background:#0A84FF;margin-top:4px;opacity:0.65;"></div>
           </button>
 
           <!-- Crayon bois -->
-          <button class="mk-tool" id="mkt-pencil" onclick="selectMkTool('pencil',this)">
+          <button class="mk-tool" id="mkt-pencil" onclick="selectMkTool('pencil',this)" style="display:flex;flex-direction:column;align-items:center;gap:0;background:none;border:none;cursor:pointer;padding:4px 2px;transition:transform 0.18s;">
             <svg width="22" height="42" viewBox="0 0 22 42" fill="none">
-              <defs><linearGradient id="pcGrad" x1="7" y1="0" x2="15" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#b8893a"/><stop offset="40%" stop-color="#d9a84e"/><stop offset="100%" stop-color="#b07830"/></linearGradient></defs>
-              <!-- Corps bois -->
-              <rect x="7" y="1" width="8" height="22" rx="1" fill="url(#pcGrad)" stroke="rgba(0,0,0,0.2)" stroke-width="0.5"/>
-              <!-- Lignes grain bois -->
+              <defs><linearGradient id="pcGrad2" x1="7" y1="0" x2="15" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#b8893a"/><stop offset="40%" stop-color="#d9a84e"/><stop offset="100%" stop-color="#b07830"/></linearGradient></defs>
+              <rect x="7" y="1" width="8" height="22" rx="1" fill="url(#pcGrad2)" stroke="rgba(0,0,0,0.2)" stroke-width="0.5"/>
               <line x1="9" y1="1" x2="9" y2="23" stroke="rgba(0,0,0,0.12)" stroke-width="0.6"/>
-              <line x1="13" y1="1" x2="13" y2="23" stroke="rgba(255,255,255,0.1)" stroke-width="0.6"/>
-              <!-- Bande gomme rose -->
+              <line x1="13" y1="1" x2="13" y2="23" stroke="rgba(255,255,255,0.15)" stroke-width="0.6"/>
               <rect x="7" y="1" width="8" height="5" rx="1" fill="#e06060" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/>
-              <!-- Virole métal -->
               <rect x="7" y="6" width="8" height="3" fill="#b0b0b0" stroke="rgba(0,0,0,0.2)" stroke-width="0.4"/>
-              <!-- Zone taillée (chair bois) -->
               <polygon points="7,23 11,36 15,23" fill="#e8c98a" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/>
-              <!-- Graphite conique -->
               <polygon points="9,29 11,36 13,29" fill="#555"/>
-              <!-- Pointe graphite -->
               <circle cx="11" cy="36" r="0.8" fill="#333"/>
             </svg>
-            <div class="mk-ink" id="mki-pencil" style="opacity:0.75;"></div>
+            <div class="mk-ink" id="mki-pencil" style="width:24px;height:5px;border-radius:3px;background:#0A84FF;margin-top:4px;opacity:0.75;"></div>
           </button>
 
           <!-- Gomme -->
-          <button class="mk-tool" id="mkt-erase" onclick="selectMkTool('erase',this)">
+          <button class="mk-tool" id="mkt-erase" onclick="selectMkTool('erase',this)" style="display:flex;flex-direction:column;align-items:center;gap:0;background:none;border:none;cursor:pointer;padding:4px 2px;transition:transform 0.18s;">
             <svg width="22" height="42" viewBox="0 0 22 42" fill="none">
-              <!-- Corps gomme -->
               <rect x="3" y="12" width="16" height="20" rx="3" fill="#f0c0c0" stroke="rgba(0,0,0,0.15)" stroke-width="0.8"/>
-              <!-- Bande de couleur supérieure -->
               <rect x="3" y="12" width="16" height="8" rx="3" fill="#d47070" stroke="rgba(0,0,0,0.1)" stroke-width="0.5"/>
               <rect x="3" y="17" width="16" height="3" fill="#d47070"/>
-              <!-- Bande argentée centre -->
               <rect x="3" y="20" width="16" height="2.5" fill="#c8c8c8"/>
-              <!-- Reflet -->
               <rect x="5" y="13" width="4" height="6" rx="1.5" fill="rgba(255,255,255,0.3)"/>
-              <!-- Base plate -->
               <rect x="3" y="30" width="16" height="2" rx="1" fill="rgba(0,0,0,0.15)"/>
             </svg>
-            <div style="width:20px;height:3px;border-radius:1.5px;background:rgba(255,255,255,0.2);margin-top:1px;"></div>
+            <div style="width:24px;height:5px;border-radius:3px;background:rgba(0,0,0,0.15);margin-top:4px;"></div>
           </button>
 
           <!-- Flèche -->
-          <button class="mk-tool" id="mkt-arrow" onclick="selectMkTool('arrow',this)">
+          <button class="mk-tool" id="mkt-arrow" onclick="selectMkTool('arrow',this)" style="display:flex;flex-direction:column;align-items:center;gap:0;background:none;border:none;cursor:pointer;padding:4px 2px;transition:transform 0.18s;">
             <svg width="22" height="42" viewBox="0 0 22 42" fill="none">
-              <line x1="5" y1="36" x2="18" y2="8" stroke="rgba(255,255,255,0.75)" stroke-width="2.5" stroke-linecap="round"/>
-              <polyline points="10,8 18,8 18,17" stroke="rgba(255,255,255,0.75)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <line x1="5" y1="36" x2="18" y2="8" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+              <polyline points="10,8 18,8 18,17" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
             </svg>
-            <div class="mk-ink" id="mki-arrow"></div>
+            <div class="mk-ink" id="mki-arrow" style="width:24px;height:5px;border-radius:3px;background:#0A84FF;margin-top:4px;"></div>
           </button>
 
-          <!-- Formes -->
-          <button class="mk-tool" id="mkt-shapes" onclick="toggleMkShapes(this)">
-            <svg width="22" height="42" viewBox="0 0 22 42" fill="none">
-              <rect x="2" y="20" width="13" height="13" rx="2" stroke="rgba(255,255,255,0.7)" stroke-width="2" fill="none"/>
-              <circle cx="16" cy="13" r="5.5" stroke="rgba(255,255,255,0.7)" stroke-width="2" fill="none"/>
-            </svg>
-            <div class="mk-ink" id="mki-shapes"></div>
-          </button>
-
-          <div style="width:1px;height:32px;background:rgba(255,255,255,0.15);flex-shrink:0;margin:0 2px;align-self:center;"></div>
+          <div style="width:1px;height:32px;background:rgba(0,0,0,0.1);flex-shrink:0;margin:0 2px;align-self:center;"></div>
 
           <!-- Roue couleurs -->
           <button onclick="toggleMkColorPicker()" id="mkColorWheel"
-            style="width:40px;height:40px;border-radius:50%;border:3px solid rgba(255,255,255,0.5);cursor:pointer;flex-shrink:0;overflow:hidden;-webkit-tap-highlight-color:transparent;background:conic-gradient(#FF453A 0deg,#FF9F0A 51deg,#FFD60A 102deg,#30D158 154deg,#0A84FF 205deg,#BF5AF2 257deg,#FF453A 360deg);box-shadow:0 0 0 1px rgba(0,0,0,0.3);">
+            style="width:40px;height:40px;border-radius:50%;border:3px solid rgba(0,0,0,0.15);cursor:pointer;flex-shrink:0;overflow:hidden;-webkit-tap-highlight-color:transparent;background:conic-gradient(#FF453A 0deg,#FF9F0A 51deg,#FFD60A 102deg,#30D158 154deg,#0A84FF 205deg,#BF5AF2 257deg,#FF453A 360deg);box-shadow:0 0 0 1px rgba(0,0,0,0.08);align-self:center;margin-bottom:3px;">
           </button>
 
-          <div style="width:1px;height:32px;background:rgba(255,255,255,0.15);flex-shrink:0;margin:0 2px;align-self:center;"></div>
+          <div style="width:1px;height:32px;background:rgba(0,0,0,0.1);flex-shrink:0;margin:0 2px;align-self:center;"></div>
 
           <!-- Texte -->
           <button id="textToolBtn" onclick="activateTextTool()"
-            style="display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 6px;">
+            style="display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 6px;transition:transform 0.18s;">
             <svg width="26" height="30" viewBox="0 0 26 30" fill="none">
-              <text x="3" y="24" font-family="'DM Sans',Arial" font-size="24" font-weight="700" fill="rgba(255,255,255,0.7)">T</text>
+              <text x="3" y="24" font-family="'DM Sans',Arial" font-size="24" font-weight="700" fill="#333">T</text>
             </svg>
-            <div style="width:22px;height:3px;border-radius:1px;background:rgba(255,255,255,0.3);"></div>
+            <div style="width:22px;height:5px;border-radius:3px;background:#0A84FF;"></div>
           </button>
 
         </div>
 
         <!-- Sous-menu formes (caché) -->
         <div id="mkShapesMenu" style="display:none;flex-direction:row;gap:8px;justify-content:center;padding:0 12px 8px;">
-          <button onclick="selectMkShape('rect')" style="padding:7px 14px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.25);border-radius:8px;color:white;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>Rect</button>
-          <button onclick="selectMkShape('circle')" style="padding:7px 14px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.25);border-radius:8px;color:white;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Cercle</button>
-          <button onclick="selectMkShape('line')" style="padding:7px 14px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.25);border-radius:8px;color:white;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="4" y1="20" x2="20" y2="4"/></svg>Ligne</button>
+          <button onclick="selectMkShape('rect')" style="padding:7px 14px;background:rgba(0,0,0,0.06);border:1.5px solid rgba(0,0,0,0.15);border-radius:8px;color:#333;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>Rect</button>
+          <button onclick="selectMkShape('circle')" style="padding:7px 14px;background:rgba(0,0,0,0.06);border:1.5px solid rgba(0,0,0,0.15);border-radius:8px;color:#333;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Cercle</button>
+          <button onclick="selectMkShape('line')" style="padding:7px 14px;background:rgba(0,0,0,0.06);border:1.5px solid rgba(0,0,0,0.15);border-radius:8px;color:#333;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2"><line x1="4" y1="20" x2="20" y2="4"/></svg>Ligne</button>
         </div>
       </div>
 
@@ -1764,7 +1734,7 @@ function openPhotoEditor(dataUrl){
   cropRatioValue=null; cropHandles.rect={x:0,y:0,w:1,h:1};
   ['sliderBrightness','sliderContrast','sliderSaturation'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=0;});
   document.querySelectorAll('.editor-mode-btn').forEach(b=>b.classList.remove('active'));
-  setTimeout(()=>initEditCanvas(dataUrl),80);
+  setTimeout(()=>{initEditCanvas(dataUrl);showAnnotMode();},80);
 }
 
 function initEditCanvas(dataUrl){
@@ -1855,8 +1825,9 @@ function selectMkTool(tool,el){
   }
   _mkCurrentTool=tool;
   editState.tool=tool;
-  document.querySelectorAll('.mk-tool').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.mk-tool').forEach(b=>{b.classList.remove('active');b.style.transform='';});
   el.classList.add('active');
+  el.style.transform='translateY(-10px)';
   // Show popup anchored to clicked tool
   if(popup){
     popup.style.display='flex';
@@ -1919,8 +1890,55 @@ function selectMkShape(shape,el){
   const popup=document.getElementById('mkPopup');if(popup){popup.style.display='flex';popup.style.flexDirection='column';}
 }
 function undoEdit(){if(editState.history.length<=1){showToast('Rien à annuler');return;}editState.history.pop();const ctx=document.getElementById('editCanvas').getContext('2d');ctx.putImageData(editState.history[editState.history.length-1],0,0);}
-function showAnnotMode(){document.getElementById('annotToolbar').style.display='block';document.getElementById('adjustToolbar').style.display='none';document.getElementById('cropToolbar').style.display='none';const oldCrop=document.getElementById('cropOverlayDiv');if(oldCrop)oldCrop.remove();setActiveEditorBtn('btnAnnot');}
-function showAdjust(){document.getElementById('annotToolbar').style.display='none';document.getElementById('adjustToolbar').style.display='block';document.getElementById('cropToolbar').style.display='none';const oldCrop=document.getElementById('cropOverlayDiv');if(oldCrop)oldCrop.remove();setActiveEditorBtn('btnAdjust');}
+function _setAnnotHeader(isAnnot){
+  const h=document.getElementById('editorHeader');
+  if(!h)return;
+  if(isAnnot){
+    h.style.cssText='background:rgba(242,242,247,0.97);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);flex-shrink:0;padding:calc(env(safe-area-inset-top,0px)+10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;min-height:60px;border-bottom:1px solid rgba(0,0,0,0.1);';
+    h.innerHTML=
+      '<button onclick="cancelEdit()" style="width:36px;height:36px;background:rgba(0,0,0,0.06);border:1px solid rgba(0,0,0,0.08);border-radius:50%;cursor:pointer;color:#000;font-size:20px;display:flex;align-items:center;justify-content:center;">✕</button>'
+      +'<div style="display:flex;align-items:center;gap:12px;">'
+      +'<div style="background:rgba(0,0,0,0.06);border:1px solid rgba(0,0,0,0.08);border-radius:20px;display:flex;gap:2px;padding:4px 6px;">'
+      +'<button onclick="undoEdit()" style="background:none;border:none;cursor:pointer;color:#000;font-size:17px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;">←</button>'
+      +'<button onclick="redoEdit()" style="background:none;border:none;cursor:pointer;color:rgba(0,0,0,0.3);font-size:17px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;">→</button>'
+      +'</div>'
+      +'<span style="font-family:\'DM Sans\',sans-serif;font-size:16px;font-weight:600;color:#000;">Annotation</span>'
+      +'</div>'
+      +'<button onclick="confirmEdit()" style="width:36px;height:36px;background:#0A84FF;border:none;border-radius:50%;cursor:pointer;color:white;font-size:18px;display:flex;align-items:center;justify-content:center;">✓</button>';
+  } else {
+    h.style.cssText='background:#1c1c1e;flex-shrink:0;padding:calc(env(safe-area-inset-top,0px)+10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;min-height:60px;';
+    h.innerHTML=
+      '<button onclick="cancelEdit()" style="background:none;border:none;color:#FF453A;font-family:\'DM Sans\',sans-serif;font-size:15px;cursor:pointer;padding:8px 12px;min-width:80px;text-align:left;">Annuler</button>'
+      +'<div style="color:white;font-family:\'DM Sans\',sans-serif;font-size:15px;font-weight:600;" id="editorTitle">Modifier</div>'
+      +'<button onclick="confirmEdit()" style="background:none;border:none;color:#0A84FF;font-family:\'DM Sans\',sans-serif;font-size:15px;font-weight:600;cursor:pointer;padding:8px 12px;min-width:80px;text-align:right;">OK</button>';
+  }
+}
+function redoEdit(){ showToast('Redo non disponible'); }
+function showAnnotMode(){
+  document.getElementById('annotToolbar').style.display='block';
+  document.getElementById('adjustToolbar').style.display='none';
+  document.getElementById('cropToolbar').style.display='none';
+  const oldCrop=document.getElementById('cropOverlayDiv');if(oldCrop)oldCrop.remove();
+  setActiveEditorBtn('btnAnnot');
+  // Thème clair
+  const pe=document.getElementById('photoEditor');
+  if(pe)pe.style.background='#f2f2f7';
+  const ia=document.getElementById('editorImageArea');if(ia)ia.style.background='#f2f2f7';
+  const eb=document.getElementById('editorBottom');
+  if(eb){eb.style.background='transparent';eb.style.borderTop='none';}
+  const mr=document.getElementById('editorModeRow');if(mr)mr.style.display='none';
+  _setAnnotHeader(true);
+}
+function showAdjust(){
+  // Thème sombre restauré
+  const pe=document.getElementById('photoEditor');if(pe)pe.style.background='#000';
+  const ia=document.getElementById('editorImageArea');if(ia)ia.style.background='#111';
+  const eb=document.getElementById('editorBottom');
+  if(eb){eb.style.background='#1c1c1e';eb.style.borderTop='1px solid rgba(255,255,255,0.08)';}
+  const mr=document.getElementById('editorModeRow');if(mr)mr.style.display='flex';
+  _setAnnotHeader(false);
+  document.getElementById('annotToolbar').style.display='none';document.getElementById('adjustToolbar').style.display='block';document.getElementById('cropToolbar').style.display='none';const oldCrop=document.getElementById('cropOverlayDiv');if(oldCrop)oldCrop.remove();setActiveEditorBtn('btnAdjust');
+}
 function setActiveEditorBtn(id){document.querySelectorAll('.editor-mode-btn').forEach(b=>b.classList.remove('active'));const el=document.getElementById(id);if(el)el.classList.add('active');}
 
 function applyAdjust(type,val){
@@ -1935,6 +1953,13 @@ function applyAdjust(type,val){
 
 // ===== CROP AVEC POIGNÉES DRAGGABLES =====
 function showCropMode(){
+  // Thème sombre restauré
+  const pe=document.getElementById('photoEditor');if(pe)pe.style.background='#000';
+  const ia=document.getElementById('editorImageArea');if(ia)ia.style.background='#111';
+  const eb=document.getElementById('editorBottom');
+  if(eb){eb.style.background='#1c1c1e';eb.style.borderTop='1px solid rgba(255,255,255,0.08)';}
+  const mr=document.getElementById('editorModeRow');if(mr)mr.style.display='flex';
+  _setAnnotHeader(false);
   document.getElementById('annotToolbar').style.display='none';
   document.getElementById('adjustToolbar').style.display='none';
   document.getElementById('cropToolbar').style.display='block';
@@ -2088,18 +2113,11 @@ function rotateCrop(){
 
 // ===== TEXTE STYLE APPLE — toolbar au-dessus du clavier =====
 function activateTextTool(){
-  if(editState.tool==='text'){
-    // Déjà en mode texte — ajouter un nouveau bloc
-    _addTextItem();
-    return;
-  }
+  if(editState.tool==='text'){_addTextItem();return;}
   document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));
   document.getElementById('textToolBtn')?.classList.add('active');
   editState.tool='text';
   textItems=[];activeTextId=null;
-  // Cacher editorBottom — plein écran Apple-style
-  const eb=document.getElementById('editorBottom');if(eb)eb.style.display='none';
-  _showTextToolbar();
   _addTextItem();
 }
 
@@ -2121,7 +2139,9 @@ function _renderTextEl(item){
   const el=document.createElement('div');
   el.id=item.id;
   _applyTextElStyle(el,item,false);
-  el.textContent=item.text||'';
+  el.textContent=item.text||'Texte';
+  el.contentEditable='true';
+  el.addEventListener('input',()=>{item.text=el.textContent||el.innerText;});
   area.appendChild(el);
   item.el=el;
   // Drag
@@ -2135,7 +2155,7 @@ function _renderTextEl(item){
     e.preventDefault();e.stopPropagation();moved=true;
     item.x=ox+e.touches[0].clientX-sx;item.y=oy+e.touches[0].clientY-sy;
     el.style.left=item.x+'px';el.style.top=item.y+'px';
-    _showSizeBar(item);
+    _showTextContextBar(item);
   },{passive:false});
   el.addEventListener('touchend',e=>{if(!moved)_selectText(item.id);e.stopPropagation();},{passive:true});
   el.addEventListener('click',e=>{_selectText(item.id);e.stopPropagation();});
@@ -2148,25 +2168,51 @@ function _applyTextElStyle(el,item,active){
     +'text-decoration:'+(item.underline?'underline':'none')+';'
     +'cursor:grab;user-select:none;white-space:pre-wrap;max-width:85%;z-index:20;'
     +'text-shadow:1px 1px 4px rgba(0,0,0,0.85);touch-action:none;padding:4px 8px;border-radius:6px;'
-    +(active?'border:2px solid rgba(255,255,255,0.85);background:rgba(255,255,255,0.08);':'border:2px solid transparent;');
+    +(active?'outline:2px solid #0A84FF;border:2px solid transparent;background:rgba(10,132,255,0.08);':'border:2px solid transparent;outline:none;');
 }
 
 function _selectText(id){
   activeTextId=id;
   textItems.forEach(it=>{if(it.el)_applyTextElStyle(it.el,it,it.id===id);});
   const item=textItems.find(t=>t.id===id);if(!item)return;
-  // Rouvrir toolbar si besoin (re-sélection après ✓)
-  if(!document.getElementById('textEditToolbar')){
-    editState.tool='text';
-    const eb=document.getElementById('editorBottom');if(eb)eb.style.display='none';
-    _showTextToolbar();
-  }
-  const inp=document.getElementById('txtInlineInput');
-  if(inp){inp.value=item.text;inp.focus();}
-  _syncToolbarState(item);
-  _showSizeBar(item);
+  editState.tool='text';
+  _showTextContextBar(item);
+  if(item.el){item.el.focus();// place cursor at end
+    const r=document.createRange(),s=window.getSelection();r.selectNodeContents(item.el);r.collapse(false);s.removeAllRanges();s.addRange(r);}
 }
 
+function _showTextContextBar(item){
+  document.getElementById('txtCtxBar')?.remove();
+  if(!item||!item.el)return;
+  const area=document.getElementById('editorImageArea');if(!area)return;
+  const bar=document.createElement('div');
+  bar.id='txtCtxBar';
+  const curColor=item.color||'#FFFFFF';
+  bar.style.cssText='position:absolute;z-index:50;background:rgba(255,255,255,0.97);'
+    +'border-radius:14px;padding:8px 12px;display:flex;align-items:center;gap:10px;'
+    +'box-shadow:0 4px 20px rgba(0,0,0,0.2);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);';
+  bar.innerHTML=
+    '<button onclick="toggleTxtColorPicker()" id="txtCtxColor" style="width:28px;height:28px;border-radius:50%;background:'+curColor+';border:2px solid rgba(0,0,0,0.15);cursor:pointer;flex-shrink:0;"></button>'
+    +'<div style="width:1px;height:22px;background:rgba(0,0,0,0.12);"></div>'
+    +'<button onclick="changeTxtSize(-4)" style="background:none;border:none;cursor:pointer;color:#000;font-size:13px;font-weight:700;padding:4px;">A−</button>'
+    +'<button onclick="changeTxtSize(4)" style="background:none;border:none;cursor:pointer;color:#000;font-size:17px;font-weight:700;padding:4px;">A+</button>'
+    +'<div style="width:1px;height:22px;background:rgba(0,0,0,0.12);"></div>'
+    +'<button onclick="deleteTxtItem()" style="background:none;border:none;cursor:pointer;color:#FF3B30;font-size:17px;padding:4px;">🗑</button>'
+    +'<button onclick="commitAllText()" style="background:none;border:none;cursor:pointer;color:#0A84FF;font-size:17px;font-weight:700;padding:4px;">✓</button>';
+  area.appendChild(bar);
+  const ar=area.getBoundingClientRect(),er=item.el.getBoundingClientRect();
+  const barWidth=240;
+  const left=Math.min(Math.max(4,(er.left-ar.left+er.width/2-barWidth/2)),ar.width-barWidth-4);
+  const top=Math.max(8,er.top-ar.top-60);
+  bar.style.left=left+'px';bar.style.top=top+'px';bar.style.width=barWidth+'px';
+}
+function deleteTxtItem(){
+  if(!activeTextId)return;
+  const idx=textItems.findIndex(t=>t.id===activeTextId);
+  if(idx>=0){textItems[idx].el?.remove();textItems.splice(idx,1);}
+  activeTextId=null;
+  document.getElementById('txtCtxBar')?.remove();
+}
 function _showSizeBar(item){
   document.getElementById('txtSizeBar')?.remove();
   if(!item||!item.el)return;
@@ -2339,14 +2385,14 @@ function _syncToolbarState(item){
 
 // Ferme juste le clavier — le texte RESTE comme overlay sélectionnable
 function commitAllText(){
-  document.getElementById('txtInlineInput')?.blur();
+  if(activeTextId){const it=textItems.find(t=>t.id===activeTextId);if(it&&it.el)it.el.blur();}
   activeTextId=null;
-  textItems.forEach(it=>{if(it.el)_applyTextElStyle(it.el,it,false);});
+  textItems.forEach(it=>{if(it.el){it.el.contentEditable='false';_applyTextElStyle(it.el,it,false);}});
+  document.getElementById('txtCtxBar')?.remove();
   document.getElementById('txtSizeBar')?.remove();
   _closeTextToolbar();
   document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));
   editState.tool=null;
-  const eb=document.getElementById('editorBottom');if(eb)eb.style.display='';
 }
 
 // Brûle tout le texte sur le canvas — appelé au OK final seulement
@@ -2380,9 +2426,9 @@ function _closeTextToolbar(){
 function setTextColor(color,el){setTxtColor(color,el);}
 function cancelTextDialog(){
   textItems.forEach(it=>it.el?.remove());textItems=[];activeTextId=null;
+  document.getElementById('txtCtxBar')?.remove();
   _closeTextToolbar();editState.tool=null;
   document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));
-  const eb=document.getElementById('editorBottom');if(eb)eb.style.display='';
 }
 function placeTextAtPosition(){commitAllText();}
 function addTextAnnot(){activateTextTool();}
