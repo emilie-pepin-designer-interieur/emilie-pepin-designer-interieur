@@ -559,47 +559,42 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
     </div>
 
     <!-- BARRE ANNOTATION -->
-    <div id="annotToolbar" style="display:none;background:#2c2c2e;flex-shrink:0;
-         padding:10px 12px;">
-      <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:10px;
-                  -webkit-overflow-scrolling:touch;scrollbar-width:none;">
+    <div id="annotToolbar" style="display:none;background:#1c1c1e;flex-shrink:0;padding:10px 14px;padding-bottom:calc(env(safe-area-inset-bottom,0px)+10px);border-top:1px solid rgba(255,255,255,0.08);">
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
         <button class="annot-tool" onclick="setEditTool('pen',this)" title="Crayon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
         <button class="annot-tool" onclick="setEditTool('marker',this)" title="Marqueur">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/>
-            <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/><path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
         <button class="annot-tool" onclick="setEditTool('arrow',this)" title="Flèche">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <line x1="5" y1="19" x2="19" y2="5"/><polyline points="8 5 19 5 19 16"/></svg></button>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="8 5 19 5 19 16"/></svg></button>
         <button class="annot-tool" onclick="setEditTool('circle',this)" title="Cercle">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <circle cx="12" cy="12" r="9"/></svg></button>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></button>
         <button class="annot-tool" onclick="setEditTool('rect',this)" title="Rectangle">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <rect x="3" y="5" width="18" height="14" rx="2"/></svg></button>
-        <button class="annot-tool" onclick="activateTextTool()" id="textToolBtn" title="Texte">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <polyline points="4 7 4 4 20 4 20 7"/>
-            <line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></button>
         <button class="annot-tool" onclick="setEditTool('erase',this)" title="Effacer">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/>
-            <path d="M22 21H7"/></svg></button>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/></svg></button>
+        <div style="width:1px;height:28px;background:rgba(255,255,255,0.2);flex-shrink:0;margin:0 2px;"></div>
+        <!-- Rond couleur -->
+        <button id="annotColorBtn" onclick="toggleAnnotColorPicker()"
+          style="width:34px;height:34px;border-radius:50%;background:#FF453A;border:3px solid white;cursor:pointer;flex-shrink:0;box-shadow:0 0 0 1px rgba(0,0,0,0.3);-webkit-tap-highlight-color:transparent;"></button>
+        <div style="width:1px;height:28px;background:rgba(255,255,255,0.2);flex-shrink:0;margin:0 2px;"></div>
+        <!-- + Texte -->
+        <button id="textToolBtn" onclick="activateTextTool()"
+          style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.25);border-radius:10px;color:white;padding:7px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;-webkit-tap-highlight-color:transparent;flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Texte</button>
       </div>
-      <!-- Couleurs + taille -->
-      <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;">
+      <!-- Palette couleurs dessin (cachée par défaut) -->
+      <div id="annotColorPicker" style="display:none;flex-wrap:wrap;gap:8px;justify-content:center;padding-top:10px;">
         <div onclick="setEditColor('#FF453A',this)" class="color-dot active" style="background:#FF453A;border-color:white;"></div>
         <div onclick="setEditColor('#FF9F0A',this)" class="color-dot" style="background:#FF9F0A;"></div>
         <div onclick="setEditColor('#FFD60A',this)" class="color-dot" style="background:#FFD60A;"></div>
         <div onclick="setEditColor('#30D158',this)" class="color-dot" style="background:#30D158;"></div>
         <div onclick="setEditColor('#0A84FF',this)" class="color-dot" style="background:#0A84FF;"></div>
         <div onclick="setEditColor('#BF5AF2',this)" class="color-dot" style="background:#BF5AF2;"></div>
-        <div onclick="setEditColor('#FFFFFF',this)" class="color-dot" style="background:white;border:2px solid rgba(255,255,255,0.4)!important;"></div>
-        <div onclick="setEditColor('#6B2D45',this)" class="color-dot" style="background:#6B2D45;"></div>
+        <div onclick="setEditColor('#FFFFFF',this)" class="color-dot" style="background:white;"></div>
+        <div onclick="setEditColor('#000000',this)" class="color-dot" style="background:#222;"></div>
         <input type="range" id="editBrushSize" min="1" max="24" value="4"
-          style="width:80px;accent-color:#0A84FF;" oninput="editState.size=parseInt(this.value)">
+          style="width:90px;accent-color:#0A84FF;" oninput="editState.size=parseInt(this.value)">
       </div>
     </div>
 
@@ -1705,7 +1700,19 @@ function editMoveDraw(ctx,x,y){
 function editEndDraw(ctx){if(!editState.drawing)return;editState.drawing=false;ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.beginPath();editState.history.push(ctx.getImageData(0,0,ctx.canvas.width,ctx.canvas.height));}
 function drawArrow(ctx,x1,y1,x2,y2){const headLen=Math.max(14,editState.size*4),angle=Math.atan2(y2-y1,x2-x1);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-headLen*Math.cos(angle-Math.PI/6),y2-headLen*Math.sin(angle-Math.PI/6));ctx.lineTo(x2-headLen*Math.cos(angle+Math.PI/6),y2-headLen*Math.sin(angle+Math.PI/6));ctx.closePath();ctx.fill();}
 function setEditTool(tool,btn){if(editState.tool===tool){editState.tool=null;document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));return;}editState.tool=tool;document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
-function setEditColor(color,el){editState.color=color;document.querySelectorAll('.color-dot').forEach(e=>e.classList.remove('active'));el.classList.add('active');}
+function setEditColor(color,el){
+  editState.color=color;
+  document.querySelectorAll('.color-dot').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  // Mettre à jour le rond couleur dans la barre
+  const btn=document.getElementById('annotColorBtn');if(btn)btn.style.background=color;
+}
+
+function toggleAnnotColorPicker(){
+  const p=document.getElementById('annotColorPicker');
+  if(!p)return;
+  p.style.display=p.style.display==='flex'?'none':'flex';
+}
 function undoEdit(){if(editState.history.length<=1){showToast('Rien à annuler');return;}editState.history.pop();const ctx=document.getElementById('editCanvas').getContext('2d');ctx.putImageData(editState.history[editState.history.length-1],0,0);}
 function showAnnotMode(){document.getElementById('annotToolbar').style.display='block';document.getElementById('adjustToolbar').style.display='none';document.getElementById('cropToolbar').style.display='none';const oldCrop=document.getElementById('cropOverlayDiv');if(oldCrop)oldCrop.remove();setActiveEditorBtn('btnAnnot');}
 function showAdjust(){document.getElementById('annotToolbar').style.display='none';document.getElementById('adjustToolbar').style.display='block';document.getElementById('cropToolbar').style.display='none';const oldCrop=document.getElementById('cropOverlayDiv');if(oldCrop)oldCrop.remove();setActiveEditorBtn('btnAdjust');}
@@ -1945,31 +1952,41 @@ function _showTextToolbar(){
   const tb=document.createElement('div');
   tb.id='textEditToolbar';
   tb.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:500;background:#1c1c1e;border-top:1px solid rgba(255,255,255,0.12);';
+  const curColor=textColor||'#FFFFFF';
   const colors=['#FFFFFF','#FF453A','#FFD60A','#30D158','#0A84FF','#BF5AF2','#FF9F0A','#000000'];
-  const dots=colors.map(c=>'<div onclick="setTxtColor(\''+c+'\',this)" class="txc" style="width:26px;height:26px;border-radius:50%;background:'+c+';cursor:pointer;flex-shrink:0;border:2px solid '+(c===textColor?'white':'transparent')+';box-sizing:border-box;transition:transform .15s;"></div>').join('');
+  const colorDots=colors.map(c=>'<div onclick="setTxtColor(\''+c+'\',this)" class="txc" style="width:28px;height:28px;border-radius:50%;background:'+c+';cursor:pointer;flex-shrink:0;border:2px solid '+(c===curColor?'white':'transparent')+';box-sizing:border-box;"></div>').join('');
   tb.innerHTML=
-    '<div style="display:flex;align-items:center;gap:6px;padding:10px 10px 6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;">'
-    +dots
-    +'<div style="width:1px;height:24px;background:rgba(255,255,255,0.2);flex-shrink:0;"></div>'
-    +'<button onclick="setTxtFont(\'\\\'DM Sans\\\'\',this)" class="txf" style="font-family:\'DM Sans\',sans-serif;padding:5px 9px;border:1.5px solid white;border-radius:7px;background:transparent;color:white;font-size:14px;cursor:pointer;flex-shrink:0;">Aa</button>'
-    +'<button onclick="setTxtFont(\'Georgia\',this)" class="txf" style="font-family:Georgia,serif;padding:5px 9px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:rgba(255,255,255,0.6);font-size:14px;font-style:italic;cursor:pointer;flex-shrink:0;">Aa</button>'
-    +'<button onclick="setTxtFont(\'monospace\',this)" class="txf" style="font-family:monospace;padding:5px 9px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:rgba(255,255,255,0.6);font-size:13px;cursor:pointer;flex-shrink:0;">Aa</button>'
-    +'<div style="width:1px;height:24px;background:rgba(255,255,255,0.2);flex-shrink:0;"></div>'
-    +'<button id="txtBBtn" onclick="toggleTxtBold()" style="width:33px;height:33px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:rgba(255,255,255,0.15);color:white;font-weight:bold;font-size:15px;cursor:pointer;flex-shrink:0;">B</button>'
-    +'<button id="txtIBtn" onclick="toggleTxtItalic()" style="width:33px;height:33px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:white;font-style:italic;font-size:15px;cursor:pointer;flex-shrink:0;">I</button>'
-    +'<button id="txtUBtn" onclick="toggleTxtUnderline()" style="width:33px;height:33px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:white;text-decoration:underline;font-size:14px;cursor:pointer;flex-shrink:0;">U</button>'
-    +'<div style="width:1px;height:24px;background:rgba(255,255,255,0.2);flex-shrink:0;"></div>'
-    +'<button onclick="changeTxtSize(-5)" style="width:33px;height:33px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:white;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;">A-</button>'
-    +'<button onclick="changeTxtSize(5)" style="width:33px;height:33px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:white;font-size:16px;font-weight:600;cursor:pointer;flex-shrink:0;">A+</button>'
-    +'<div style="width:1px;height:24px;background:rgba(255,255,255,0.2);flex-shrink:0;"></div>'
-    +'<button onclick="_addTextItem()" style="width:33px;height:33px;border:1.5px solid rgba(255,255,255,0.3);border-radius:7px;background:transparent;color:white;font-size:20px;line-height:1;cursor:pointer;flex-shrink:0;">+</button>'
-    +'<button onclick="deleteTxtItem()" style="width:33px;height:33px;border:1.5px solid rgba(255,69,58,0.5);border-radius:7px;background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">'
-    +'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FF453A" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'
-    +'<button onclick="commitAllText()" style="margin-left:4px;padding:7px 14px;background:#0A84FF;border:none;border-radius:8px;color:white;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap;">Terminer</button>'
+    // Champ texte
+    '<input id="txtInlineInput" type="text" placeholder="Tapez votre texte..." autocomplete="off" autocorrect="off" spellcheck="false"'
+    +' style="width:calc(100% - 24px);margin:10px 12px 8px;padding:11px 14px;background:#3a3a3c;border:none;border-radius:10px;color:white;font-size:16px;font-family:\'DM Sans\',sans-serif;outline:none;box-sizing:border-box;display:block;"'
+    +' oninput="onTxtInput(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();_addTextItem();}">'
+    // Barre compacte : couleur | police | taille | gras | ✓
+    +'<div style="display:flex;align-items:center;gap:10px;padding:6px 14px 12px;padding-bottom:calc(env(safe-area-inset-bottom,0px)+10px);">'
+    // Rond couleur — ouvre/ferme la palette
+    +'<button id="txtColorCircle" onclick="toggleTxtColorPicker()" style="width:36px;height:36px;border-radius:50%;background:'+curColor+';border:3px solid rgba(255,255,255,0.7);cursor:pointer;flex-shrink:0;box-shadow:0 0 0 1px rgba(0,0,0,0.4);"></button>'
+    // Police — ouvre/ferme le sélecteur
+    +'<button id="txtFontBtn" onclick="toggleTxtFontPicker()" style="padding:7px 11px;background:#3a3a3c;border:none;border-radius:9px;color:white;font-family:\'DM Sans\',sans-serif;font-size:14px;cursor:pointer;flex-shrink:0;white-space:nowrap;">Aa ▾</button>'
+    // Taille en chiffres
+    +'<input id="txtSizeInp" type="number" value="36" min="10" max="96" inputmode="numeric"'
+    +' style="width:54px;padding:7px 6px;background:#3a3a3c;border:none;border-radius:9px;color:white;font-size:14px;font-family:\'DM Sans\',sans-serif;text-align:center;outline:none;-moz-appearance:textfield;"'
+    +' oninput="setTxtSizeNum(parseInt(this.value)||36)">'
+    // Gras
+    +'<button id="txtBBtn" onclick="toggleTxtBold()" style="width:38px;height:38px;background:rgba(255,255,255,0.18);border:1.5px solid white;border-radius:9px;color:white;font-weight:bold;font-size:17px;cursor:pointer;flex-shrink:0;">B</button>'
+    // Spacer
+    +'<div style="flex:1;"></div>'
+    // ✓ Valider
+    +'<button onclick="commitAllText()" style="width:42px;height:38px;background:#30D158;border:none;border-radius:10px;color:white;font-size:20px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✓</button>'
     +'</div>'
-    +'<input id="txtInlineInput" type="text" placeholder="Tapez votre texte..." autocomplete="off" autocorrect="off"'
-    +' style="width:calc(100% - 24px);margin:0 12px 10px;padding:11px 14px;background:#3a3a3c;border:none;border-radius:10px;color:white;font-size:16px;font-family:\'DM Sans\',sans-serif;outline:none;box-sizing:border-box;display:block;"'
-    +' oninput="onTxtInput(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();_addTextItem();}">';
+    // Palette couleurs (cachée)
+    +'<div id="txtColorPicker" style="display:none;flex-wrap:wrap;gap:8px;justify-content:center;padding:6px 14px 10px;">'
+    +colorDots
+    +'</div>'
+    // Sélecteur police (caché)
+    +'<div id="txtFontPicker" style="display:none;flex-direction:row;gap:8px;padding:6px 14px 10px;">'
+    +'<button onclick="setTxtFont(\'\\\'DM Sans\\\'\',this)" class="txf" style="flex:1;font-family:\'DM Sans\',sans-serif;padding:8px;border:2px solid white;border-radius:8px;background:rgba(255,255,255,0.1);color:white;font-size:15px;cursor:pointer;">Sans</button>'
+    +'<button onclick="setTxtFont(\'Georgia\',this)" class="txf" style="flex:1;font-family:Georgia,serif;padding:8px;border:2px solid rgba(255,255,255,0.3);border-radius:8px;background:transparent;color:rgba(255,255,255,0.7);font-size:15px;font-style:italic;cursor:pointer;">Serif</button>'
+    +'<button onclick="setTxtFont(\'monospace\',this)" class="txf" style="flex:1;font-family:monospace;padding:8px;border:2px solid rgba(255,255,255,0.3);border-radius:8px;background:transparent;color:rgba(255,255,255,0.7);font-size:13px;cursor:pointer;">Mono</button>'
+    +'</div>';
   document.body.appendChild(tb);
   // Repositionner au-dessus du clavier via visualViewport
   if(window.visualViewport){
@@ -1981,6 +1998,22 @@ function _showTextToolbar(){
   setTimeout(()=>document.getElementById('txtInlineInput')?.focus(),120);
 }
 
+function toggleTxtColorPicker(){
+  const p=document.getElementById('txtColorPicker'),f=document.getElementById('txtFontPicker');
+  if(f)f.style.display='none';
+  if(p)p.style.display=p.style.display==='flex'?'none':'flex';
+}
+function toggleTxtFontPicker(){
+  const p=document.getElementById('txtFontPicker'),c=document.getElementById('txtColorPicker');
+  if(c)c.style.display='none';
+  if(p)p.style.display=p.style.display==='flex'?'none':'flex';
+}
+function setTxtSizeNum(v){
+  const item=textItems.find(t=>t.id===activeTextId);if(!item)return;
+  item.size=Math.max(10,Math.min(96,v));
+  if(item.el)item.el.style.fontSize=item.size+'px';
+}
+
 function onTxtInput(val){
   const item=textItems.find(t=>t.id===activeTextId);if(!item)return;
   item.text=val;
@@ -1989,15 +2022,24 @@ function onTxtInput(val){
 
 function setTxtColor(c,el){
   textColor=c;
-  document.querySelectorAll('.txc').forEach(d=>{d.style.border='2px solid transparent';d.style.transform='';});
-  if(el){el.style.border='2px solid white';el.style.transform='scale(1.25)';}
+  document.querySelectorAll('.txc').forEach(d=>{d.style.border='2px solid transparent';});
+  if(el)el.style.border='2px solid white';
+  // Mettre à jour le rond couleur de la barre
+  const circle=document.getElementById('txtColorCircle');
+  if(circle)circle.style.background=c;
+  // Fermer la palette
+  const p=document.getElementById('txtColorPicker');if(p)p.style.display='none';
   const item=textItems.find(t=>t.id===activeTextId);
   if(item){item.color=c;if(item.el)item.el.style.color=c;}
 }
 
 function setTxtFont(f,el){
-  document.querySelectorAll('.txf').forEach(b=>{b.style.borderColor='rgba(255,255,255,0.3)';b.style.color='rgba(255,255,255,0.6)';});
-  if(el){el.style.borderColor='white';el.style.color='white';}
+  document.querySelectorAll('.txf').forEach(b=>{b.style.borderColor='rgba(255,255,255,0.3)';b.style.color='rgba(255,255,255,0.7)';b.style.background='transparent';});
+  if(el){el.style.borderColor='white';el.style.color='white';el.style.background='rgba(255,255,255,0.12)';}
+  // Mettre à jour le libellé du bouton police et fermer le menu
+  const btn=document.getElementById('txtFontBtn');
+  if(btn)btn.textContent=(el?el.textContent.trim():'Aa')+' ▾';
+  const p=document.getElementById('txtFontPicker');if(p)p.style.display='none';
   const item=textItems.find(t=>t.id===activeTextId);
   if(item){item.font=f;if(item.el)item.el.style.fontFamily=f+',Arial,sans-serif';}
 }
