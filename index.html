@@ -1462,7 +1462,7 @@ function renderViewerPhotos(){
     const src=p.dataUrl||p.odUrl||'';
     return `<div style="width:100vw;min-width:100vw;flex:0 0 100vw;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#000;">
       ${src
-        ? `<img src="${src}" style="width:100vw;height:100%;object-fit:contain;display:block;flex-shrink:0;" loading="lazy">`
+        ? `<img src="${src}" style="width:100vw;height:auto;max-height:100%;object-fit:contain;display:block;" loading="lazy">`
         : `<div style="color:rgba(255,255,255,0.3);font-size:13px;font-family:'DM Sans',sans-serif;">Chargement...</div>`
       }
     </div>`;
@@ -2250,49 +2250,42 @@ function closeGalleryScreen() {
 // DÉTAIL PHOTO plein écran + pellicule + outils
 function openPhotoDetail(index) {
   galleryCurrentIndex = index;
-  let detail = document.getElementById('photoDetailScreen');
-  if(!detail) {
-    detail = document.createElement('div');
-    detail.id = 'photoDetailScreen';
-    detail.style.cssText = 'position:fixed;inset:0;z-index:210;background:#000;display:flex;flex-direction:column;';
-    detail.innerHTML = `
-      <div style="position:absolute;top:0;left:0;right:0;z-index:10;padding:calc(env(safe-area-inset-top,44px)+10px) 16px 14px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(0,0,0,0.75),transparent);">
-        <button onclick="closePhotoDetail()" style="background:none;border:none;color:white;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:16px;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;">
-          <svg width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="white" stroke-width="2.5"><polyline points="7 1 1 7.5 7 14"/></svg>Photos
-        </button>
-        <div id="detailCounter" style="color:white;font-family:'DM Sans',sans-serif;font-size:13px;opacity:0.85;"></div>
-        <button onclick="shareDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;padding:4px;-webkit-tap-highlight-color:transparent;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-        </button>
-      </div>
-      <div id="detailMain" style="flex:1;overflow:hidden;position:relative;display:flex;align-items:center;">
-        <div id="detailTrack" style="display:flex;height:100%;will-change:transform;"></div>
-      </div>
-      <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.85),transparent);padding-bottom:calc(env(safe-area-inset-bottom,0px)+8px);">
-        <div style="display:flex;justify-content:space-around;padding:10px 16px 12px;">
-          <button onclick="annotateDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;min-width:60px;">
-            <div style="width:46px;height:46px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></div>
-            <span style="font-family:'DM Sans',sans-serif;font-size:11px;color:rgba(255,255,255,0.85);">Modifier</span>
-          </button>
-          <button onclick="saveDetailToOneDrive()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;min-width:60px;">
-            <div style="width:46px;height:46px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
-            <span style="font-family:'DM Sans',sans-serif;font-size:11px;color:rgba(255,255,255,0.85);">OneDrive</span>
-          </button>
-          <button onclick="deleteDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;min-width:60px;">
-            <div style="width:46px;height:46px;background:rgba(255,69,58,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF453A" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
-            <span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#FF453A;">Supprimer</span>
-          </button>
-        </div>
-        <div id="detailStrip" style="display:flex;gap:3px;padding:0 8px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center;height:68px;"></div>
-      </div>`;
-    document.body.appendChild(detail);
-    const main = detail.querySelector('#detailMain');
-    let sx=0,sy=0,sw=false;
-    main.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;sw=false;},{passive:true});
-    main.addEventListener('touchmove',e=>{if(Math.abs(e.touches[0].clientX-sx)>Math.abs(e.touches[0].clientY-sy)&&Math.abs(e.touches[0].clientX-sx)>10)sw=true;},{passive:true});
-    main.addEventListener('touchend',e=>{if(!sw)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50){if(dx<0&&galleryCurrentIndex<sessionPhotos.length-1)scrollDetailTo(galleryCurrentIndex+1,true);else if(dx>0&&galleryCurrentIndex>0)scrollDetailTo(galleryCurrentIndex-1,true);}},{passive:true});
-  }
-  detail.style.display='flex';
+  const old = document.getElementById('photoDetailScreen');
+  if(old) old.remove();
+  const detail = document.createElement('div');
+  detail.id = 'photoDetailScreen';
+  detail.style.cssText = 'position:fixed;inset:0;z-index:210;background:#000;display:flex;flex-direction:column;';
+  detail.innerHTML = '<div style="position:relative;height:calc(env(safe-area-inset-top,0px) + 82px);background:rgba(0,0,0,0.75);flex-shrink:0;">'
+    + '<div style="position:absolute;bottom:12px;left:16px;right:16px;display:flex;align-items:center;justify-content:space-between;">'
+    + '<button onclick="closePhotoDetail()" style="background:none;border:none;color:white;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:16px;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;width:52px;height:52px;justify-content:center;">'
+    + '<svg width="11" height="18" viewBox="0 0 11 18" fill="none" stroke="white" stroke-width="2.5"><polyline points="9 1 1 9 9 17"/></svg></button>'
+    + '<div id="detailCounter" style="color:white;font-family:\'DM Sans\',sans-serif;font-size:13px;opacity:0.85;"></div>'
+    + '<button onclick="shareDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;width:52px;height:52px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">'
+    + '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>'
+    + '</button></div></div>'
+    + '<div id="detailMain" style="flex:1;min-height:0;overflow:hidden;position:relative;background:#000;">'
+    + '<div id="detailTrack" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;will-change:transform;"></div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.85);padding-bottom:calc(env(safe-area-inset-bottom,0px)+8px);flex-shrink:0;">'
+    + '<div style="display:flex;justify-content:space-around;padding:10px 16px 12px;">'
+    + '<button onclick="annotateDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;min-width:60px;">'
+    + '<div style="width:46px;height:46px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></div>'
+    + '<span style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:rgba(255,255,255,0.85);">Modifier</span></button>'
+    + '<button onclick="saveDetailToOneDrive()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;min-width:60px;">'
+    + '<div style="width:46px;height:46px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>'
+    + '<span style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:rgba(255,255,255,0.85);">OneDrive</span></button>'
+    + '<button onclick="deleteDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;min-width:60px;">'
+    + '<div style="width:46px;height:46px;background:rgba(255,69,58,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF453A" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>'
+    + '<span style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:#FF453A;">Supprimer</span></button>'
+    + '</div>'
+    + '<div id="detailStrip" style="display:flex;gap:3px;padding:0 8px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center;height:62px;"></div>'
+    + '</div>';
+  document.body.appendChild(detail);
+  const main = detail.querySelector('#detailMain');
+  let sx=0,sy=0,sw=false;
+  main.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;sw=false;},{passive:true});
+  main.addEventListener('touchmove',e=>{if(Math.abs(e.touches[0].clientX-sx)>Math.abs(e.touches[0].clientY-sy)&&Math.abs(e.touches[0].clientX-sx)>10)sw=true;},{passive:true});
+  main.addEventListener('touchend',e=>{if(!sw)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50){if(dx<0&&galleryCurrentIndex<sessionPhotos.length-1)scrollDetailTo(galleryCurrentIndex+1,true);else if(dx>0&&galleryCurrentIndex>0)scrollDetailTo(galleryCurrentIndex-1,true);}},{passive:true});
   renderDetailPhotos();
   scrollDetailTo(index,false);
   renderDetailStrip();
@@ -2304,7 +2297,10 @@ function renderDetailPhotos() {
   track.style.transition='none';
   track.innerHTML=sessionPhotos.map((p)=>{
     const src=p.dataUrl||p.odUrl||'';
-    return `<div style="min-width:100vw;height:100%;display:flex;align-items:center;justify-content:center;background:#000;">${src?`<img src="${src}" style="max-width:100%;max-height:100%;object-fit:contain;" loading="lazy">`:`<div style="color:rgba(255,255,255,0.3);font-size:14px;font-family:'DM Sans',sans-serif;">Chargement...</div>`}</div>`;
+    const img=src
+      ?'<img src="'+src+'" style="width:100vw;height:auto;max-height:100%;object-fit:contain;display:block;" loading="lazy">'
+      :'<div style="color:rgba(255,255,255,0.3);font-size:14px;font-family:\'DM Sans\',sans-serif;">Chargement...</div>';
+    return '<div style="width:100vw;min-width:100vw;flex:0 0 100vw;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#000;">'+img+'</div>';
   }).join('');
 }
 
