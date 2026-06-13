@@ -527,13 +527,13 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
       <!-- Rangée modes + undo + OneDrive -->
       <div style="display:flex;align-items:center;gap:6px;padding:7px 12px 5px;">
         <button onclick="undoEdit()" style="background:rgba(255,255,255,0.08);border:none;color:white;width:36px;height:36px;border-radius:10px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;">↩</button>
-        <div style="flex:1;display:flex;justify-content:center;gap:4px;">
-          <button onclick="showAnnotMode()" id="btnAnnot" class="editor-mode-btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg><span>Annoter</span></button>
-          <button onclick="showAdjust()" id="btnAdjust" class="editor-mode-btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span>Ajuster</span></button>
-          <button onclick="showCropMode()" id="btnCrop" class="editor-mode-btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg><span>Recadrer</span></button>
+        <div style="flex:1;display:flex;justify-content:center;gap:3px;">
+          <button onclick="showAnnotMode()" id="btnAnnot" class="editor-mode-btn" title="Annoter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+          <button onclick="showAdjust()" id="btnAdjust" class="editor-mode-btn" title="Ajuster"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" stroke-dasharray="4 3"/></svg></button>
+          <button onclick="showCropMode()" id="btnCrop" class="editor-mode-btn" title="Recadrer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg></button>
         </div>
-        <button onclick="saveCurrentPhotoToOneDrive()" style="background:#0A84FF;border:none;color:white;padding:7px 10px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:3px;flex-shrink:0;-webkit-tap-highlight-color:transparent;">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>OneDrive</button>
+        <button onclick="saveCurrentPhotoToOneDrive()" title="OneDrive" style="background:rgba(10,132,255,0.85);border:none;color:white;width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
       </div>
 
       <!-- ANNOTER : outils style Apple Markup -->
@@ -573,64 +573,95 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
         <!-- Outils Apple Markup -->
         <div style="display:flex;align-items:flex-end;justify-content:center;gap:4px;padding:8px 8px;padding-bottom:calc(env(safe-area-inset-bottom,0px)+10px);">
 
-          <!-- Stylo (pen) -->
+          <!-- Stylo fin -->
           <button class="mk-tool" id="mkt-pen" onclick="selectMkTool('pen',this)">
-            <svg width="26" height="38" viewBox="0 0 26 38" fill="none">
-              <rect x="7" y="2" width="12" height="22" rx="4" fill="#3a3a3c" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
-              <polygon points="7,24 13,36 19,24" fill="#3a3a3c" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
-              <circle cx="13" cy="35" r="1.5" fill="white"/>
-              <rect x="9" y="8" width="8" height="3" rx="1.5" fill="rgba(255,255,255,0.15)"/>
+            <svg width="22" height="42" viewBox="0 0 22 42" fill="none">
+              <!-- Corps métallique effilé -->
+              <rect x="7" y="1" width="8" height="26" rx="4" fill="url(#penGrad)" stroke="rgba(255,255,255,0.25)" stroke-width="0.8"/>
+              <defs><linearGradient id="penGrad" x1="7" y1="0" x2="15" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5a5a5e"/><stop offset="50%" stop-color="#8a8a8e"/><stop offset="100%" stop-color="#4a4a4e"/></linearGradient></defs>
+              <!-- Clip métal -->
+              <rect x="13.5" y="4" width="2" height="18" rx="1" fill="rgba(255,255,255,0.18)"/>
+              <!-- Pointe conique -->
+              <polygon points="7,27 11,40 15,27" fill="#9a9a9e" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+              <!-- Bille -->
+              <circle cx="11" cy="40" r="1.2" fill="#d0d0d4"/>
             </svg>
             <div class="mk-ink" id="mki-pen"></div>
           </button>
 
-          <!-- Marqueur (marker) -->
+          <!-- Marqueur large -->
           <button class="mk-tool" id="mkt-marker" onclick="selectMkTool('marker',this)">
-            <svg width="26" height="38" viewBox="0 0 26 38" fill="none">
-              <rect x="5" y="2" width="16" height="20" rx="5" fill="#3a3a3c" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
-              <rect x="8" y="22" width="10" height="8" rx="2" fill="#3a3a3c" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
-              <rect x="9" y="30" width="8" height="5" rx="1.5" fill="#555"/>
-              <rect x="7" y="8" width="12" height="4" rx="2" fill="rgba(255,255,255,0.1)"/>
+            <svg width="22" height="42" viewBox="0 0 22 42" fill="none">
+              <defs><linearGradient id="mkGrad" x1="4" y1="0" x2="18" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3a3a3e"/><stop offset="50%" stop-color="#5a5a5e"/><stop offset="100%" stop-color="#2e2e32"/></linearGradient></defs>
+              <!-- Corps large -->
+              <rect x="4" y="1" width="14" height="24" rx="5" fill="url(#mkGrad)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+              <!-- Reflet -->
+              <rect x="6" y="4" width="5" height="14" rx="2.5" fill="rgba(255,255,255,0.12)"/>
+              <!-- Réduction -->
+              <path d="M6 25 L5 31 L17 31 L16 25 Z" fill="#4a4a4e" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+              <!-- Pointe biseautée -->
+              <rect x="6" y="31" width="10" height="7" rx="1.5" fill="#666" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+              <!-- Trait biseau -->
+              <line x1="6" y1="35" x2="16" y2="35" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
             </svg>
-            <div class="mk-ink mk-ink-thick" id="mki-marker" style="opacity:0.55;"></div>
+            <div class="mk-ink mk-ink-thick" id="mki-marker" style="opacity:0.65;"></div>
           </button>
 
-          <!-- Crayon (pencil) -->
+          <!-- Crayon bois -->
           <button class="mk-tool" id="mkt-pencil" onclick="selectMkTool('pencil',this)">
-            <svg width="26" height="38" viewBox="0 0 26 38" fill="none">
-              <rect x="8" y="2" width="10" height="20" rx="3" fill="#c8a060" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-              <rect x="8" y="22" width="10" height="6" rx="1" fill="#d4976a"/>
-              <polygon points="8,28 13,36 18,28" fill="#f5deb3"/>
-              <polygon points="10,30 13,36 16,30" fill="#888"/>
-              <circle cx="13" cy="35.5" r="1" fill="#555"/>
+            <svg width="22" height="42" viewBox="0 0 22 42" fill="none">
+              <defs><linearGradient id="pcGrad" x1="7" y1="0" x2="15" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#b8893a"/><stop offset="40%" stop-color="#d9a84e"/><stop offset="100%" stop-color="#b07830"/></linearGradient></defs>
+              <!-- Corps bois -->
+              <rect x="7" y="1" width="8" height="22" rx="1" fill="url(#pcGrad)" stroke="rgba(0,0,0,0.2)" stroke-width="0.5"/>
+              <!-- Lignes grain bois -->
+              <line x1="9" y1="1" x2="9" y2="23" stroke="rgba(0,0,0,0.12)" stroke-width="0.6"/>
+              <line x1="13" y1="1" x2="13" y2="23" stroke="rgba(255,255,255,0.1)" stroke-width="0.6"/>
+              <!-- Bande gomme rose -->
+              <rect x="7" y="1" width="8" height="5" rx="1" fill="#e06060" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/>
+              <!-- Virole métal -->
+              <rect x="7" y="6" width="8" height="3" fill="#b0b0b0" stroke="rgba(0,0,0,0.2)" stroke-width="0.4"/>
+              <!-- Zone taillée (chair bois) -->
+              <polygon points="7,23 11,36 15,23" fill="#e8c98a" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/>
+              <!-- Graphite conique -->
+              <polygon points="9,29 11,36 13,29" fill="#555"/>
+              <!-- Pointe graphite -->
+              <circle cx="11" cy="36" r="0.8" fill="#333"/>
             </svg>
-            <div class="mk-ink" id="mki-pencil" style="opacity:0.7;"></div>
+            <div class="mk-ink" id="mki-pencil" style="opacity:0.75;"></div>
           </button>
 
-          <!-- Gomme (eraser) -->
+          <!-- Gomme -->
           <button class="mk-tool" id="mkt-erase" onclick="selectMkTool('erase',this)">
-            <svg width="26" height="38" viewBox="0 0 26 38" fill="none">
-              <rect x="4" y="10" width="18" height="20" rx="4" fill="#e8a0a0" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-              <rect x="4" y="10" width="18" height="8" rx="4" fill="#cc7070"/>
-              <rect x="4" y="30" width="18" height="2" rx="1" fill="rgba(255,255,255,0.2)"/>
+            <svg width="22" height="42" viewBox="0 0 22 42" fill="none">
+              <!-- Corps gomme -->
+              <rect x="3" y="12" width="16" height="20" rx="3" fill="#f0c0c0" stroke="rgba(0,0,0,0.15)" stroke-width="0.8"/>
+              <!-- Bande de couleur supérieure -->
+              <rect x="3" y="12" width="16" height="8" rx="3" fill="#d47070" stroke="rgba(0,0,0,0.1)" stroke-width="0.5"/>
+              <rect x="3" y="17" width="16" height="3" fill="#d47070"/>
+              <!-- Bande argentée centre -->
+              <rect x="3" y="20" width="16" height="2.5" fill="#c8c8c8"/>
+              <!-- Reflet -->
+              <rect x="5" y="13" width="4" height="6" rx="1.5" fill="rgba(255,255,255,0.3)"/>
+              <!-- Base plate -->
+              <rect x="3" y="30" width="16" height="2" rx="1" fill="rgba(0,0,0,0.15)"/>
             </svg>
-            <div style="width:22px;height:3px;border-radius:1px;background:rgba(255,255,255,0.2);margin-top:2px;"></div>
+            <div style="width:20px;height:3px;border-radius:1.5px;background:rgba(255,255,255,0.2);margin-top:1px;"></div>
           </button>
 
           <!-- Flèche -->
           <button class="mk-tool" id="mkt-arrow" onclick="selectMkTool('arrow',this)">
-            <svg width="26" height="38" viewBox="0 0 26 38" fill="none">
-              <line x1="6" y1="32" x2="20" y2="8" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round"/>
-              <polyline points="12,8 20,8 20,16" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <svg width="22" height="42" viewBox="0 0 22 42" fill="none">
+              <line x1="5" y1="36" x2="18" y2="8" stroke="rgba(255,255,255,0.75)" stroke-width="2.5" stroke-linecap="round"/>
+              <polyline points="10,8 18,8 18,17" stroke="rgba(255,255,255,0.75)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
             </svg>
             <div class="mk-ink" id="mki-arrow"></div>
           </button>
 
           <!-- Formes -->
           <button class="mk-tool" id="mkt-shapes" onclick="toggleMkShapes(this)">
-            <svg width="26" height="38" viewBox="0 0 26 38" fill="none">
-              <rect x="3" y="18" width="14" height="14" rx="2" stroke="rgba(255,255,255,0.6)" stroke-width="2" fill="none"/>
-              <circle cx="19" cy="11" r="6" stroke="rgba(255,255,255,0.6)" stroke-width="2" fill="none"/>
+            <svg width="22" height="42" viewBox="0 0 22 42" fill="none">
+              <rect x="2" y="20" width="13" height="13" rx="2" stroke="rgba(255,255,255,0.7)" stroke-width="2" fill="none"/>
+              <circle cx="16" cy="13" r="5.5" stroke="rgba(255,255,255,0.7)" stroke-width="2" fill="none"/>
             </svg>
             <div class="mk-ink" id="mki-shapes"></div>
           </button>
@@ -2104,6 +2135,7 @@ function _renderTextEl(item){
     e.preventDefault();e.stopPropagation();moved=true;
     item.x=ox+e.touches[0].clientX-sx;item.y=oy+e.touches[0].clientY-sy;
     el.style.left=item.x+'px';el.style.top=item.y+'px';
+    _showSizeBar(item);
   },{passive:false});
   el.addEventListener('touchend',e=>{if(!moved)_selectText(item.id);e.stopPropagation();},{passive:true});
   el.addEventListener('click',e=>{_selectText(item.id);e.stopPropagation();});
@@ -2123,9 +2155,37 @@ function _selectText(id){
   activeTextId=id;
   textItems.forEach(it=>{if(it.el)_applyTextElStyle(it.el,it,it.id===id);});
   const item=textItems.find(t=>t.id===id);if(!item)return;
+  // Rouvrir toolbar si besoin (re-sélection après ✓)
+  if(!document.getElementById('textEditToolbar')){
+    editState.tool='text';
+    const eb=document.getElementById('editorBottom');if(eb)eb.style.display='none';
+    _showTextToolbar();
+  }
   const inp=document.getElementById('txtInlineInput');
   if(inp){inp.value=item.text;inp.focus();}
   _syncToolbarState(item);
+  _showSizeBar(item);
+}
+
+function _showSizeBar(item){
+  document.getElementById('txtSizeBar')?.remove();
+  if(!item||!item.el)return;
+  const area=document.getElementById('editorImageArea');if(!area)return;
+  const bar=document.createElement('div');
+  bar.id='txtSizeBar';
+  bar.style.cssText='position:absolute;display:flex;flex-direction:column;gap:3px;z-index:30;'
+    +'background:rgba(28,28,30,0.92);border:1px solid rgba(255,255,255,0.18);border-radius:12px;'
+    +'padding:6px 5px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);';
+  bar.innerHTML=
+    '<button onclick="changeTxtSize(6)" style="width:34px;height:34px;background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:white;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">A+</button>'
+    +'<div style="width:20px;height:1px;background:rgba(255,255,255,0.15);margin:1px auto;"></div>'
+    +'<button onclick="changeTxtSize(-6)" style="width:34px;height:34px;background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:white;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">A−</button>';
+  area.appendChild(bar);
+  // Positionner à gauche du bloc texte
+  const ar=area.getBoundingClientRect(),er=item.el.getBoundingClientRect();
+  const top=er.top-ar.top;
+  const left=Math.max(4,er.left-ar.left-46);
+  bar.style.top=top+'px';bar.style.left=left+'px';
 }
 
 function _showTextToolbar(){
@@ -2258,6 +2318,9 @@ function changeTxtSize(d){
   const item=textItems.find(t=>t.id===activeTextId);if(!item)return;
   item.size=Math.max(12,Math.min(96,item.size+d));
   if(item.el)item.el.style.fontSize=item.size+'px';
+  const si=document.getElementById('txtSizeInp');if(si)si.value=item.size;
+  // Repositionner la barre après redimensionnement
+  setTimeout(()=>_showSizeBar(item),30);
 }
 
 function deleteTxtItem(){
@@ -2274,15 +2337,26 @@ function _syncToolbarState(item){
   const inp=document.getElementById('txtInlineInput');if(inp)inp.value=item.text;
 }
 
+// Ferme juste le clavier — le texte RESTE comme overlay sélectionnable
 function commitAllText(){
+  document.getElementById('txtInlineInput')?.blur();
+  activeTextId=null;
+  textItems.forEach(it=>{if(it.el)_applyTextElStyle(it.el,it,false);});
+  document.getElementById('txtSizeBar')?.remove();
+  _closeTextToolbar();
+  document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));
+  editState.tool=null;
+  const eb=document.getElementById('editorBottom');if(eb)eb.style.display='';
+}
+
+// Brûle tout le texte sur le canvas — appelé au OK final seulement
+function _burnAllTextToCanvas(){
   const canvas=document.getElementById('editCanvas'),area=document.getElementById('editorImageArea');
-  if(!canvas||!area){_closeTextToolbar();return;}
+  if(!canvas||!area||!textItems.length)return;
   const cr=canvas.getBoundingClientRect(),ctx=canvas.getContext('2d');
   const sx=canvas.width/cr.width,sy=canvas.height/cr.height;
-  let changed=false;
   for(const item of textItems){
     if(!item.text||!item.el)continue;
-    changed=true;
     const r=item.el.getBoundingClientRect();
     const cx=(r.left-cr.left)*sx,cy=(r.top-cr.top+r.height*0.78)*sy;
     const fs=item.size*sx;
@@ -2292,13 +2366,10 @@ function commitAllText(){
     if(item.underline){const tw=ctx.measureText(item.text).width;ctx.strokeStyle=item.color;ctx.lineWidth=fs*0.05;ctx.beginPath();ctx.moveTo(cx,cy+fs*0.15);ctx.lineTo(cx+tw,cy+fs*0.15);ctx.stroke();}
     item.el.remove();
   }
-  if(changed)editState.history.push(ctx.getImageData(0,0,canvas.width,canvas.height));
+  editState.history.push(ctx.getImageData(0,0,canvas.width,canvas.height));
   textItems=[];activeTextId=null;
-  _closeTextToolbar();
-  document.querySelectorAll('.annot-tool').forEach(b=>b.classList.remove('active'));
-  editState.tool=null;
-  const eb=document.getElementById('editorBottom');if(eb)eb.style.display='';
-  if(changed)showToast('Textes gravés ✅');
+  document.getElementById('txtSizeBar')?.remove();
+  // fake return value to signal something was done
 }
 
 function _closeTextToolbar(){
@@ -2329,6 +2400,9 @@ function cancelEdit(){
 }
 
 function confirmEdit(){
+  // Brûler les overlays texte sur le canvas avant de sauvegarder
+  _burnAllTextToCanvas();
+  _closeTextToolbar();
   const div=document.getElementById('liveTextEl');if(div)commitLiveText();
   const overlay=document.getElementById('textPlacementOverlay'),dlg=document.getElementById('textDialog');
   if(overlay)overlay.style.display='none';if(dlg)dlg.style.display='none';

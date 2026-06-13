@@ -1,5 +1,5 @@
-// Service Worker v19 - Text tool fixes
-const CACHE_NAME = 'emilie-pepin-v19';
+// Service Worker v20 - Text overlay + size bar + tools
+const CACHE_NAME = 'emilie-pepin-v20';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
