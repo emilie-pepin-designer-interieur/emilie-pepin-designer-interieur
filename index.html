@@ -523,7 +523,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 
     <!-- BARRE OUTILS FIXE BAS -->
     <div style="background:#1c1c1e;flex-shrink:0;
-         padding:8px 12px calc(env(safe-area-inset-bottom,0px)+8px);
+         padding:8px 12px 8px;
          display:flex;align-items:center;justify-content:space-between;">
       <button onclick="undoEdit()" style="background:rgba(255,255,255,0.1);
               border:none;color:white;width:38px;height:38px;border-radius:10px;
@@ -1426,8 +1426,8 @@ function openPhotoViewer(index){
       </div>
     </div>
     <!-- PHOTO PRINCIPALE plein écran -->
-    <div id="viewerMain" style="flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0;background:#000;">
-      <div id="viewerTrack" style="display:flex;width:100%;height:100%;will-change:transform;"></div>
+    <div id="viewerMain" style="flex:1;position:relative;overflow:hidden;min-height:0;background:#000;">
+      <div id="viewerTrack" style="display:flex;height:100%;will-change:transform;position:absolute;top:0;left:0;"></div>
     </div>
     <!-- PELLICULE MINIATURES -->
     <div id="viewerStrip" style="height:74px;display:flex;flex-direction:row;gap:4px;padding:5px 8px;overflow-x:auto;overflow-y:hidden;background:rgba(0,0,0,0.88);-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center;flex-shrink:0;flex-wrap:nowrap;"></div>
