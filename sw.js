@@ -1,5 +1,5 @@
-// Service Worker v11 - Force cache clear
-const CACHE_NAME = 'emilie-pepin-v11';
+// Service Worker v12 - Force cache clear
+const CACHE_NAME = 'emilie-pepin-v12';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
