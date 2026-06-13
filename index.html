@@ -1427,7 +1427,7 @@ function openPhotoViewer(index){
     </div>
     <!-- PHOTO PRINCIPALE plein écran -->
     <div id="viewerMain" style="flex:1;min-height:0;background:#000;position:relative;overflow:hidden;">
-      <div id="viewerTrack" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;will-change:transform;"></div>
+      <div id="viewerTrack" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:stretch;will-change:transform;"></div>
     </div>
     <!-- PELLICULE MINIATURES -->
     <div id="viewerStrip" style="height:62px;display:flex;flex-direction:row;gap:3px;padding:4px 8px;overflow-x:auto;overflow-y:hidden;background:rgba(0,0,0,0.88);-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center;flex-shrink:0;flex-wrap:nowrap;"></div>
@@ -1460,12 +1460,10 @@ function renderViewerPhotos(){
   track.style.transition='none';
   track.innerHTML=sessionPhotos.map((p,i)=>{
     const src=p.dataUrl||p.odUrl||'';
-    return `<div style="width:100vw;min-width:100vw;flex:0 0 100vw;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#000;">
-      ${src
-        ? `<img src="${src}" style="width:100vw;height:auto;max-height:100%;object-fit:contain;display:block;" loading="lazy">`
-        : `<div style="color:rgba(255,255,255,0.3);font-size:13px;font-family:'DM Sans',sans-serif;">Chargement...</div>`
-      }
-    </div>`;
+    const inner=src
+      ?'<img src="'+src+'" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;display:block;" loading="lazy">'
+      :'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,0.3);font-size:13px;font-family:\'DM Sans\',sans-serif;">Chargement...</div>';
+    return '<div style="width:100vw;min-width:100vw;flex:0 0 100vw;height:100%;position:relative;background:#000;">'+inner+'</div>';
   }).join('');
 }
 
@@ -2264,7 +2262,7 @@ function openPhotoDetail(index) {
     + '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>'
     + '</button></div></div>'
     + '<div id="detailMain" style="flex:1;min-height:0;overflow:hidden;position:relative;background:#000;">'
-    + '<div id="detailTrack" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;will-change:transform;"></div>'
+    + '<div id="detailTrack" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:stretch;will-change:transform;"></div>'
     + '</div>'
     + '<div style="background:rgba(0,0,0,0.85);padding-bottom:calc(env(safe-area-inset-bottom,0px)+8px);flex-shrink:0;">'
     + '<div style="display:flex;justify-content:space-around;padding:10px 16px 12px;">'
@@ -2297,10 +2295,10 @@ function renderDetailPhotos() {
   track.style.transition='none';
   track.innerHTML=sessionPhotos.map((p)=>{
     const src=p.dataUrl||p.odUrl||'';
-    const img=src
-      ?'<img src="'+src+'" style="width:100vw;height:auto;max-height:100%;object-fit:contain;display:block;" loading="lazy">'
-      :'<div style="color:rgba(255,255,255,0.3);font-size:14px;font-family:\'DM Sans\',sans-serif;">Chargement...</div>';
-    return '<div style="width:100vw;min-width:100vw;flex:0 0 100vw;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#000;">'+img+'</div>';
+    const inner=src
+      ?'<img src="'+src+'" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;display:block;" loading="lazy">'
+      :'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,0.3);font-size:14px;font-family:\'DM Sans\',sans-serif;">Chargement...</div>';
+    return '<div style="width:100vw;min-width:100vw;flex:0 0 100vw;height:100%;position:relative;background:#000;">'+inner+'</div>';
   }).join('');
 }
 
@@ -2324,7 +2322,7 @@ function renderDetailStrip() {
 }
 
 function closePhotoDetail() {
-  const d=document.getElementById('photoDetailScreen');if(d)d.style.display='none';
+  const d=document.getElementById('photoDetailScreen');if(d)d.remove();
   renderGalleryGrid();
 }
 
