@@ -1406,42 +1406,45 @@ function renderFilmstripGrid(){
 // ===== LECTEUR PHOTO APPLE-STYLE =====
 function openPhotoViewer(index){
   viewerCurrentIndex=index;
-  // Toujours recréer pour que les changements de style soient pris en compte
   const old=document.getElementById('photoViewer');
   if(old) old.remove();
   const viewer=document.createElement('div');
   viewer.id='photoViewer';
-  viewer.style.cssText='position:fixed;inset:0;z-index:300;background:#000;display:flex;flex-direction:column;';
-  viewer.innerHTML=`
-    <!-- HEADER : ← caméra | compteur | galerie -->
-    <div style="position:relative;height:calc(env(safe-area-inset-top,0px) + 82px);background:rgba(0,0,0,0.75);flex-shrink:0;">
-      <div style="position:absolute;bottom:12px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:center;">
-        <button onclick="closePhotoViewer()" style="width:52px;height:52px;background:rgba(255,255,255,0.18);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <span id="viewerCounter" style="color:white;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;"></span>
-        <button onclick="openGalleryFromViewer()" style="width:52px;height:52px;background:rgba(255,255,255,0.18);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        </button>
-      </div>
-    </div>
-    <!-- PHOTO PRINCIPALE plein écran -->
-    <div id="viewerMain" style="flex:1;min-height:0;background:#000;position:relative;overflow:hidden;">
-      <div id="viewerTrack" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:stretch;will-change:transform;"></div>
-    </div>
-    <!-- PELLICULE MINIATURES -->
-    <div id="viewerStrip" style="height:62px;display:flex;flex-direction:row;gap:3px;padding:4px 8px;overflow-x:auto;overflow-y:hidden;background:rgba(0,0,0,0.88);-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center;flex-shrink:0;flex-wrap:nowrap;"></div>
-    <!-- BARRE ACTIONS : poubelle | modifier -->
-    <div style="display:flex;justify-content:space-around;align-items:center;background:rgba(0,0,0,0.88);padding:10px 40px calc(env(safe-area-inset-bottom,0px) + 12px);flex-shrink:0;border-top:1px solid rgba(255,255,255,0.08);">
-      <button onclick="deleteFromViewer()" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;color:rgba(255,255,255,0.75);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:6px 20px;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-        <span style="font-size:10px;font-family:'DM Sans',sans-serif;">Supprimer</span>
-      </button>
-      <button onclick="annotateFromViewer()" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;color:#0A84FF;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:6px 20px;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-        <span style="font-size:10px;font-family:'DM Sans',sans-serif;">Modifier</span>
-      </button>
-    </div>`;
+  // Photo plein écran, contrôles en overlay — comme Apple Photos
+  viewer.style.cssText='position:fixed;inset:0;z-index:300;background:#000;';
+  viewer.innerHTML=
+    // Carrousel photos — plein écran absolu
+    '<div id="viewerMain" style="position:absolute;inset:0;overflow:hidden;">'
+    +'<div id="viewerTrack" style="position:absolute;inset:0;display:flex;will-change:transform;"></div>'
+    +'</div>'
+    // Overlay HAUT : dégradé + boutons
+    +'<div style="position:absolute;top:0;left:0;right:0;z-index:10;pointer-events:none;">'
+    +'<div style="background:linear-gradient(to bottom,rgba(0,0,0,0.65) 0%,transparent 100%);padding-top:env(safe-area-inset-top,0px);padding-left:16px;padding-right:16px;padding-bottom:40px;display:flex;justify-content:space-between;align-items:flex-start;padding-top:calc(env(safe-area-inset-top,0px) + 14px);pointer-events:auto;">'
+    +'<button onclick="closePhotoViewer()" style="width:44px;height:44px;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">'
+    +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>'
+    +'</button>'
+    +'<span id="viewerCounter" style="color:white;font-size:14px;font-family:\'DM Sans\',sans-serif;font-weight:500;line-height:44px;text-shadow:0 1px 4px rgba(0,0,0,0.6);"></span>'
+    +'<button onclick="openGalleryFromViewer()" style="width:44px;height:44px;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">'
+    +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+    +'</button>'
+    +'</div></div>'
+    // Overlay BAS : pellicule + actions
+    +'<div style="position:absolute;bottom:0;left:0;right:0;z-index:10;">'
+    +'<div style="background:linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 100%);padding-bottom:env(safe-area-inset-bottom,0px);">'
+    // Pellicule miniatures
+    +'<div id="viewerStrip" style="display:flex;flex-direction:row;gap:3px;padding:8px 8px 6px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center;height:62px;flex-wrap:nowrap;"></div>'
+    // Boutons Supprimer / Modifier
+    +'<div style="display:flex;justify-content:space-around;align-items:center;padding:8px 40px 16px;">'
+    +'<button onclick="deleteFromViewer()" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;color:rgba(255,255,255,0.85);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:6px 20px;">'
+    +'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>'
+    +'<span style="font-size:10px;font-family:\'DM Sans\',sans-serif;">Supprimer</span>'
+    +'</button>'
+    +'<button onclick="annotateFromViewer()" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;color:#0A84FF;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:6px 20px;">'
+    +'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>'
+    +'<span style="font-size:10px;font-family:\'DM Sans\',sans-serif;">Modifier</span>'
+    +'</button>'
+    +'</div>'
+    +'</div></div>';
   document.body.appendChild(viewer);
   const main=viewer.querySelector('#viewerMain');
   main.addEventListener('touchstart',e=>{viewerStartX=e.touches[0].clientX;},{passive:true});
@@ -2252,32 +2255,39 @@ function openPhotoDetail(index) {
   if(old) old.remove();
   const detail = document.createElement('div');
   detail.id = 'photoDetailScreen';
-  detail.style.cssText = 'position:fixed;inset:0;z-index:210;background:#000;display:flex;flex-direction:column;';
-  detail.innerHTML = '<div style="position:relative;height:calc(env(safe-area-inset-top,0px) + 82px);background:rgba(0,0,0,0.75);flex-shrink:0;">'
-    + '<div style="position:absolute;bottom:12px;left:16px;right:16px;display:flex;align-items:center;justify-content:space-between;">'
-    + '<button onclick="closePhotoDetail()" style="background:none;border:none;color:white;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:16px;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;width:52px;height:52px;justify-content:center;">'
-    + '<svg width="11" height="18" viewBox="0 0 11 18" fill="none" stroke="white" stroke-width="2.5"><polyline points="9 1 1 9 9 17"/></svg></button>'
-    + '<div id="detailCounter" style="color:white;font-family:\'DM Sans\',sans-serif;font-size:13px;opacity:0.85;"></div>'
-    + '<button onclick="shareDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;width:52px;height:52px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">'
-    + '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>'
-    + '</button></div></div>'
-    + '<div id="detailMain" style="flex:1;min-height:0;overflow:hidden;position:relative;background:#000;">'
-    + '<div id="detailTrack" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:stretch;will-change:transform;"></div>'
-    + '</div>'
-    + '<div style="background:rgba(0,0,0,0.85);padding-bottom:calc(env(safe-area-inset-bottom,0px)+8px);flex-shrink:0;">'
-    + '<div style="display:flex;justify-content:space-around;padding:10px 16px 12px;">'
-    + '<button onclick="annotateDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;min-width:60px;">'
-    + '<div style="width:46px;height:46px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></div>'
-    + '<span style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:rgba(255,255,255,0.85);">Modifier</span></button>'
-    + '<button onclick="saveDetailToOneDrive()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;min-width:60px;">'
-    + '<div style="width:46px;height:46px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>'
-    + '<span style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:rgba(255,255,255,0.85);">OneDrive</span></button>'
-    + '<button onclick="deleteDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;min-width:60px;">'
-    + '<div style="width:46px;height:46px;background:rgba(255,69,58,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF453A" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>'
-    + '<span style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:#FF453A;">Supprimer</span></button>'
-    + '</div>'
-    + '<div id="detailStrip" style="display:flex;gap:3px;padding:0 8px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center;height:62px;"></div>'
-    + '</div>';
+  // Photo plein écran, contrôles en overlay — comme Apple Photos
+  detail.style.cssText = 'position:fixed;inset:0;z-index:210;background:#000;';
+  detail.innerHTML =
+    // Carrousel photos — plein écran absolu
+    '<div id="detailMain" style="position:absolute;inset:0;overflow:hidden;">'
+    +'<div id="detailTrack" style="position:absolute;inset:0;display:flex;will-change:transform;"></div>'
+    +'</div>'
+    // Overlay HAUT
+    +'<div style="position:absolute;top:0;left:0;right:0;z-index:10;">'
+    +'<div style="background:linear-gradient(to bottom,rgba(0,0,0,0.65) 0%,transparent 100%);padding-top:calc(env(safe-area-inset-top,0px) + 14px);padding-left:16px;padding-right:16px;padding-bottom:40px;display:flex;justify-content:space-between;align-items:flex-start;">'
+    +'<button onclick="closePhotoDetail()" style="width:44px;height:44px;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">'
+    +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>'
+    +'</button>'
+    +'<div id="detailCounter" style="color:white;font-size:14px;font-family:\'DM Sans\',sans-serif;font-weight:500;line-height:44px;text-shadow:0 1px 4px rgba(0,0,0,0.6);"></div>'
+    +'<button onclick="shareDetailPhoto()" style="width:44px;height:44px;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">'
+    +'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>'
+    +'</button>'
+    +'</div></div>'
+    // Overlay BAS
+    +'<div style="position:absolute;bottom:0;left:0;right:0;z-index:10;">'
+    +'<div style="background:linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 100%);padding-bottom:env(safe-area-inset-bottom,0px);">'
+    +'<div id="detailStrip" style="display:flex;gap:3px;padding:8px 8px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center;height:62px;flex-wrap:nowrap;"></div>'
+    +'<div style="display:flex;justify-content:space-around;padding:8px 16px 16px;">'
+    +'<button onclick="annotateDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;min-width:60px;">'
+    +'<div style="width:44px;height:44px;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></div>'
+    +'<span style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:rgba(255,255,255,0.9);">Modifier</span></button>'
+    +'<button onclick="saveDetailToOneDrive()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;min-width:60px;">'
+    +'<div style="width:44px;height:44px;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>'
+    +'<span style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:rgba(255,255,255,0.9);">OneDrive</span></button>'
+    +'<button onclick="deleteDetailPhoto()" style="background:none;border:none;color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;min-width:60px;">'
+    +'<div style="width:44px;height:44px;background:rgba(255,69,58,0.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF453A" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>'
+    +'<span style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:#FF453A;">Supprimer</span></button>'
+    +'</div></div></div>';
   document.body.appendChild(detail);
   const main = detail.querySelector('#detailMain');
   let sx=0,sy=0,sw=false;
