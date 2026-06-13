@@ -1,5 +1,5 @@
-// Service Worker v17 - Force cache clear
-const CACHE_NAME = 'emilie-pepin-v17';
+// Service Worker v18 - Apple Markup tools
+const CACHE_NAME = 'emilie-pepin-v18';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
