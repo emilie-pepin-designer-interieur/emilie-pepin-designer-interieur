@@ -1,5 +1,5 @@
-// Service Worker v21 - Annotation Apple-style redesign
-const CACHE_NAME = 'emilie-pepin-v21';
+// Service Worker v22 - Onglets iOS editeur
+const CACHE_NAME = 'emilie-pepin-v22';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
