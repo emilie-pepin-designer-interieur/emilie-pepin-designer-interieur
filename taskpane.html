@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Studio Émilie Pépin</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #FDF8FA;
+      color: #333;
+      padding: 20px;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #6B2D45;
+    }
+    .logo h1 {
+      color: #6B2D45;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .logo p {
+      color: #9B6B8A;
+      font-size: 11px;
+      margin-top: 3px;
+    }
+    .info-box {
+      background: #F2D7E0;
+      border-left: 4px solid #6B2D45;
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 20px;
+    }
+    .info-box h2 {
+      color: #6B2D45;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+    .info-label {
+      color: #6B2D45;
+      font-weight: bold;
+      min-width: 70px;
+    }
+    .info-value {
+      color: #333;
+      text-align: right;
+      flex: 1;
+      margin-left: 8px;
+      font-style: italic;
+    }
+    .btn-envoyer {
+      width: 100%;
+      background: #6B2D45;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 14px;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: background 0.2s;
+    }
+    .btn-envoyer:hover { background: #9B6B8A; }
+    .btn-envoyer:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-refresh {
+      width: 100%;
+      background: transparent;
+      color: #9B6B8A;
+      border: 1px solid #9B6B8A;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+    .btn-refresh:hover { background: #F2D7E0; }
+    .status {
+      text-align: center;
+      font-size: 12px;
+      padding: 10px;
+      border-radius: 4px;
+      display: none;
+    }
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      display: block;
+    }
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      display: block;
+    }
+    .status.loading {
+      background: #F2D7E0;
+      color: #6B2D45;
+      display: block;
+    }
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 10px;
+      color: #C4859A;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">
+    <h1>Émilie Pépin</h1>
+    <p>Designer d'intérieur</p>
+  </div>
+
+  <div class="info-box">
+    <h2>Informations détectées</h2>
+    <div class="info-row">
+      <span class="info-label">Client</span>
+      <span class="info-value" id="nomClient">Chargement...</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Projet</span>
+      <span class="info-value" id="nomProjet">Chargement...</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Courriel</span>
+      <span class="info-value" id="courrielClient">Chargement...</span>
+    </div>
+  </div>
+
+  <button class="btn-envoyer" id="btnEnvoyer" onclick="envoyerSoumission()">
+    🌸 Envoyer la soumission
+  </button>
+  <button class="btn-refresh" onclick="lireDocument()">
+    ↻ Relire le document
+  </button>
+
+  <div class="status" id="status"></div>
+
+  <div class="footer">Anna — Studio Émilie Pépin</div>
+
+  <script>
+    var nomClient = '';
+    var nomProjet = '';
+    var courrielClient = '';
+    var FLOW_URL = 'REMPLACER_PAR_URL_FLUX_POWER_AUTOMATE';
+
+    Office.onReady(function(info) {
+      if (info.host === Office.HostType.Word) {
+        lireDocument();
+      }
+    });
+
+    function lireDocument() {
+      document.getElementById('nomClient').textContent = 'Lecture...';
+      document.getElementById('nomProjet').textContent = 'Lecture...';
+      document.getElementById('courrielClient').textContent = 'Lecture...';
+
+      Word.run(function(context) {
+        var body = context.document.body;
+        body.load('text');
+        return context.sync().then(function() {
+          var texte = body.text;
+          nomClient = extraireValeur(texte, 'CLIENT');
+          nomProjet = extraireValeur(texte, 'PROJET');
+          courrielClient = extraireValeur(texte, 'COURRIEL');
+
+          document.getElementById('nomClient').textContent = nomClient || 'Non trouvé';
+          document.getElementById('nomProjet').textContent = nomProjet || 'Non trouvé';
+          document.getElementById('courrielClient').textContent = courrielClient || 'Non trouvé';
+        });
+      }).catch(function(err) {
+        afficherStatut('Erreur de lecture : ' + err.message, 'error');
+      });
+    }
+
+    function extraireValeur(texte, label) {
+      var lignes = texte.split('\n');
+      for (var i = 0; i < lignes.length; i++) {
+        var ligne = lignes[i].trim();
+        if (ligne.toUpperCase().startsWith(label)) {
+          var valeur = ligne.substring(label.length).trim();
+          if (valeur) return valeur;
+          if (i + 1 < lignes.length) return lignes[i + 1].trim();
+        }
+      }
+      return '';
+    }
+
+    function envoyerSoumission() {
+      if (!nomClient || !nomProjet) {
+        afficherStatut('❌ Client ou projet non détecté. Cliquez sur "Relire le document".', 'error');
+        return;
+      }
+
+      var btn = document.getElementById('btnEnvoyer');
+      btn.disabled = true;
+      afficherStatut('⏳ Envoi en cours... Veuillez patienter.', 'loading');
+
+      fetch(FLOW_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nomClient: nomClient,
+          nomProjet: nomProjet,
+          courrielClient: courrielClient
+        })
+      })
+      .then(function(response) {
+        if (response.ok || response.status === 202) {
+          afficherStatut('✅ Soumission envoyée avec succès à ' + courrielClient + ' !', 'success');
+        } else {
+          throw new Error('Erreur ' + response.status);
+        }
+      })
+      .catch(function(err) {
+        afficherStatut('❌ Erreur : ' + err.message, 'error');
+      })
+      .finally(function() {
+        btn.disabled = false;
+      });
+    }
+
+    function afficherStatut(message, type) {
+      var el = document.getElementById('status');
+      el.textContent = message;
+      el.className = 'status ' + type;
+    }
+  </script>
+</body>
+</html>
