@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeAppCatalog xmlns="http://schemas.microsoft.com/office/appforoffice/1.0">
+  <Apps>
+    <App>
+      <AppManifestUrl>https://emilie-pepin-designer-interieur.github.io/emilie-pepin-designer-interieur/manifest.xml</AppManifestUrl>
+    </App>
+  </Apps>
+</OfficeAppCatalog>
