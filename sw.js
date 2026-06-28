@@ -1,5 +1,5 @@
-// Service Worker v22 - Onglets iOS editeur
-const CACHE_NAME = 'emilie-pepin-v22';
+// Service Worker v23 - GPS, PDF rapport, facture, phases, avant-apres, Anna, partage
+const CACHE_NAME = 'emilie-pepin-v23';
 
 self.addEventListener('install', e => {
   self.skipWaiting();

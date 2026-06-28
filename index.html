@@ -213,6 +213,43 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 .filmstrip-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .filmstrip-item .saved-badge { position: absolute; top: 4px; right: 4px; background: #30D158; color: white; font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 5px; font-family: 'DM Sans', sans-serif; }
 .filmstrip-item .delete-btn { position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; background: rgba(255,69,58,0.85); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; }
+
+/* PHASES STEPPER */
+.phase-step { display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;cursor:pointer; }
+.phase-dot { width:28px;height:28px;border-radius:50%;background:var(--blush);border:2px solid var(--rose-powder);display:flex;align-items:center;justify-content:center;font-size:13px;transition:all 0.2s; }
+.phase-dot.done { background:var(--mauve);border-color:var(--mauve);color:white; }
+.phase-dot.current { background:white;border:3px solid var(--mauve);color:var(--mauve);font-weight:700; }
+.phase-line { flex:1;height:2px;background:var(--blush);margin-top:14px;transition:background 0.2s; }
+.phase-line.done { background:var(--mauve); }
+.phase-label { font-size:9px;color:var(--text-light);font-family:'DM Sans',sans-serif;text-align:center; }
+
+/* BEFORE/AFTER VIEWER */
+#beforeAfterViewer { display:none;position:fixed;inset:0;z-index:400;background:#000; }
+#baContainer { position:absolute;inset:0;overflow:hidden;cursor:ew-resize; }
+#baLeft,#baRight { position:absolute;inset:0; }
+#baLeft img,#baRight img { position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain; }
+#baDivider { position:absolute;top:0;bottom:0;width:3px;background:white;box-shadow:0 0 8px rgba(0,0,0,0.5);cursor:ew-resize;z-index:10; }
+#baHandle { position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;background:white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:18px; }
+
+/* PRINT */
+@media print {
+  body > * { display: none !important; }
+  #printReport { display: block !important; }
+  #printInvoice { display: block !important; }
+  @page { margin: 15mm; }
+}
+#printReport {
+  display: none;
+  font-family: 'DM Sans', Arial, sans-serif;
+  color: #2A1520;
+}
+#printReport .pr-header { text-align:center; margin-bottom: 20px; border-bottom: 2px solid #6B2D45; padding-bottom: 12px; }
+#printReport .pr-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: #6B2D45; }
+#printReport .pr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+#printReport .pr-photo { break-inside: avoid; }
+#printReport .pr-photo img { width: 100%; border-radius: 8px; border: 1px solid #ddd; }
+#printReport .pr-caption { font-size: 11px; color: #6B4A56; margin-top: 4px; padding: 2px 4px; }
+#printInvoice { display: none; font-family: 'DM Sans', Arial, sans-serif; }
 </style>
 </head>
 <body>
@@ -239,7 +276,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
     <div class="section-label" id="clientsLabel">Clients</div>
     <div class="client-list" id="clientList"><div class="empty-state"><div class="empty-icon">🌸</div><div class="empty-title">Chargement...</div></div></div>
   </div>
-  <button class="fab" onclick="showAddClient()">+</button>
+  <button class="fab" onclick="showAddClient()" style="position:relative;">+<span id="offlineBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#FF453A;color:white;border-radius:50%;font-size:10px;min-width:18px;height:18px;align-items:center;justify-content:center;font-weight:700;"></span></button>
 </div>
 
 <!-- ===== SCREEN CLIENT DETAIL ===== -->
@@ -264,6 +301,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
         <div class="hero-stat"><div class="stat-value" id="statPhotos">0</div><div class="stat-label">Photos</div></div>
       </div>
     </div>
+    <div id="phasesStepper" style="background:white;margin:12px 14px;border-radius:var(--radius);padding:14px 16px 10px;box-shadow:var(--shadow-card);">
+      <div style="font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-light);margin-bottom:10px;">Avancement du projet</div>
+      <div style="display:flex;align-items:flex-start;" id="phasesRow"></div>
+    </div>
     <div style="padding:14px 14px 6px"><div class="section-label" style="padding:0 0 6px">Actions rapides</div></div>
     <div class="actions-grid">
       <button class="action-btn" onclick="goToPhotos()"><div class="action-icon icon-photos">📸</div><div class="action-label">Photos chantier</div></button>
@@ -274,8 +315,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
       <button class="action-btn" onclick="showScreen('screenMoodboard')"><div class="action-icon" style="background:#FFF0F8">🎨</div><div class="action-label">Moodboard</div></button>
       <button class="action-btn" onclick="logDeplacement()"><div class="action-icon icon-move">🚗</div><div class="action-label">Déplacement</div></button>
       <button class="action-btn" onclick="askAnna()"><div class="action-icon icon-anna">✨</div><div class="action-label">Demander à Anna</div></button>
+      <button class="action-btn" onclick="generatePhotoReport()"><div class="action-icon" style="background:#FFF0EA;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E05A00" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></div><div class="action-label">Rapport PDF</div></button>
+      <button class="action-btn" onclick="openBeforeAfterPicker()"><div class="action-icon" style="background:#F0EAFF;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B3AC4" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg></div><div class="action-label">Avant / Apr&egrave;s</div></button>
     </div>
-    <button class="bill-btn" onclick="showFacturer()"><span>💰</span> Facturer ce client</button>
+    <button class="bill-btn" onclick="printInvoice()"><span>💰</span> Facturer ce client</button>
   </div>
 </div>
 
@@ -774,7 +817,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
     <div class="section-label">Inspirations</div>
     <div class="mood-grid" id="moodGrid"><div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Ajoutez des images 🎨</div></div>
     <input type="file" id="moodInput" accept="image/*" style="display:none" onchange="handleMoodImage(event)">
-    <div style="padding:0 14px 14px"><button class="submit-btn" onclick="exportMoodboard()">📤 Partager avec le client</button></div>
+    <div style="padding:0 14px 14px"><button class="submit-btn" onclick="sharePhotosOneDrive()">🔗 Partager photos OneDrive</button></div>
   </div>
 </div>
 
@@ -786,7 +829,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
   </div>
   <div class="scroll-content" id="annaScrollContent" style="padding-bottom:125px">
     <div class="anna-header"><div class="anna-avatar">✨</div><div class="anna-name">Anna</div><div class="anna-desc">Votre assistante IA personnalisée</div></div>
-    <div class="anna-suggestions">
+    <div class="anna-suggestions" id="annaChips">
       <div class="suggestion-chip" onclick="sendToAnna('Résume mes tâches du jour')">📋 Tâches du jour</div>
       <div class="suggestion-chip" onclick="sendToAnna('Quels clients ont des factures en attente?')">💰 Factures en attente</div>
       <div class="suggestion-chip" onclick="sendToAnna('Rédige un courriel de suivi pour mon dernier client')">📧 Courriel de suivi</div>
@@ -830,7 +873,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
   <button class="nav-item active" id="nav-clients" onclick="navTo('screenClients','nav-clients')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clients</button>
   <button class="nav-item" id="nav-dashboard" onclick="navTo('screenDashboard','nav-dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tableau</button>
   <button class="nav-item" id="nav-temps" onclick="navTo('screenTemps','nav-temps')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Temps</button>
-  <button class="nav-item" id="nav-anna" onclick="navTo('screenAnna','nav-anna')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2"/><path d="M8 12s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>Anna</button>
+  <button class="nav-item" id="nav-anna" onclick="navTo('screenAnna','nav-anna');_renderAnnaChips()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2"/><path d="M8 12s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>Anna</button>
 </nav>
 
 <script>
@@ -880,6 +923,8 @@ let textItems = [];
 let activeTextId = null;
 let viewerCurrentIndex = 0;
 let viewerStartX = 0;
+let _gpsCoords = null;
+navigator.geolocation?.getCurrentPosition(p=>{ _gpsCoords={lat:p.coords.latitude,lng:p.coords.longitude}; },{},{ enableHighAccuracy:false, timeout:8000 });
 
 // ===== INIT =====
 window.addEventListener('load', async () => {
@@ -1038,6 +1083,7 @@ function openClient(id) {
   setEl('photosClientNameCam',c.Title); setEl('timerClientName',c.Title);
   const addrEl = document.getElementById('clientAddress');
   if(addrEl){if(c.address){addrEl.textContent='📍 '+c.address;addrEl.style.display='block';}else addrEl.style.display='none';}
+  renderPhases(c.id);
   showScreen('screenClient');
 }
 
@@ -1273,11 +1319,11 @@ function formatDateForFilename(d){
 
 // ===== SAUVEGARDE AUTO =====
 async function autoSavePhoto(photo,index){
-  if(!navigator.onLine){offlineQueue.push(index);showToast('📴 Hors ligne — photo en attente');return;}
-  if(!state.accessToken||!state.currentClient){offlineQueue.push(index);return;}
+  if(!navigator.onLine){offlineQueue.push(index);_updateOfflineBadge();showToast('📴 Hors ligne — photo en attente');return;}
+  if(!state.accessToken||!state.currentClient){offlineQueue.push(index);_updateOfflineBadge();return;}
   const ok=await uploadPhotoToOneDrive(photo.dataUrl,photo.filename);
   if(ok){sessionPhotos[index].saved=true;updateFilmstripThumb();updateSavePendingBtn();}
-  else offlineQueue.push(index);
+  else{offlineQueue.push(index);_updateOfflineBadge();}
 }
 
 window.addEventListener('online',async()=>{
@@ -1290,7 +1336,7 @@ window.addEventListener('online',async()=>{
       if(ok) sessionPhotos[idx].saved=true; else offlineQueue.push(idx);
     }
   }
-  updateFilmstripThumb(); updateSavePendingBtn();
+  updateFilmstripThumb(); updateSavePendingBtn(); _updateOfflineBadge();
   showToast(`✅ ${queue.length-offlineQueue.length} photo${queue.length>1?'s':''} synchronisée${queue.length>1?'s':''}`);
 });
 window.addEventListener('offline',()=>showToast('📴 Hors ligne — photos en attente'));
@@ -1405,6 +1451,8 @@ function openPhotoViewer(index){
     +'<div style="background:linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 100%);padding-bottom:env(safe-area-inset-bottom,0px);">'
     // Pellicule miniatures
     +'<div id="viewerStrip" style="display:flex;flex-direction:row;gap:3px;padding:8px 8px 6px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:center;height:62px;flex-wrap:nowrap;"></div>'
+    // Commentaire
+    +'<div style="padding:0px 16px 4px;"><input id="viewerCommentInput" type="text" placeholder="Ajouter un commentaire…" style="width:100%;background:rgba(255,255,255,0.12);border:none;border-radius:10px;color:white;font-family:\'DM Sans\',sans-serif;font-size:14px;padding:10px 14px;outline:none;box-sizing:border-box;" onchange="savePhotoComment(viewerCurrentIndex,this.value)"></div>'
     // Boutons Supprimer / Modifier
     +'<div style="display:flex;justify-content:space-around;align-items:center;padding:8px 40px 16px;">'
     +'<button onclick="deleteFromViewer()" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;color:rgba(255,255,255,0.85);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:6px 20px;">'
@@ -1447,6 +1495,7 @@ function scrollViewerTo(index,animated){
   if(track){track.style.transition=animated?'transform 0.3s ease':'none';track.style.transform=`translateX(${-index*100}vw)`;}
   if(counter) counter.textContent=`${index+1} / ${sessionPhotos.length}`;
   viewerCurrentIndex=index;
+  const ci=document.getElementById('viewerCommentInput');if(ci)ci.value=loadPhotoComment(index);
   document.querySelectorAll('.viewer-strip-item').forEach((el,i)=>{
     el.style.border=i===index?'2px solid white':'2px solid transparent';
     if(i===index){el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});}
@@ -1599,6 +1648,11 @@ async function uploadPhotoToOneDrive(dataUrl,filename){
 }
 
 function updatePhotosGallery(){renderFilmstripGrid();}
+function _updateOfflineBadge(){
+  const n=offlineQueue.length;
+  const badge=document.getElementById('offlineBadge');
+  if(badge){badge.textContent=n>0?n:'';badge.style.display=n>0?'flex':'none';}
+}
 
 // ===== FLIP + FLASH + GALERIE =====
 function flipCamera(){cameraFacing=cameraFacing==='environment'?'user':'environment';stopCamera();startCamera();}
@@ -2421,6 +2475,15 @@ function confirmEdit(){
   document.removeEventListener('touchmove',cropHandleMove);document.removeEventListener('touchend',cropHandleEnd);
   document.removeEventListener('mousemove',cropHandleMove);document.removeEventListener('mouseup',cropHandleEnd);
   const canvas=document.getElementById('editCanvas');
+  // GPS watermark
+  if(_gpsCoords){
+    const gc=canvas.getContext('2d');
+    const gw=canvas.width,gh=canvas.height;
+    const gtxt=_gpsCoords.lat.toFixed(5)+', '+_gpsCoords.lng.toFixed(5);
+    gc.font='bold '+Math.round(gw*0.022)+'px DM Sans,Arial';
+    gc.fillStyle='rgba(0,0,0,0.5)';gc.fillRect(8,gh-Math.round(gw*0.036),gc.measureText(gtxt).width+12,Math.round(gw*0.032));
+    gc.fillStyle='rgba(255,255,255,0.9)';gc.textBaseline='bottom';gc.fillText(gtxt,14,gh-8);
+  }
   const filter=canvas.style.filter;
   let dataUrl;
   if(filter&&filter.trim()!==''){
@@ -2489,7 +2552,7 @@ function showSuiviProjet(){showToast('Suivi projet — bientôt disponible');}
 function showFacturer(){showToast('Facturation — utilisez Power Automate Flux 2');}
 function startVoiceNote(){showToast('Note vocale — bientôt disponible');}
 function logDeplacement(){showToast('Déplacement enregistré dans TripLog');}
-function askAnna(){navTo('screenAnna','nav-anna');}
+function askAnna(){navTo('screenAnna','nav-anna');_renderAnnaChips();}
 function toggleSwatch(el){el.classList.toggle('selected');}
 function addMoodImage(){document.getElementById('moodInput').click();}
 function handleMoodImage(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{const grid=document.getElementById('moodGrid');const empty=grid.querySelector('div[style*="grid-column"]');if(empty)empty.remove();const item=document.createElement('div');item.className='mood-item';item.innerHTML=`<img src="${ev.target.result}" alt="Inspiration"><div class="mood-label">Inspiration</div>`;grid.appendChild(item);};r.readAsDataURL(file);e.target.value='';}
@@ -2771,9 +2834,159 @@ function shareDetailPhoto() {
 function isIPad(){return /iPad/.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/MacIntel/.test(navigator.userAgent));}
 function openMarkupForDevice(index,src){openPhotoEditor(src);}
 
+// ===== RAPPORT PDF =====
+function generatePhotoReport(){
+  const client=state.currentClient;
+  const photos=sessionPhotos.filter(p=>p.dataUrl);
+  if(!photos.length){showToast('Aucune photo en session');return;}
+  document.getElementById('prTitle').textContent='Rapport Chantier'+(client?' — '+(client.name||client.Title||''):'');
+  document.getElementById('prMeta').textContent=new Date().toLocaleDateString('fr-CA',{day:'2-digit',month:'long',year:'numeric'})+' · '+photos.length+' photo'+(photos.length>1?'s':'');
+  const grid=document.getElementById('prGrid');
+  grid.innerHTML=photos.map((p,i)=>'<div class="pr-photo"><img src="'+p.dataUrl+'"><div class="pr-caption">Photo '+(i+1)+(p.filename?' — '+escHtml(p.filename):'')+'</div></div>').join('');
+  document.getElementById('printReport').style.display='block';
+  setTimeout(()=>{window.print();setTimeout(()=>{document.getElementById('printReport').style.display='none';},500);},200);
+}
+
+// ===== TAUX HORAIRE + FACTURE =====
+function _getClientRate(clientId){ return parseFloat(localStorage.getItem('rate_'+clientId)||'0'); }
+function _setClientRate(clientId, rate){ localStorage.setItem('rate_'+clientId, rate); }
+function _getTotalHours(clientId){
+  const entries=(state.timeEntries||[]).filter(e=>e.clientId===clientId);
+  return entries.reduce((s,e)=>s+(e.duration||0),0)/3600;
+}
+function printInvoice(){
+  const client=state.currentClient;if(!client)return;
+  const id=client.id||client.ID;
+  const rate=_getClientRate(id);
+  if(!rate){
+    const r=parseFloat(prompt('Taux horaire ($/h) pour '+escHtml(client.Title||'')+':', '0')||'0');
+    if(r>0)_setClientRate(id,r);
+  }
+  const finalRate=_getClientRate(id);
+  const entries=(state.timeEntries||[]).filter(e=>e.clientId===id);
+  const rows=entries.map(e=>{const h=(e.duration||0)/3600;return '<tr style="border-bottom:1px solid #eee"><td style="padding:6px 0">'+escHtml(e.note||'Travail'+(e.date?' — '+e.date:''))+'</td><td style="text-align:right;padding:6px 0">'+h.toFixed(2)+'h</td><td style="text-align:right;padding:6px 0">'+(h*finalRate).toFixed(2)+'$</td></tr>';}).join('');
+  const total=entries.reduce((s,e)=>s+(e.duration||0)/3600,0)*finalRate;
+  document.getElementById('invMeta').textContent=(client.Title||client.name||'')+' · '+new Date().toLocaleDateString('fr-CA',{day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('invTable').innerHTML='<tr style="font-weight:600;border-bottom:2px solid #6B2D45"><td>Description</td><td style="text-align:right">Heures</td><td style="text-align:right">Montant</td></tr>'+rows;
+  document.getElementById('invTotal').textContent='Total : '+total.toFixed(2)+' $';
+  document.getElementById('printInvoice').style.display='block';
+  setTimeout(()=>{window.print();setTimeout(()=>{document.getElementById('printInvoice').style.display='none';},500);},200);
+}
+
+// ===== PHASES PROJET =====
+const PHASES=['Concept','Design','Chantier','Livraison'];
+function _getPhase(clientId){ return parseInt(localStorage.getItem('phase_'+clientId)||'0'); }
+function setPhase(clientId, idx){
+  localStorage.setItem('phase_'+clientId, idx);
+  renderPhases(clientId);
+}
+function renderPhases(clientId){
+  const current=_getPhase(clientId);
+  const row=document.getElementById('phasesRow');if(!row)return;
+  let html='';
+  PHASES.forEach((p,i)=>{
+    const cls=i<current?'done':i===current?'current':'';
+    const icon=i<current?'✓':(i+1).toString();
+    html+='<div class="phase-step" onclick="setPhase(\''+clientId+'\','+i+')"><div class="phase-dot '+cls+'">'+icon+'</div><div class="phase-label">'+p+'</div></div>';
+    if(i<PHASES.length-1)html+='<div class="phase-line'+(i<current?' done':'')+'"></div>';
+  });
+  row.innerHTML=html;
+}
+
+// ===== AVANT/APRÈS =====
+function openBeforeAfterPicker(){
+  const photos=sessionPhotos.filter(p=>p.dataUrl);
+  if(photos.length<2){showToast('Besoin de 2 photos minimum');return;}
+  openBeforeAfter(photos[0].dataUrl, photos[photos.length-1].dataUrl);
+}
+function openBeforeAfter(src1, src2){
+  document.getElementById('baImgLeft').src=src1;
+  document.getElementById('baImgRight').src=src2;
+  const v=document.getElementById('beforeAfterViewer');
+  v.style.display='block';
+  const container=document.getElementById('baContainer');
+  const divider=document.getElementById('baDivider');
+  const right=document.getElementById('baRight');
+  const setPos=x=>{
+    const r=container.getBoundingClientRect();
+    const pos=Math.min(95,Math.max(5,(x-r.left)/r.width*100));
+    divider.style.left=pos+'%';
+    right.style.clipPath='inset(0 0 0 '+pos+'%)';
+  };
+  setTimeout(()=>setPos(container.getBoundingClientRect().left+container.getBoundingClientRect().width/2),50);
+  container.onpointermove=e=>{if(e.buttons)setPos(e.clientX);};
+  container.ontouchmove=e=>{e.preventDefault();setPos(e.touches[0].clientX);};
+}
+
+// ===== ANNA CHIPS DYNAMIQUES =====
+function _renderAnnaChips(){
+  const name = state.currentClient ? (state.currentClient.name||state.currentClient.Title||'ce projet') : 'un projet';
+  const chips = [
+    'Photos chantier pour '+name,
+    'Résumé des heures de '+name,
+    'Prochaines étapes pour '+name,
+    'Idées matériaux pour '+name,
+    'Budget estimé'
+  ];
+  const container = document.getElementById('annaChips');
+  if(!container)return;
+  container.innerHTML = chips.map(c=>'<button class="suggestion-chip" onclick="sendToAnna(\''+c.replace(/'/g,"\\'")+'\')">' +c+'</button>').join('');
+}
+
+// ===== PARTAGE ONEDRIVE =====
+async function sharePhotosOneDrive(){
+  if(!state.accessToken){showToast('Connexion requise');return;}
+  if(!state.currentClient){showToast('Sélectionnez un client');return;}
+  const clientName=state.currentClient.Title||state.currentClient.name||'';
+  showToast('Création du lien de partage…');
+  try {
+    const folder=await graphGet('/me/drive/root:/'+CONFIG.oneDriveRoot+'/'+encodeURIComponent(clientName)+'/10_Photos/Chantier');
+    if(!folder||!folder.id){showToast('Dossier photos introuvable');return;}
+    const link=await graphPost('/me/drive/items/'+folder.id+'/createLink',{type:'view',scope:'anonymous'});
+    if(link&&link.link&&link.link.webUrl){
+      await navigator.clipboard.writeText(link.link.webUrl).catch(()=>{});
+      showToast('Lien copié dans le presse-papier !');
+    }
+  } catch(e){ showToast('Erreur partage: '+e.message); }
+}
+
+// ===== COMMENTAIRES PHOTOS =====
+function savePhotoComment(idx, text){ localStorage.setItem('photoComment_'+idx,text); }
+function loadPhotoComment(idx){ return localStorage.getItem('photoComment_'+idx)||''; }
+
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script>
   <input type="file" id="cameraInput" accept="image/*,video/*" style="display:none;" onchange="handleCameraCapture(event)" multiple>
   <input type="file" id="galleryFileInput" accept="image/*,video/*" style="display:none;" onchange="handleGalleryCapture(event)" multiple>
+
+<!-- RAPPORT PDF -->
+<div id="printReport">
+  <div class="pr-header">
+    <div class="pr-title" id="prTitle">Rapport Chantier</div>
+    <div id="prMeta" style="font-size:13px;color:#6B4A56;margin-top:6px;"></div>
+  </div>
+  <div class="pr-grid" id="prGrid"></div>
+</div>
+
+<!-- FACTURE IMPRIMABLE -->
+<div id="printInvoice" style="display:none;padding:20px;font-family:'DM Sans',Arial,sans-serif;color:#2A1520;">
+  <div style="border-bottom:2px solid #6B2D45;padding-bottom:12px;margin-bottom:20px;">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:32px;color:#6B2D45;">Facture</div>
+    <div id="invMeta" style="font-size:13px;color:#6B4A56;margin-top:4px;"></div>
+  </div>
+  <table id="invTable" style="width:100%;border-collapse:collapse;font-size:13px;"></table>
+  <div id="invTotal" style="text-align:right;margin-top:16px;font-size:18px;font-weight:700;color:#6B2D45;"></div>
+</div>
+
+<!-- AVANT/APRÈS VIEWER -->
+<div id="beforeAfterViewer">
+  <div id="baContainer">
+    <div id="baLeft"><img id="baImgLeft" src=""></div>
+    <div id="baRight"><img id="baImgRight" src=""></div>
+    <div id="baDivider"><div id="baHandle">&#9665;&#9655;</div></div>
+  </div>
+  <button onclick="document.getElementById('beforeAfterViewer').style.display='none'" style="position:absolute;top:calc(env(safe-area-inset-top,0px)+16px);left:16px;background:rgba(0,0,0,0.6);border:none;color:white;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;">&#x2715;</button>
+  <div style="position:absolute;top:calc(env(safe-area-inset-top,0px)+16px);left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:white;border-radius:20px;padding:6px 16px;font-family:'DM Sans',sans-serif;font-size:13px;">Avant / Apr&egrave;s</div>
+</div>
 </body>
 </html>
