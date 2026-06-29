@@ -1,5 +1,5 @@
-// Service Worker v26 - OneDrive files, DXF viewer, punch list, client portal
-const CACHE_NAME = 'emilie-pepin-v26';
+// Service Worker v27 - Facture OneDrive, MileIQ auto-detect, Gantt Outlook/Planner, Teams
+const CACHE_NAME = 'emilie-pepin-v27';
 
 self.addEventListener('install', e => {
   self.skipWaiting();

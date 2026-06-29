@@ -270,6 +270,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 .punch-status.doing { background:#FFD60A;border-color:#FFD60A; }
 .pl-filter.active { border-bottom-color:var(--mauve)!important;color:var(--mauve)!important; }
 @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.gantt-bar { height:28px;border-radius:6px;position:relative;min-width:4px;transition:width 0.3s; }
+.gantt-row { display:flex;align-items:center;gap:10px;margin-bottom:10px; }
+.gantt-label { width:110px;font-family:'DM Sans',sans-serif;font-size:12px;color:#333;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.gantt-track { flex:1;background:#E5E5EA;border-radius:6px;height:28px;position:relative;overflow:hidden; }
+.g-tab.active { border-bottom-color:var(--mauve)!important;color:var(--mauve)!important; }
 </style>
 </head>
 <body>
@@ -352,6 +358,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
       <button class="action-btn" onclick="generateClientPortal()">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         <span>Portail client</span>
+      </button>
+      <button class="action-btn" onclick="openGantt()">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="3" rx="1"/><rect x="3" y="10" width="12" height="3" rx="1"/><rect x="3" y="16" width="15" height="3" rx="1"/></svg>
+        <span>Planification</span>
+      </button>
+      <button class="action-btn" onclick="sendTeamsUpdate()">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>Teams</span>
       </button>
     </div>
     <!-- ONEDRIVE FILE BROWSER -->
@@ -2904,23 +2918,78 @@ function _getTotalHours(clientId){
   const entries=(state.timeEntries||[]).filter(e=>e.clientId===clientId);
   return entries.reduce((s,e)=>s+(e.duration||0),0)/3600;
 }
-function printInvoice(){
+async function printInvoice(){
   const client=state.currentClient;if(!client)return;
-  const id=client.id||client.ID;
-  const rate=_getClientRate(id);
+  const id=client.id||client.ID||'';
+  const clientName=client.name||client.Nom||client.Title||'';
+  let rate=_getClientRate(id);
   if(!rate){
-    const r=parseFloat(prompt('Taux horaire ($/h) pour '+escHtml(client.Title||'')+':', '0')||'0');
-    if(r>0)_setClientRate(id,r);
+    const input=prompt('Taux horaire ($/h) pour '+clientName+' :','125');
+    if(!input)return;
+    rate=parseFloat(input)||0;
+    _setClientRate(id,rate);
   }
-  const finalRate=_getClientRate(id);
   const entries=(state.timeEntries||[]).filter(e=>e.clientId===id);
-  const rows=entries.map(e=>{const h=(e.duration||0)/3600;return '<tr style="border-bottom:1px solid #eee"><td style="padding:6px 0">'+escHtml(e.note||'Travail'+(e.date?' — '+e.date:''))+'</td><td style="text-align:right;padding:6px 0">'+h.toFixed(2)+'h</td><td style="text-align:right;padding:6px 0">'+(h*finalRate).toFixed(2)+'$</td></tr>';}).join('');
-  const total=entries.reduce((s,e)=>s+(e.duration||0)/3600,0)*finalRate;
-  document.getElementById('invMeta').textContent=(client.Title||client.name||'')+' · '+new Date().toLocaleDateString('fr-CA',{day:'2-digit',month:'long',year:'numeric'});
-  document.getElementById('invTable').innerHTML='<tr style="font-weight:600;border-bottom:2px solid #6B2D45"><td>Description</td><td style="text-align:right">Heures</td><td style="text-align:right">Montant</td></tr>'+rows;
-  document.getElementById('invTotal').textContent='Total : '+total.toFixed(2)+' $';
-  document.getElementById('printInvoice').style.display='block';
-  setTimeout(()=>{window.print();setTimeout(()=>{document.getElementById('printInvoice').style.display='none';},500);},200);
+  const rows=entries.map(e=>{const h=(e.duration||0)/3600;return '<tr style="border-bottom:1px solid #eee"><td style="padding:8px 10px">'+escHtml(e.note||'Travail'+(e.date?' — '+e.date:''))+'</td><td style="text-align:right;padding:8px 10px">'+h.toFixed(2)+'h</td><td style="text-align:right;padding:8px 10px">'+(h*rate).toFixed(2)+'$</td></tr>';}).join('');
+  const total=entries.reduce((s,e)=>s+(e.duration||0)/3600,0)*rate;
+  const dateStr=new Date().toLocaleDateString('fr-CA',{day:'2-digit',month:'long',year:'numeric'});
+  const numFact='FA-'+Date.now().toString().slice(-6);
+
+  const htmlContent=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<title>Facture ${numFact} — ${escHtml(clientName)}</title>
+<style>
+  body{font-family:'DM Sans',Arial,sans-serif;color:#2A1520;padding:30px;max-width:700px;margin:0 auto;}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:30px;padding-bottom:20px;border-bottom:3px solid #6B2D45;}
+  .logo{font-family:Georgia,serif;font-size:24px;color:#6B2D45;}
+  .logo-sub{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#9B4D6B;margin-top:3px;}
+  .invoice-title{font-size:28px;color:#6B2D45;font-family:Georgia,serif;text-align:right;}
+  .invoice-num{font-size:13px;color:#9B4D6B;text-align:right;}
+  .meta{display:flex;justify-content:space-between;margin-bottom:24px;font-size:13px;}
+  .meta-block{}
+  .meta-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9B4D6B;margin-bottom:4px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{background:#6B2D45;color:white;padding:10px 10px;text-align:left;font-weight:500;}
+  th:not(:first-child){text-align:right;}
+  .total-row{font-weight:700;font-size:15px;border-top:2px solid #6B2D45;}
+  .total-row td{padding:12px 10px;}
+  .footer{margin-top:30px;font-size:11px;color:#9B4D6B;text-align:center;border-top:1px solid #F0E0E8;padding-top:16px;}
+  @media print{.no-print{display:none;}}
+</style></head><body>
+<div class="header">
+  <div><div class="logo">Émilie Pépin</div><div class="logo-sub">Designer d'intérieur</div><div style="margin-top:12px;font-size:12px;color:#6B4A56;">info@emiliepepin.ca</div></div>
+  <div><div class="invoice-title">FACTURE</div><div class="invoice-num">${numFact}</div><div style="font-size:12px;color:#9B4D6B;text-align:right;margin-top:4px;">${dateStr}</div></div>
+</div>
+<div class="meta">
+  <div class="meta-block"><div class="meta-label">Facturer à</div><strong>${escHtml(clientName)}</strong></div>
+  <div class="meta-block" style="text-align:right"><div class="meta-label">Taux horaire</div>${rate.toFixed(2)} $/h</div>
+</div>
+<table>
+  <tr><th>Description</th><th style="text-align:right">Heures</th><th style="text-align:right">Montant</th></tr>
+  ${rows||'<tr><td colspan="3" style="padding:10px;color:#9B4D6B;">Aucune entrée de temps enregistrée</td></tr>'}
+  <tr class="total-row"><td colspan="2" style="text-align:right;padding:12px 10px;">TOTAL</td><td style="text-align:right;padding:12px 10px;color:#6B2D45;">${total.toFixed(2)} $</td></tr>
+</table>
+<div class="footer">Merci de votre confiance · Paiement dans les 30 jours · info@emiliepepin.ca</div>
+<div class="no-print" style="margin-top:20px;text-align:center;"><button onclick="window.print()" style="background:#6B2D45;color:white;border:none;border-radius:8px;padding:12px 28px;font-size:14px;cursor:pointer;">🖨️ Imprimer</button></div>
+</body></html>`;
+
+  // Save to OneDrive Factures folder
+  if(state.accessToken && clientName){
+    try{
+      const fileName='Facture_'+numFact+'_'+clientName.replace(/[^a-zA-Z0-9]/g,'_')+'.html';
+      const path='/me/drive/root:/Emilie Pepin Designer Interieur/CLIENTS/'+encodeURIComponent(clientName)+'/Factures/'+encodeURIComponent(fileName)+':/content';
+      await fetch('https://graph.microsoft.com/v1.0'+path,{
+        method:'PUT',
+        headers:{'Authorization':'Bearer '+state.accessToken,'Content-Type':'text/html; charset=utf-8'},
+        body:htmlContent
+      });
+      showToast('✅ Facture sauvegardée dans OneDrive/Factures !');
+    }catch(err){ showToast('⚠️ Sauvegarde OneDrive échouée: '+err.message); }
+  }
+
+  // Open print window
+  const win=window.open('','_blank');
+  if(win){win.document.write(htmlContent);win.document.close();}
+  else{ showToast('Autorisez les pop-ups pour imprimer'); }
 }
 
 // ===== PHASES PROJET =====
@@ -3214,7 +3283,10 @@ function printBudget() {
   win.document.close();
 }
 
-// ===== KILOMÉTRAGE =====
+// ===== KILOMÉTRAGE MileIQ-style =====
+let _kmAutoWatchId = null, _kmAutoTrip = null, _kmAutoStartPos = null, _kmAutoLastPos = null, _kmAutoDistKm = 0;
+let _kmTripType = 'pro';
+
 function _kmKey(){ return 'km_trips'; }
 function _getTrips(){ try{ return JSON.parse(localStorage.getItem(_kmKey())||'[]'); }catch(e){ return []; } }
 function _saveTrips(trips){ localStorage.setItem(_kmKey(), JSON.stringify(trips)); }
@@ -3223,131 +3295,211 @@ function saveKmRate(v){ localStorage.setItem('km_rate', parseFloat(v)||0.70); }
 
 function openKilometres(){
   navTo('screenKilometres','nav-km');
-  const rateEl = document.getElementById('kmRate');
-  if(rateEl) rateEl.value = getKmRate().toFixed(2);
+  const r = document.getElementById('kmRate');
+  if(r) r.value = getKmRate().toFixed(2);
   renderTrips();
 }
 
+function setTripType(type, btn){
+  _kmTripType = type;
+  document.getElementById('tripTypePro').style.background = type==='pro' ? 'var(--mauve)' : '#F2F2F7';
+  document.getElementById('tripTypePro').style.color = type==='pro' ? 'white' : '#8E8E93';
+  document.getElementById('tripTypePerso').style.background = type==='perso' ? '#FF453A' : '#F2F2F7';
+  document.getElementById('tripTypePerso').style.color = type==='perso' ? 'white' : '#8E8E93';
+}
+
+// === AUTO-DETECTION (GPS speed threshold) ===
+function startAutoDetect(){
+  if(!navigator.geolocation){ showToast('GPS non disponible sur cet appareil'); return; }
+  if(_kmAutoWatchId !== null){ stopAutoDetect(); return; }
+  showToast('📍 Détection auto activée — en attente de mouvement…');
+  const btn = document.getElementById('kmAutoBtn');
+  if(btn){ btn.textContent = '⏹ Arrêter détection'; btn.style.background = '#FF453A'; btn.style.color = 'white'; }
+  _kmAutoWatchId = navigator.geolocation.watchPosition(
+    pos => _kmHandleGpsUpdate(pos),
+    err => { showToast('GPS: '+err.message); stopAutoDetect(); },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+function stopAutoDetect(){
+  if(_kmAutoWatchId !== null){ navigator.geolocation.clearWatch(_kmAutoWatchId); _kmAutoWatchId = null; }
+  const btn = document.getElementById('kmAutoBtn');
+  if(btn){ btn.textContent = '📍 Activer détection auto'; btn.style.background = 'var(--blush)'; btn.style.color = 'var(--mauve)'; }
+  if(_kmAutoTrip){ stopAutoTrip(false); }
+}
+
+function _kmHandleGpsUpdate(pos){
+  const speed = pos.coords.speed || 0;
+  const speedKmh = speed * 3.6;
+  if(speedKmh > 15 && !_kmAutoTrip){
+    _kmAutoTrip = { startTime: new Date(), startLat: pos.coords.latitude, startLng: pos.coords.longitude };
+    _kmAutoStartPos = pos; _kmAutoLastPos = pos; _kmAutoDistKm = 0;
+    const banner = document.getElementById('kmDrivingBanner');
+    if(banner) banner.style.display = 'flex';
+    showToast('🚗 Conduite détectée — trajet démarré');
+  } else if(_kmAutoTrip && speedKmh > 5){
+    if(_kmAutoLastPos){
+      _kmAutoDistKm += _haversineKm(
+        _kmAutoLastPos.coords.latitude, _kmAutoLastPos.coords.longitude,
+        pos.coords.latitude, pos.coords.longitude
+      );
+      _kmAutoLastPos = pos;
+      const liveEl = document.getElementById('kmLiveKm');
+      if(liveEl) liveEl.textContent = _kmAutoDistKm.toFixed(1);
+    }
+  } else if(_kmAutoTrip && speedKmh < 5){
+    if(!_kmAutoTrip._stopTimeout){
+      _kmAutoTrip._stopTimeout = setTimeout(()=>{
+        if(_kmAutoDistKm > 0.5) _kmShowClassifyPrompt();
+        else { _kmAutoTrip=null; _kmAutoDistKm=0; const b=document.getElementById('kmDrivingBanner'); if(b)b.style.display='none'; }
+      }, 30000);
+    }
+  }
+}
+
+function _haversineKm(lat1, lon1, lat2, lon2){
+  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function _kmShowClassifyPrompt(){
+  const banner = document.getElementById('kmDrivingBanner');
+  if(banner){ banner.style.display='flex'; const l=document.getElementById('kmLiveKm'); if(l) l.textContent=_kmAutoDistKm.toFixed(1); }
+}
+
+function stopAutoTrip(isPro){
+  if(!_kmAutoTrip) return;
+  if(_kmAutoTrip._stopTimeout){ clearTimeout(_kmAutoTrip._stopTimeout); }
+  if(isPro && _kmAutoDistKm > 0.1){
+    const trips = _getTrips();
+    trips.unshift({
+      id: Date.now(),
+      date: _kmAutoTrip.startTime.toISOString().split('T')[0],
+      depart: _kmAutoTrip.startLat.toFixed(4)+', '+_kmAutoTrip.startLng.toFixed(4),
+      dest: _kmAutoLastPos ? _kmAutoLastPos.coords.latitude.toFixed(4)+', '+_kmAutoLastPos.coords.longitude.toFixed(4) : '',
+      km: parseFloat(_kmAutoDistKm.toFixed(1)),
+      client: state.currentClient ? (state.currentClient.name||state.currentClient.Nom||'') : '',
+      motif: 'Trajet auto-détecté',
+      type: 'pro',
+      auto: true
+    });
+    _saveTrips(trips);
+    showToast('✅ Trajet enregistré — '+_kmAutoDistKm.toFixed(1)+' km');
+    renderTrips();
+  }
+  _kmAutoTrip = null; _kmAutoDistKm = 0; _kmAutoLastPos = null;
+  const banner = document.getElementById('kmDrivingBanner');
+  if(banner) banner.style.display = 'none';
+}
+
+// === MANUAL TRIP ===
 function openAddTrip(){
-  const modal = document.getElementById('kmModal');
-  modal.style.display = 'flex';
+  _kmTripType = 'pro';
   document.getElementById('kmInputDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('kmInputDepart').value = '';
   document.getElementById('kmInputDest').value = '';
   document.getElementById('kmInputKm').value = '';
-  document.getElementById('kmInputClient').value = state.currentClient ? (state.currentClient.name||state.currentClient.Nom||'') : '';
+  document.getElementById('kmInputClient').value = state.currentClient?(state.currentClient.name||state.currentClient.Nom||''):'';
   document.getElementById('kmInputMotif').value = '';
+  setTripType('pro',null);
+  document.getElementById('kmModal').style.display = 'flex';
 }
-
-function closeAddTrip(){
-  document.getElementById('kmModal').style.display = 'none';
-}
+function closeAddTrip(){ document.getElementById('kmModal').style.display='none'; }
 
 function useGpsDepart(){
   if(!navigator.geolocation){ showToast('GPS non disponible'); return; }
   showToast('📍 Localisation…');
-  navigator.geolocation.getCurrentPosition(function(p){
-    var lat = p.coords.latitude.toFixed(5), lng = p.coords.longitude.toFixed(5);
-    document.getElementById('kmInputDepart').value = lat+', '+lng;
-    showToast('📍 Position GPS capturée');
-  }, function(){ showToast('Impossible d\'obtenir la position'); }, { timeout:8000 });
+  navigator.geolocation.getCurrentPosition(p=>{
+    document.getElementById('kmInputDepart').value=p.coords.latitude.toFixed(5)+', '+p.coords.longitude.toFixed(5);
+    showToast('📍 Position capturée');
+  },()=>showToast('Impossible d\'obtenir la position'),{timeout:8000});
 }
 
 function saveTrip(){
-  var date = document.getElementById('kmInputDate').value;
-  var depart = document.getElementById('kmInputDepart').value.trim();
-  var dest = document.getElementById('kmInputDest').value.trim();
-  var km = parseFloat(document.getElementById('kmInputKm').value)||0;
-  var client = document.getElementById('kmInputClient').value.trim();
-  var motif = document.getElementById('kmInputMotif').value.trim();
+  const date=document.getElementById('kmInputDate').value;
+  const depart=document.getElementById('kmInputDepart').value.trim();
+  const dest=document.getElementById('kmInputDest').value.trim();
+  const km=parseFloat(document.getElementById('kmInputKm').value)||0;
+  const client=document.getElementById('kmInputClient').value.trim();
+  const motif=document.getElementById('kmInputMotif').value.trim();
   if(!km){ showToast('Entrez une distance en km'); return; }
-  var trips = _getTrips();
-  trips.unshift({ id: Date.now(), date: date, depart: depart, dest: dest, km: km, client: client, motif: motif });
-  _saveTrips(trips);
-  closeAddTrip();
-  renderTrips();
+  const trips=_getTrips();
+  trips.unshift({id:Date.now(),date,depart,dest,km,client,motif,type:_kmTripType});
+  _saveTrips(trips); closeAddTrip(); renderTrips();
   showToast('✅ Trajet enregistré — '+km+' km');
+}
+
+function classifyTrip(id, type){
+  const trips=_getTrips(); const t=trips.find(x=>x.id===id); if(t){ t.type=type; _saveTrips(trips); renderTrips(); }
 }
 
 function deleteTrip(id){
   if(!confirm('Supprimer ce trajet ?')) return;
-  _saveTrips(_getTrips().filter(function(t){ return t.id!==id; }));
-  renderTrips();
+  _saveTrips(_getTrips().filter(t=>t.id!==id)); renderTrips();
 }
 
 function renderTrips(){
-  var trips = _getTrips();
-  var rate = getKmRate();
-  var totalKm = trips.reduce(function(s,t){ return s+(parseFloat(t.km)||0); }, 0);
-  var totalAmt = totalKm * rate;
-  var elKm = document.getElementById('kmTotalKm');
-  var elAmt = document.getElementById('kmTotalAmt');
-  var elTrips = document.getElementById('kmTotalTrips');
-  if(elKm) elKm.textContent = totalKm.toFixed(1);
-  if(elAmt) elAmt.textContent = totalAmt.toFixed(2)+' $';
-  if(elTrips) elTrips.textContent = trips.length;
-  var list = document.getElementById('kmTripsList');
-  if(!list) return;
-  if(!trips.length){
-    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);font-family:\'DM Sans\',sans-serif;font-size:14px;">Aucun trajet enregistré.<br>Appuyez sur « + Trajet » pour commencer.</div>';
-    return;
-  }
-  list.innerHTML = trips.map(function(t){
-    var amt = ((parseFloat(t.km)||0)*rate).toFixed(2);
-    var route = [t.depart,t.dest].filter(Boolean).join(' → ') || 'Trajet';
-    return '<div class="km-trip-card">'
-      +'<div class="km-trip-dot"></div>'
-      +'<div class="km-trip-info">'
-        +'<div class="km-trip-route">'+escHtml(route)+'</div>'
-        +'<div class="km-trip-meta">'+escHtml(t.date||'')+(t.client?' · '+escHtml(t.client):'')+(t.motif?' · '+escHtml(t.motif):'')+'</div>'
-      +'</div>'
-      +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">'
-        +'<div class="km-trip-amount">'+((parseFloat(t.km)||0).toFixed(1))+' km</div>'
-        +'<div style="font-size:11px;color:var(--text-light);font-family:\'DM Sans\',sans-serif;">'+amt+' $</div>'
-        +'<button onclick="deleteTrip('+t.id+')" style="background:none;border:none;color:#FF453A;font-size:16px;cursor:pointer;padding:0;line-height:1;">×</button>'
-      +'</div>'
-    +'</div>';
-  }).join('');
+  const trips=_getTrips(); const rate=getKmRate();
+  const now=new Date(); const m=now.getMonth(), y=now.getFullYear();
+  const thisMonth=trips.filter(t=>{ const d=new Date(t.date||''); return d.getMonth()===m && d.getFullYear()===y && t.type==='pro'; });
+  const totalKm=thisMonth.reduce((s,t)=>s+(parseFloat(t.km)||0),0);
+  const totalAmt=totalKm*rate;
+  const el1=document.getElementById('kmTotalKm'); if(el1) el1.textContent=totalKm.toFixed(1);
+  const el2=document.getElementById('kmTotalAmt'); if(el2) el2.textContent=totalAmt.toFixed(2);
+  const el3=document.getElementById('kmTotalTrips'); if(el3) el3.textContent=trips.filter(t=>t.type==='pro').length;
+
+  const unclassified=trips.filter(t=>!t.type);
+  const ucEl=document.getElementById('kmUnclassified'); if(ucEl) ucEl.style.display=unclassified.length?'block':'none';
+  const ucList=document.getElementById('kmUnclassifiedList');
+  if(ucList) ucList.innerHTML=unclassified.map(t=>`
+    <div style="background:white;border-radius:14px;padding:14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:10px;">
+      <div style="flex:1;"><div style="font-family:'DM Sans',sans-serif;font-size:13px;color:#333;">${escHtml(t.depart||'?')} → ${escHtml(t.dest||'?')}</div>
+        <div style="font-size:11px;color:#8E8E93;margin-top:2px;">${escHtml(t.date||'')} · ${(parseFloat(t.km)||0).toFixed(1)} km · ${((parseFloat(t.km)||0)*rate).toFixed(2)} $</div></div>
+      <button onclick="classifyTrip(${t.id},'pro')" style="background:var(--mauve);color:white;border:none;border-radius:12px;padding:6px 12px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;">💼 Pro</button>
+      <button onclick="classifyTrip(${t.id},'perso')" style="background:#F2F2F7;color:#8E8E93;border:none;border-radius:12px;padding:6px 12px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;">🏠</button>
+    </div>`).join('');
+
+  const proTrips=trips.filter(t=>t.type==='pro');
+  const list=document.getElementById('kmTripsList'); if(!list) return;
+  if(!proTrips.length){ list.innerHTML='<div style="text-align:center;padding:40px;color:#8E8E93;font-family:\'DM Sans\',sans-serif;font-size:14px;">Aucun trajet professionnel.<br>Appuyez sur « + Manuel » ou activez la détection auto.</div>'; return; }
+  const groups={};
+  proTrips.forEach(t=>{ const d=t.date||'Sans date'; if(!groups[d]) groups[d]=[]; groups[d].push(t); });
+  list.innerHTML=Object.keys(groups).sort((a,b)=>b.localeCompare(a)).map(date=>`
+    <div style="margin-bottom:4px;">
+      <div style="font-size:11px;font-weight:600;color:#8E8E93;font-family:'DM Sans',sans-serif;padding:8px 4px 4px;">${date}</div>
+      ${groups[date].map(t=>`
+        <div style="background:white;border-radius:14px;padding:14px;margin-bottom:6px;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--blush);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;">🚗</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:'DM Sans',sans-serif;font-size:13px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(t.depart?t.depart+'→'+(t.dest||''):'Trajet')}</div>
+            <div style="font-size:11px;color:#8E8E93;margin-top:2px;font-family:'DM Sans',sans-serif;">${escHtml(t.client||'')}${t.motif?' · '+escHtml(t.motif):''}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--mauve);">${(parseFloat(t.km)||0).toFixed(1)} km</div>
+            <div style="font-size:11px;color:#8E8E93;">${((parseFloat(t.km)||0)*rate).toFixed(2)} $</div>
+          </div>
+          <button onclick="deleteTrip(${t.id})" style="background:none;border:none;color:#FF453A;font-size:18px;cursor:pointer;padding:0 0 0 6px;">×</button>
+        </div>`).join('')}
+    </div>`).join('');
 }
 
 function printKmReport(){
-  var trips = _getTrips();
-  var rate = getKmRate();
-  var totalKm = trips.reduce(function(s,t){ return s+(parseFloat(t.km)||0); }, 0);
-  var totalAmt = totalKm * rate;
-  var year = new Date().getFullYear();
-  var win = window.open('','_blank');
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rapport kilométrage '+year+'</title>'
-  +'<style>'
-  +'body{font-family:\'DM Sans\',Arial,sans-serif;color:#2A1520;padding:24px;max-width:800px;margin:0 auto;}'
-  +'h1{font-family:Georgia,serif;color:#6B2D45;font-size:28px;margin-bottom:4px;}'
-  +'.sub{color:#6B4A56;font-size:13px;margin-bottom:20px;}'
-  +'table{width:100%;border-collapse:collapse;font-size:12px;}'
-  +'th{background:#6B2D45;color:white;padding:8px 10px;text-align:left;font-weight:500;}'
-  +'td{padding:8px 10px;border-bottom:1px solid #eee;}'
-  +'tr:nth-child(even) td{background:#fdf8fa;}'
-  +'.total-row{font-weight:700;background:#f0e8ec!important;}'
-  +'@media print{button{display:none;}}'
-  +'</style></head><body>'
-  +'<h1>Rapport kilométrage — '+year+'</h1>'
-  +'<div class="sub">Émilie Pépin Designer d\'intérieur · Taux ARC : '+rate.toFixed(2)+' $/km · Imprimé le '+new Date().toLocaleDateString('fr-CA',{day:'2-digit',month:'long',year:'numeric'})+'</div>'
-  +'<table>'
-  +'<tr><th>Date</th><th>Départ</th><th>Destination</th><th>Client</th><th>Motif</th><th style="text-align:right">km</th><th style="text-align:right">Montant</th></tr>'
-  +trips.map(function(t){
-    return '<tr>'
-      +'<td>'+escHtml(t.date||'')+'</td>'
-      +'<td>'+escHtml(t.depart||'—')+'</td>'
-      +'<td>'+escHtml(t.dest||'—')+'</td>'
-      +'<td>'+escHtml(t.client||'—')+'</td>'
-      +'<td>'+escHtml(t.motif||'—')+'</td>'
-      +'<td style="text-align:right">'+((parseFloat(t.km)||0).toFixed(1))+'</td>'
-      +'<td style="text-align:right">'+((parseFloat(t.km)||0)*rate).toFixed(2)+' $</td>'
-    +'</tr>';
-  }).join('')
-  +'<tr class="total-row"><td colspan="5">TOTAL</td><td style="text-align:right">'+totalKm.toFixed(1)+'</td><td style="text-align:right">'+totalAmt.toFixed(2)+' $</td></tr>'
-  +'</table>'
-  +'<button onclick="window.print()" style="margin-top:20px;padding:10px 24px;background:#6B2D45;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px;">🖨️ Imprimer</button>'
-  +'</body></html>');
+  const trips=_getTrips().filter(t=>t.type==='pro');
+  const rate=getKmRate();
+  const totalKm=trips.reduce((s,t)=>s+(parseFloat(t.km)||0),0);
+  const totalAmt=totalKm*rate;
+  const year=new Date().getFullYear();
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rapport kilométrage ${year}</title>
+  <style>body{font-family:Arial,sans-serif;color:#2A1520;padding:24px;max-width:800px;margin:0 auto;}h1{font-family:Georgia,serif;color:#6B2D45;font-size:28px;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#6B2D45;color:white;padding:8px 10px;text-align:left;}td{padding:8px 10px;border-bottom:1px solid #eee;}.total{font-weight:700;}@media print{button{display:none;}}</style></head><body>
+  <h1>Rapport kilométrage ${year}</h1><p style="color:#6B4A56;font-size:13px;">Émilie Pépin Designer d'intérieur · Taux ARC : ${rate.toFixed(2)} $/km</p>
+  <table><tr><th>Date</th><th>Départ</th><th>Destination</th><th>Client</th><th>Motif</th><th style="text-align:right">km</th><th style="text-align:right">$</th></tr>
+  ${trips.map(t=>`<tr><td>${escHtml(t.date||'')}</td><td>${escHtml(t.depart||'—')}</td><td>${escHtml(t.dest||'—')}</td><td>${escHtml(t.client||'—')}</td><td>${escHtml(t.motif||'—')}</td><td style="text-align:right">${(parseFloat(t.km)||0).toFixed(1)}</td><td style="text-align:right">${((parseFloat(t.km)||0)*rate).toFixed(2)}</td></tr>`).join('')}
+  <tr class="total"><td colspan="5">TOTAL</td><td style="text-align:right">${totalKm.toFixed(1)}</td><td style="text-align:right">${totalAmt.toFixed(2)}</td></tr></table>
+  <button onclick="window.print()" style="margin-top:20px;padding:10px 24px;background:#6B2D45;color:white;border:none;border-radius:8px;cursor:pointer;">Imprimer</button>
+  </body></html>`);
   win.document.close();
 }
 
@@ -3803,6 +3955,156 @@ ${photos.length?`<div class="section">
 }
 
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+
+// ===== GANTT =====
+let _ganttSource = 'planner', _ganttColor = '#6B2D45';
+const GANTT_KEY = () => 'gantt_'+(state.currentClient?.id||state.currentClient?.ID||'');
+
+function openGantt(){
+  showScreen('screenGantt');
+  loadGantt();
+}
+
+function switchGanttSource(src){
+  _ganttSource=src;
+  document.querySelectorAll('.g-tab').forEach(b=>{b.classList.remove('active');b.style.borderBottomColor='transparent';b.style.color='#8E8E93';});
+  const map={planner:'gTabPlanner',outlook:'gTabOutlook',local:'gTabLocal'};
+  const el=document.getElementById(map[src]);
+  if(el){el.classList.add('active');el.style.borderBottomColor='var(--mauve)';el.style.color='var(--mauve)';}
+  loadGantt();
+}
+
+async function loadGantt(){
+  const loader=document.getElementById('ganttLoading'); if(loader)loader.style.display='block';
+  const container=document.getElementById('ganttContainer'); if(container)container.innerHTML='';
+  try {
+    let events=[];
+    const clientName=state.currentClient?.name||state.currentClient?.Nom||'';
+
+    if(_ganttSource==='outlook' && state.accessToken){
+      const now=new Date(); const end=new Date(now); end.setMonth(end.getMonth()+3);
+      const resp=await graphGet('/me/events?$filter=start/dateTime ge \''+now.toISOString()+'\' and end/dateTime le \''+end.toISOString()+'\'&$select=subject,start,end,categories&$orderby=start/dateTime&$top=50').catch(()=>null);
+      if(resp?.value){
+        events=resp.value
+          .filter(e=>!clientName||e.subject?.toLowerCase().includes(clientName.toLowerCase()))
+          .map(e=>({id:e.id,title:e.subject,start:e.start?.dateTime?.split('T')[0]||'',end:e.end?.dateTime?.split('T')[0]||'',color:'#0A84FF',source:'outlook'}));
+      }
+    } else if(_ganttSource==='planner' && state.accessToken){
+      const plans=await graphGet('/me/planner/tasks?$select=title,startDateTime,dueDateTime,percentComplete&$top=50').catch(()=>null);
+      if(plans?.value){
+        events=plans.value
+          .filter(t=>!clientName||t.title?.toLowerCase().includes(clientName.toLowerCase()))
+          .map(t=>({id:t.id,title:t.title,start:t.startDateTime?.split('T')[0]||new Date().toISOString().split('T')[0],end:t.dueDateTime?.split('T')[0]||new Date().toISOString().split('T')[0],color:t.percentComplete===100?'#34C759':t.percentComplete>0?'#FF9F0A':'#6B2D45',pct:t.percentComplete||0,source:'planner'}));
+      }
+    }
+
+    const local=JSON.parse(localStorage.getItem(GANTT_KEY())||'[]');
+    if(_ganttSource==='local') events=local;
+    else events=[...local,...events];
+
+    if(loader)loader.style.display='none';
+    if(!events.length){
+      if(container)container.innerHTML='<div style="text-align:center;padding:40px;color:#8E8E93;font-family:\'DM Sans\',sans-serif;font-size:14px;">'
+        +(_ganttSource==='local'?'Aucune tâche locale. Appuyez sur « + Tâche ».'
+          :!state.accessToken?'Connectez-vous à Microsoft 365 pour voir vos tâches.'
+          :'Aucune tâche trouvée pour ce client.')+'</div>';
+      return;
+    }
+
+    const dates=events.flatMap(e=>[e.start,e.end]).filter(Boolean).sort();
+    const minDate=new Date(dates[0]||new Date()); const maxDate=new Date(dates[dates.length-1]||new Date());
+    const totalDays=Math.max(1,(maxDate-minDate)/86400000);
+    const today=new Date().toISOString().split('T')[0];
+
+    const html='<div style="background:white;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">'
+      +'<div style="display:flex;justify-content:space-between;font-size:10px;color:#8E8E93;font-family:\'DM Sans\',sans-serif;margin-bottom:10px;padding-left:120px;">'
+      +'<span>'+minDate.toLocaleDateString('fr-CA',{month:'short',day:'numeric'})+'</span>'
+      +'<span>Auj.</span>'
+      +'<span>'+maxDate.toLocaleDateString('fr-CA',{month:'short',day:'numeric'})+'</span></div>'
+      +events.map(ev=>{
+        const start=new Date(ev.start||today); const end=new Date(ev.end||ev.start||today);
+        const left=Math.max(0,(start-minDate)/86400000/totalDays*100);
+        const width=Math.max(1,(end-start)/86400000/totalDays*100);
+        const todayPct=(new Date(today)-minDate)/86400000/totalDays*100;
+        return '<div class="gantt-row">'
+          +'<div class="gantt-label" title="'+escHtml(ev.title||'')+'">'+escHtml(ev.title||'')+'</div>'
+          +'<div class="gantt-track">'
+          +(todayPct>0&&todayPct<100?'<div style="position:absolute;left:'+todayPct+'%;top:0;bottom:0;width:2px;background:#FF453A;z-index:2;"></div>':'')
+          +'<div class="gantt-bar" style="margin-left:'+left+'%;width:'+Math.min(width,100-left)+'%;background:'+(ev.color||'#6B2D45')+';position:absolute;top:0;display:flex;align-items:center;padding:0 6px;">'
+          +(ev.pct?'<div style="position:absolute;left:0;top:0;bottom:0;width:'+ev.pct+'%;background:rgba(255,255,255,0.3);border-radius:6px;"></div>':'')
+          +'<span style="color:white;font-size:10px;font-family:\'DM Sans\',sans-serif;position:relative;white-space:nowrap;overflow:hidden;">'+escHtml(ev.title||'')+'</span>'
+          +'</div></div>'
+          +'</div>';
+      }).join('')+'</div>';
+    if(container)container.innerHTML=html;
+  } catch(e){
+    if(loader)loader.style.display='none';
+    if(container)container.innerHTML='<div style="padding:14px;color:#FF453A;font-size:12px;font-family:\'DM Sans\',sans-serif;">Erreur: '+escHtml(e.message)+'</div>';
+  }
+}
+
+function setGanttColor(c, btn){
+  _ganttColor=c;
+  document.querySelectorAll('.g-color-btn').forEach(b=>{b.style.background='#F2F2F7';});
+  if(btn){btn.style.background=c;btn.style.color='white';}
+}
+
+function addGanttEvent(){
+  document.getElementById('gTitle').value='';
+  document.getElementById('gStart').value=new Date().toISOString().split('T')[0];
+  const end=new Date(); end.setDate(end.getDate()+7);
+  document.getElementById('gEnd').value=end.toISOString().split('T')[0];
+  _ganttColor='#6B2D45';
+  document.querySelectorAll('.g-color-btn').forEach((b,i)=>{b.style.background=i===0?'#6B2D45':'#F2F2F7';b.style.color=i===0?'white':['#0A84FF','#34C759','#FF9F0A'][i-1]||'#8E8E93';});
+  document.getElementById('gSyncOutlook').checked=false;
+  document.getElementById('ganttModal').style.display='flex';
+}
+
+async function saveGanttEvent(){
+  const title=document.getElementById('gTitle').value.trim(); if(!title){showToast('Entrez un titre');return;}
+  const start=document.getElementById('gStart').value; const end=document.getElementById('gEnd').value;
+  const syncOutlook=document.getElementById('gSyncOutlook').checked;
+  const local=JSON.parse(localStorage.getItem(GANTT_KEY())||'[]');
+  local.push({id:Date.now(),title,start,end,color:_ganttColor,source:'local'});
+  localStorage.setItem(GANTT_KEY(),JSON.stringify(local));
+  if(syncOutlook && state.accessToken){
+    try{
+      await graphPost('/me/events',{
+        subject: title,
+        start:{dateTime:start+'T08:00:00',timeZone:'America/Toronto'},
+        end:{dateTime:end+'T17:00:00',timeZone:'America/Toronto'},
+        body:{contentType:'HTML',content:'Projet: '+(state.currentClient?.name||state.currentClient?.Nom||'')},
+        categories:['Émilie Pépin']
+      });
+      showToast('✅ Tâche ajoutée + synchronisée dans Outlook !');
+    }catch(e){showToast('✅ Sauvegardé localement (Outlook sync échoué)');}
+  } else { showToast('✅ Tâche ajoutée'); }
+  document.getElementById('ganttModal').style.display='none';
+  loadGantt();
+}
+
+// ===== TEAMS =====
+async function sendTeamsUpdate(){
+  if(!state.accessToken){ showToast('Connexion Microsoft requise'); return; }
+  const client=state.currentClient; if(!client){ showToast('Sélectionnez un client'); return; }
+  const clientName=client.name||client.Nom||'';
+  const phase=(['Concept','Design','Chantier','Livraison'])[_getPhase(client.id||client.ID||'')||0];
+  const msg=prompt('Message à envoyer dans Teams pour '+clientName+' :','Mise à jour projet '+clientName+' — Phase: '+phase+'. Tout se déroule bien !');
+  if(!msg) return;
+  showToast('Envoi dans Teams…');
+  try{
+    const teams=await graphGet('/me/joinedTeams?$select=id,displayName&$top=5').catch(()=>null);
+    if(!teams?.value?.length){ showToast('Aucune équipe Teams trouvée'); return; }
+    const team=teams.value.find(t=>t.displayName?.toLowerCase().includes('émilie')||t.displayName?.toLowerCase().includes('studio'))||teams.value[0];
+    const channels=await graphGet('/teams/'+team.id+'/channels?$filter=displayName eq \'General\'').catch(()=>null);
+    const channelId=channels?.value?.[0]?.id;
+    if(!channelId){ showToast('Canal General introuvable'); return; }
+    await graphPost('/teams/'+team.id+'/channels/'+channelId+'/messages',{
+      body:{ contentType:'html', content:'<p><strong>📋 '+escHtml(clientName)+'</strong> — '+escHtml(phase)+'</p><p>'+escHtml(msg)+'</p><p><em>Envoyé depuis Studio Émilie Pépin</em></p>' }
+    });
+    showToast('✅ Message envoyé dans Teams !');
+  }catch(e){ showToast('⚠️ Erreur Teams: '+e.message); }
+}
 </script>
   <input type="file" id="cameraInput" accept="image/*,video/*" style="display:none;" onchange="handleCameraCapture(event)" multiple>
   <input type="file" id="galleryFileInput" accept="image/*,video/*" style="display:none;" onchange="handleGalleryCapture(event)" multiple>
@@ -3874,85 +4176,95 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch
 </div>
 
 <!-- ===== SCREEN KILOMÉTRAGE ===== -->
-<div class="screen" id="screenKilometres" style="flex-direction:column;background:var(--rose-cream);">
+<div class="screen" id="screenKilometres" style="flex-direction:column;background:#F2F2F7;">
   <!-- Header -->
   <div style="background:var(--mauve);padding:calc(env(safe-area-inset-top,0px)+12px) 16px 12px;display:flex;align-items:center;gap:12px;">
     <button onclick="navTo('screenClients','nav-clients')" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px 4px 0;">‹</button>
     <h2 style="color:white;font-family:'Cormorant Garamond',serif;font-size:20px;margin:0;flex:1;">Kilométrage</h2>
-    <button onclick="openAddTrip()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">+ Trajet</button>
+    <button onclick="openAddTrip()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">+ Manuel</button>
   </div>
 
-  <!-- Summary cards -->
+  <!-- Auto-detect banner -->
+  <div id="kmDrivingBanner" style="display:none;background:#34C759;padding:12px 16px;align-items:center;gap:10px;">
+    <div style="width:10px;height:10px;border-radius:50%;background:white;animation:pulse 1s infinite;"></div>
+    <span style="color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;flex:1;">Conduite détectée — <span id="kmLiveKm">0.0</span> km</span>
+    <button onclick="stopAutoTrip(true)" style="background:white;color:#34C759;border:none;border-radius:16px;padding:6px 14px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:600;">✅ Pro</button>
+    <button onclick="stopAutoTrip(false)" style="background:rgba(255,255,255,0.3);color:white;border:none;border-radius:16px;padding:6px 14px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;">✕ Perso</button>
+  </div>
+
+  <!-- Summary -->
   <div style="display:flex;gap:10px;padding:14px 14px 0;">
-    <div style="flex:1;background:white;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-card);text-align:center;">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;margin-bottom:4px;">Total km</div>
+    <div style="flex:1;background:white;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#8E8E93;font-family:'DM Sans',sans-serif;margin-bottom:4px;">Ce mois</div>
       <div id="kmTotalKm" style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--mauve);">0</div>
+      <div style="font-size:10px;color:#8E8E93;font-family:'DM Sans',sans-serif;">km</div>
     </div>
-    <div style="flex:1;background:white;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-card);text-align:center;">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;margin-bottom:4px;">Remboursement</div>
-      <div id="kmTotalAmt" style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--mauve);">0 $</div>
+    <div style="flex:1;background:white;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#8E8E93;font-family:'DM Sans',sans-serif;margin-bottom:4px;">Remboursement</div>
+      <div id="kmTotalAmt" style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--mauve);">0</div>
+      <div style="font-size:10px;color:#8E8E93;font-family:'DM Sans',sans-serif;">$</div>
     </div>
-    <div style="flex:1;background:white;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-card);text-align:center;">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;margin-bottom:4px;">Trajets</div>
+    <div style="flex:1;background:white;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#8E8E93;font-family:'DM Sans',sans-serif;margin-bottom:4px;">Trajets</div>
       <div id="kmTotalTrips" style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--mauve);">0</div>
+      <div style="font-size:10px;color:#8E8E93;font-family:'DM Sans',sans-serif;">total</div>
     </div>
   </div>
 
-  <!-- Rate row -->
-  <div style="display:flex;align-items:center;gap:8px;padding:10px 14px 0;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-light);">
+  <!-- Rate + rapport -->
+  <div style="display:flex;align-items:center;gap:8px;padding:10px 14px 0;font-family:'DM Sans',sans-serif;font-size:12px;color:#8E8E93;">
     <span>Taux ARC :</span>
     <input type="number" id="kmRate" value="0.70" step="0.01" min="0" max="2"
-      style="width:58px;border:1px solid var(--blush);border-radius:8px;padding:4px 6px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--mauve);text-align:center;"
+      style="width:58px;border:1px solid #E5E5EA;border-radius:8px;padding:4px 6px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--mauve);text-align:center;"
       onchange="saveKmRate(this.value);renderTrips()">
     <span>$/km</span>
+    <button onclick="startAutoDetect()" id="kmAutoBtn" style="margin-left:8px;background:var(--blush);border:none;border-radius:16px;padding:5px 12px;font-size:11px;color:var(--mauve);cursor:pointer;font-family:'DM Sans',sans-serif;">📍 Activer détection auto</button>
     <button onclick="printKmReport()" style="margin-left:auto;background:var(--mauve);color:white;border:none;border-radius:16px;padding:5px 14px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;">🖨️ Rapport</button>
   </div>
 
-  <!-- Trips list -->
+  <!-- MileIQ-style trip list -->
   <div style="flex:1;overflow-y:auto;padding:12px 14px;padding-bottom:calc(env(safe-area-inset-bottom,0px)+80px);">
-    <div id="kmTripsList" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <!-- Unclassified trips -->
+    <div id="kmUnclassified" style="display:none;margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#FF9F0A;font-family:'DM Sans',sans-serif;margin-bottom:8px;">⚠️ À classifier</div>
+      <div id="kmUnclassifiedList"></div>
+    </div>
+    <!-- Classified trips by date -->
+    <div id="kmTripsList" style="display:flex;flex-direction:column;gap:2px;"></div>
   </div>
 </div>
 
-<!-- Add trip modal -->
+<!-- Add trip modal (manual) -->
 <div id="kmModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5);align-items:flex-end;">
-  <div style="background:white;border-radius:20px 20px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom,0px)+20px);width:100%;box-sizing:border-box;max-height:90vh;overflow-y:auto;">
+  <div style="background:white;border-radius:20px 20px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom,0px)+20px);width:100%;box-sizing:border-box;max-height:88vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;margin-bottom:16px;">
       <h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--mauve);margin:0;flex:1;">Nouveau trajet</h3>
-      <button onclick="closeAddTrip()" style="background:none;border:none;font-size:24px;color:var(--text-light);cursor:pointer;">×</button>
+      <button onclick="closeAddTrip()" style="background:none;border:none;font-size:24px;color:#8E8E93;cursor:pointer;">×</button>
     </div>
-
-    <div style="display:flex;flex-direction:column;gap:12px;">
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8E8E93;font-family:'DM Sans',sans-serif;">Date</label>
+        <input type="date" id="kmInputDate" style="width:100%;border:none;border-bottom:2px solid #E5E5EA;padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;outline:none;background:transparent;box-sizing:border-box;"></div>
       <div>
-        <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Date</label>
-        <input type="date" id="kmInputDate" style="width:100%;border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;box-sizing:border-box;outline:none;background:transparent;">
-      </div>
-      <div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;flex:1;">Départ</label>
-          <button onclick="useGpsDepart()" style="background:var(--blush);border:none;border-radius:12px;padding:3px 10px;font-size:11px;color:var(--mauve);cursor:pointer;font-family:'DM Sans',sans-serif;">📍 GPS</button>
+        <div style="display:flex;align-items:center;gap:8px;"><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8E8E93;font-family:'DM Sans',sans-serif;flex:1;">Départ</label>
+          <button onclick="useGpsDepart()" style="background:#F2F2F7;border:none;border-radius:12px;padding:3px 10px;font-size:11px;color:var(--mauve);cursor:pointer;font-family:'DM Sans',sans-serif;">📍 GPS</button></div>
+        <input type="text" id="kmInputDepart" placeholder="Adresse de départ" style="width:100%;border:none;border-bottom:2px solid #E5E5EA;padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;outline:none;background:transparent;box-sizing:border-box;"></div>
+      <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8E8E93;font-family:'DM Sans',sans-serif;">Destination</label>
+        <input type="text" id="kmInputDest" placeholder="Adresse de destination" style="width:100%;border:none;border-bottom:2px solid #E5E5EA;padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;outline:none;background:transparent;box-sizing:border-box;"></div>
+      <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8E8E93;font-family:'DM Sans',sans-serif;">Distance (km)</label>
+        <input type="number" id="kmInputKm" placeholder="0.0" min="0" step="0.1" style="width:100%;border:none;border-bottom:2px solid #E5E5EA;padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;outline:none;background:transparent;box-sizing:border-box;"></div>
+      <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8E8E93;font-family:'DM Sans',sans-serif;">Client</label>
+        <input type="text" id="kmInputClient" placeholder="Nom du client" style="width:100%;border:none;border-bottom:2px solid #E5E5EA;padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;outline:none;background:transparent;box-sizing:border-box;"></div>
+      <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8E8E93;font-family:'DM Sans',sans-serif;">Motif</label>
+        <input type="text" id="kmInputMotif" placeholder="Visite chantier, Réunion client…" style="width:100%;border:none;border-bottom:2px solid #E5E5EA;padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;outline:none;background:transparent;box-sizing:border-box;"></div>
+      <!-- Classification MileIQ style -->
+      <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8E8E93;font-family:'DM Sans',sans-serif;">Type</label>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button onclick="setTripType('pro',this)" id="tripTypePro" style="flex:1;background:var(--mauve);color:white;border:none;border-radius:14px;padding:12px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;font-weight:600;">💼 Professionnel</button>
+          <button onclick="setTripType('perso',this)" id="tripTypePerso" style="flex:1;background:#F2F2F7;color:#8E8E93;border:none;border-radius:14px;padding:12px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">🏠 Personnel</button>
         </div>
-        <input type="text" id="kmInputDepart" placeholder="Adresse de départ" style="width:100%;border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;box-sizing:border-box;outline:none;background:transparent;">
-      </div>
-      <div>
-        <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Destination</label>
-        <input type="text" id="kmInputDest" placeholder="Adresse de destination" style="width:100%;border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;box-sizing:border-box;outline:none;background:transparent;">
-      </div>
-      <div>
-        <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Distance (km)</label>
-        <input type="number" id="kmInputKm" placeholder="0" min="0" step="0.1" style="width:100%;border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;box-sizing:border-box;outline:none;background:transparent;">
-      </div>
-      <div>
-        <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Client</label>
-        <input type="text" id="kmInputClient" placeholder="Nom du client (optionnel)" style="width:100%;border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;box-sizing:border-box;outline:none;background:transparent;">
-      </div>
-      <div>
-        <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Motif</label>
-        <input type="text" id="kmInputMotif" placeholder="Ex: Visite chantier, Réunion client…" style="width:100%;border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;box-sizing:border-box;outline:none;background:transparent;">
       </div>
     </div>
-
-    <button onclick="saveTrip()" style="width:100%;margin-top:20px;background:var(--mauve);color:white;border:none;border-radius:24px;padding:16px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;">Enregistrer le trajet</button>
+    <button onclick="saveTrip()" style="width:100%;margin-top:20px;background:var(--mauve);color:white;border:none;border-radius:24px;padding:16px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;">Enregistrer</button>
   </div>
 </div>
 
@@ -4044,6 +4356,56 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch
   </div>
   <button onclick="document.getElementById('beforeAfterViewer').style.display='none'" style="position:absolute;top:calc(env(safe-area-inset-top,0px)+16px);left:16px;background:rgba(0,0,0,0.6);border:none;color:white;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;">&#x2715;</button>
   <div style="position:absolute;top:calc(env(safe-area-inset-top,0px)+16px);left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:white;border-radius:20px;padding:6px 16px;font-family:'DM Sans',sans-serif;font-size:13px;">Avant / Apr&egrave;s</div>
+</div>
+
+<!-- ===== SCREEN GANTT ===== -->
+<div class="screen" id="screenGantt" style="flex-direction:column;background:#F2F2F7;">
+  <div style="background:var(--mauve);padding:calc(env(safe-area-inset-top,0px)+12px) 16px 12px;display:flex;align-items:center;gap:12px;">
+    <button onclick="showScreen('screenClient')" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;">‹</button>
+    <h2 style="color:white;font-family:'Cormorant Garamond',serif;font-size:20px;margin:0;flex:1;">Planification</h2>
+    <button onclick="addGanttEvent()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">+ Tâche</button>
+  </div>
+  <!-- Source tabs -->
+  <div style="display:flex;background:white;border-bottom:1px solid #E5E5EA;">
+    <button onclick="switchGanttSource('planner')" id="gTabPlanner" class="g-tab active" style="flex:1;padding:10px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:12px;border-bottom:2px solid var(--mauve);color:var(--mauve);cursor:pointer;">📋 Planner</button>
+    <button onclick="switchGanttSource('outlook')" id="gTabOutlook" class="g-tab" style="flex:1;padding:10px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:12px;border-bottom:2px solid transparent;color:#8E8E93;cursor:pointer;">📅 Outlook</button>
+    <button onclick="switchGanttSource('local')" id="gTabLocal" class="g-tab" style="flex:1;padding:10px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:12px;border-bottom:2px solid transparent;color:#8E8E93;cursor:pointer;">📌 Local</button>
+  </div>
+  <!-- Gantt visual timeline -->
+  <div style="flex:1;overflow-y:auto;padding:14px;padding-bottom:calc(env(safe-area-inset-bottom,0px)+80px);">
+    <div id="ganttLoading" style="text-align:center;padding:30px;color:#8E8E93;font-family:'DM Sans',sans-serif;font-size:14px;display:none;">Chargement…</div>
+    <div id="ganttContainer"></div>
+  </div>
+</div>
+
+<!-- Add event modal -->
+<div id="ganttModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5);align-items:flex-end;">
+  <div style="background:white;border-radius:20px 20px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom,0px)+20px);width:100%;box-sizing:border-box;">
+    <div style="display:flex;align-items:center;margin-bottom:16px;">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--mauve);margin:0;flex:1;">Nouvelle tâche</h3>
+      <button onclick="document.getElementById('ganttModal').style.display='none'" style="background:none;border:none;font-size:24px;color:#8E8E93;cursor:pointer;">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <input type="text" id="gTitle" placeholder="Titre de la tâche" style="border:none;border-bottom:2px solid #E5E5EA;padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;color:#333;background:transparent;">
+      <div style="display:flex;gap:12px;">
+        <div style="flex:1;"><label style="font-size:10px;color:#8E8E93;font-family:'DM Sans',sans-serif;">Début</label>
+          <input type="date" id="gStart" style="width:100%;border:none;border-bottom:2px solid #E5E5EA;padding:6px 0;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;color:#333;background:transparent;"></div>
+        <div style="flex:1;"><label style="font-size:10px;color:#8E8E93;font-family:'DM Sans',sans-serif;">Fin</label>
+          <input type="date" id="gEnd" style="width:100%;border:none;border-bottom:2px solid #E5E5EA;padding:6px 0;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;color:#333;background:transparent;"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="setGanttColor('#6B2D45',this)" class="g-color-btn" style="flex:1;background:#6B2D45;color:white;border:none;border-radius:10px;padding:8px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;">Design</button>
+        <button onclick="setGanttColor('#0A84FF',this)" class="g-color-btn" style="flex:1;background:#F2F2F7;color:#0A84FF;border:none;border-radius:10px;padding:8px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;">Chantier</button>
+        <button onclick="setGanttColor('#34C759',this)" class="g-color-btn" style="flex:1;background:#F2F2F7;color:#34C759;border:none;border-radius:10px;padding:8px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;">Livraison</button>
+        <button onclick="setGanttColor('#FF9F0A',this)" class="g-color-btn" style="flex:1;background:#F2F2F7;color:#FF9F0A;border:none;border-radius:10px;padding:8px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;">Réunion</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+        <input type="checkbox" id="gSyncOutlook" style="width:18px;height:18px;accent-color:var(--mauve);">
+        <label for="gSyncOutlook" style="font-family:'DM Sans',sans-serif;font-size:13px;color:#333;">Ajouter dans Outlook Calendar</label>
+      </div>
+    </div>
+    <button onclick="saveGanttEvent()" style="width:100%;margin-top:16px;background:var(--mauve);color:white;border:none;border-radius:24px;padding:14px;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;">Enregistrer</button>
+  </div>
 </div>
 </body>
 </html>
