@@ -250,6 +250,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 #printReport .pr-photo img { width: 100%; border-radius: 8px; border: 1px solid #ddd; }
 #printReport .pr-caption { font-size: 11px; color: #6B4A56; margin-top: 4px; padding: 2px 4px; }
 #printInvoice { display: none; font-family: 'DM Sans', Arial, sans-serif; }
+.fp-tool-btn { transition: all 0.15s; }
+.fp-active { background: var(--mauve) !important; color: white !important; }
+.budget-line { background:white;border-radius:12px;padding:14px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;gap:8px; }
+.budget-line input { border:none;border-bottom:1px solid var(--blush);padding:4px 0;font-family:'DM Sans',sans-serif;font-size:13px;color:#333;background:transparent;outline:none;width:100%; }
+.budget-line .bl-row { display:flex;gap:8px;align-items:center; }
+.budget-line .bl-label { font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-light);margin-bottom:2px; }
 </style>
 </head>
 <body>
@@ -317,6 +323,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
       <button class="action-btn" onclick="askAnna()"><div class="action-icon icon-anna">✨</div><div class="action-label">Demander à Anna</div></button>
       <button class="action-btn" onclick="generatePhotoReport()"><div class="action-icon" style="background:#FFF0EA;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E05A00" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></div><div class="action-label">Rapport PDF</div></button>
       <button class="action-btn" onclick="openBeforeAfterPicker()"><div class="action-icon" style="background:#F0EAFF;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B3AC4" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg></div><div class="action-label">Avant / Apr&egrave;s</div></button>
+      <button class="action-btn" onclick="openFloorPlan()">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12M3 15h6"/></svg>
+        <span>Plan d'étage</span>
+      </button>
+      <button class="action-btn" onclick="openBudget()">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Budget</span>
+      </button>
     </div>
     <button class="bill-btn" onclick="printInvoice()"><span>💰</span> Facturer ce client</button>
   </div>
@@ -2954,10 +2968,259 @@ async function sharePhotosOneDrive(){
 function savePhotoComment(idx, text){ localStorage.setItem('photoComment_'+idx,text); }
 function loadPhotoComment(idx){ return localStorage.getItem('photoComment_'+idx)||''; }
 
+// ===== PLAN D'ETAGE =====
+let fpHistory = [], fpTool = 'pen', fpDrawing = false, fpLastX = 0, fpLastY = 0, fpColor = '#6B2D45', fpSize = 3;
+
+function openFloorPlan() {
+  showScreen('screenFloorPlan');
+  const saved = localStorage.getItem('floorPlan_' + (state.currentClient?.id || state.currentClient?.ID || ''));
+  if (saved) {
+    _fpLoadImage(saved);
+  }
+}
+
+function loadFloorPlan(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => _fpLoadImage(ev.target.result);
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function _fpLoadImage(src) {
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.getElementById('fpCanvas');
+    const container = document.getElementById('floorPlanCanvas');
+    const maxW = window.innerWidth;
+    const maxH = window.innerHeight - 200;
+    let w = img.width, h = img.height;
+    if (w > maxW) { h = h * maxW / w; w = maxW; }
+    if (h > maxH) { w = w * maxH / h; h = maxH; }
+    canvas.width = Math.round(w);
+    canvas.height = Math.round(h);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    fpHistory = [ctx.getImageData(0, 0, canvas.width, canvas.height)];
+    document.getElementById('floorPlanEmpty').style.display = 'none';
+    container.style.display = 'flex';
+    _fpBindEvents(canvas);
+  };
+  img.src = src;
+}
+
+function _fpBindEvents(canvas) {
+  const nc = canvas.cloneNode(true);
+  canvas.parentNode.replaceChild(nc, canvas);
+  const c = document.getElementById('fpCanvas');
+  const getPos = e => {
+    const r = c.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return [(t.clientX - r.left) * c.width / r.width, (t.clientY - r.top) * c.height / r.height];
+  };
+  const start = e => { e.preventDefault(); fpDrawing = true; [fpLastX, fpLastY] = getPos(e); };
+  const move = e => {
+    e.preventDefault();
+    if (!fpDrawing) return;
+    const [x, y] = getPos(e);
+    const ctx = c.getContext('2d');
+    ctx.strokeStyle = fpColor; ctx.lineWidth = fpSize; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(fpLastX, fpLastY); ctx.lineTo(x, y); ctx.stroke();
+    [fpLastX, fpLastY] = [x, y];
+  };
+  const end = e => {
+    if (!fpDrawing) return;
+    fpDrawing = false;
+    const ctx = c.getContext('2d');
+    fpHistory.push(ctx.getImageData(0, 0, c.width, c.height));
+    if (fpHistory.length > 30) fpHistory.shift();
+  };
+  c.addEventListener('mousedown', start);
+  c.addEventListener('mousemove', move);
+  c.addEventListener('mouseup', end);
+  c.addEventListener('touchstart', start, { passive: false });
+  c.addEventListener('touchmove', move, { passive: false });
+  c.addEventListener('touchend', end);
+}
+
+function fpUndo() {
+  if (fpHistory.length <= 1) return;
+  fpHistory.pop();
+  const c = document.getElementById('fpCanvas');
+  c.getContext('2d').putImageData(fpHistory[fpHistory.length - 1], 0, 0);
+}
+
+function fpSetTool(tool) {
+  fpTool = tool;
+  document.querySelectorAll('.fp-tool-btn').forEach(b => b.classList.remove('fp-active'));
+  const btn = document.getElementById(tool === 'pen' ? 'fpBtnPen' : 'fpBtnText');
+  if (btn) btn.classList.add('fp-active');
+}
+
+function fpSave() {
+  const c = document.getElementById('fpCanvas');
+  const dataUrl = c.toDataURL('image/jpeg', 0.85);
+  const clientId = state.currentClient?.id || state.currentClient?.ID || '';
+  localStorage.setItem('floorPlan_' + clientId, dataUrl);
+  showToast('✅ Plan sauvegardé !');
+}
+
+// ===== BUDGET =====
+function _budgetKey() { return 'budget_' + (state.currentClient?.id || state.currentClient?.ID || ''); }
+
+function openBudget() {
+  showScreen('screenBudget');
+  renderBudget();
+}
+
+function _getBudgetLines() {
+  try { return JSON.parse(localStorage.getItem(_budgetKey()) || '[]'); } catch(e) { return []; }
+}
+function _saveBudgetLines(lines) { localStorage.setItem(_budgetKey(), JSON.stringify(lines)); }
+
+function addBudgetLine() {
+  const lines = _getBudgetLines();
+  lines.push({ id: Date.now(), article: '', fournisseur: '', estime: '', reel: '' });
+  _saveBudgetLines(lines);
+  renderBudget();
+}
+
+function deleteBudgetLine(id) {
+  const lines = _getBudgetLines().filter(l => l.id !== id);
+  _saveBudgetLines(lines);
+  renderBudget();
+}
+
+function updateBudgetLine(id, field, value) {
+  const lines = _getBudgetLines();
+  const line = lines.find(l => l.id === id);
+  if (line) { line[field] = value; _saveBudgetLines(lines); }
+  _updateBudgetTotals();
+}
+
+function _updateBudgetTotals() {
+  const lines = _getBudgetLines();
+  const total = lines.reduce((s, l) => s + (parseFloat(l.estime) || 0), 0);
+  const spent = lines.reduce((s, l) => s + (parseFloat(l.reel) || 0), 0);
+  const el = document.getElementById('budgetTotal');
+  const es = document.getElementById('budgetSpent');
+  if (el) el.textContent = total.toFixed(2) + ' $';
+  if (es) { es.textContent = spent.toFixed(2) + ' $'; es.style.color = spent > total ? '#FF453A' : '#34C759'; }
+}
+
+function renderBudget() {
+  const lines = _getBudgetLines();
+  const container = document.getElementById('budgetLines');
+  if (!container) return;
+  container.innerHTML = lines.length === 0
+    ? '<div style="text-align:center;padding:40px;color:var(--text-light);font-family:\'DM Sans\',sans-serif;font-size:14px;">Aucune ligne de budget.<br>Appuyez sur &quot;+ Ligne&quot; pour commencer.</div>'
+    : lines.map(l => `
+      <div class="budget-line">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="bl-label">Article</div>
+          <button onclick="deleteBudgetLine(${l.id})" style="background:none;border:none;color:#FF453A;font-size:18px;cursor:pointer;padding:0;">×</button>
+        </div>
+        <input type="text" placeholder="Nom de l'article" value="${escHtml(l.article||'')}" onchange="updateBudgetLine(${l.id},'article',this.value)" oninput="updateBudgetLine(${l.id},'article',this.value)">
+        <div class="bl-row">
+          <div style="flex:1;">
+            <div class="bl-label">Fournisseur</div>
+            <input type="text" placeholder="Ex: IKEA, Rona…" value="${escHtml(l.fournisseur||'')}" onchange="updateBudgetLine(${l.id},'fournisseur',this.value)" oninput="updateBudgetLine(${l.id},'fournisseur',this.value)">
+          </div>
+        </div>
+        <div class="bl-row">
+          <div style="flex:1;">
+            <div class="bl-label">Estimé ($)</div>
+            <input type="number" placeholder="0.00" value="${escHtml(l.estime||'')}" onchange="updateBudgetLine(${l.id},'estime',this.value)" oninput="updateBudgetLine(${l.id},'estime',this.value)">
+          </div>
+          <div style="flex:1;">
+            <div class="bl-label">Réel ($)</div>
+            <input type="number" placeholder="0.00" value="${escHtml(l.reel||'')}" onchange="updateBudgetLine(${l.id},'reel',this.value)" oninput="updateBudgetLine(${l.id},'reel',this.value)">
+          </div>
+          <div style="flex:0.6;text-align:right;">
+            <div class="bl-label">Écart</div>
+            <div style="font-size:13px;font-weight:600;color:${(parseFloat(l.reel)||0)>(parseFloat(l.estime)||0)?'#FF453A':'#34C759'};">${((parseFloat(l.reel)||0)-(parseFloat(l.estime)||0)).toFixed(2)} $</div>
+          </div>
+        </div>
+      </div>`).join('');
+  _updateBudgetTotals();
+}
+
+function printBudget() {
+  const client = state.currentClient;
+  const lines = _getBudgetLines();
+  const total = lines.reduce((s,l)=>s+(parseFloat(l.estime)||0),0);
+  const spent = lines.reduce((s,l)=>s+(parseFloat(l.reel)||0),0);
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Budget</title>
+  <style>body{font-family:'DM Sans',Arial,sans-serif;color:#2A1520;padding:20px;}
+  h1{font-family:Georgia,serif;color:#6B2D45;font-size:28px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:16px;}
+  th{background:#6B2D45;color:white;padding:8px 10px;text-align:left;}
+  td{padding:8px 10px;border-bottom:1px solid #eee;}
+  .total{font-weight:700;font-size:15px;text-align:right;margin-top:12px;}
+  @media print{button{display:none;}}</style></head><body>
+  <h1>Budget — ${escHtml(client?.name||client?.Nom||client?.Title||'')}</h1>
+  <p style="color:#6B4A56;font-size:13px;">${new Date().toLocaleDateString('fr-CA',{day:'2-digit',month:'long',year:'numeric'})}</p>
+  <table><tr><th>Article</th><th>Fournisseur</th><th>Estimé</th><th>Réel</th><th>Écart</th></tr>
+  ${lines.map(l=>`<tr><td>${escHtml(l.article||'—')}</td><td>${escHtml(l.fournisseur||'—')}</td><td>${(parseFloat(l.estime)||0).toFixed(2)} $</td><td>${(parseFloat(l.reel)||0).toFixed(2)} $</td><td style="color:${(parseFloat(l.reel)||0)>(parseFloat(l.estime)||0)?'#FF453A':'#34C759'}">${((parseFloat(l.reel)||0)-(parseFloat(l.estime)||0)).toFixed(2)} $</td></tr>`).join('')}
+  </table>
+  <div class="total">Total estimé : ${total.toFixed(2)} $ &nbsp;|&nbsp; Total réel : ${spent.toFixed(2)} $</div>
+  <button onclick="window.print()" style="margin-top:20px;padding:10px 24px;background:#6B2D45;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px;">Imprimer</button>
+  </body></html>`);
+  win.document.close();
+}
+
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script>
   <input type="file" id="cameraInput" accept="image/*,video/*" style="display:none;" onchange="handleCameraCapture(event)" multiple>
   <input type="file" id="galleryFileInput" accept="image/*,video/*" style="display:none;" onchange="handleGalleryCapture(event)" multiple>
+
+<!-- ===== SCREEN PLAN D'ÉTAGE ===== -->
+<div class="screen" id="screenFloorPlan" style="flex-direction:column;background:var(--rose-cream);">
+  <div style="background:var(--mauve);padding:calc(env(safe-area-inset-top,0px)+12px) 16px 12px;display:flex;align-items:center;gap:12px;">
+    <button onclick="showScreen('screenClient')" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;">‹</button>
+    <h2 style="color:white;font-family:'Cormorant Garamond',serif;font-size:20px;margin:0;flex:1;">Plan d'étage</h2>
+    <button onclick="document.getElementById('floorPlanInput').click()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">+ Importer</button>
+  </div>
+  <input type="file" id="floorPlanInput" accept="image/*,.pdf" style="display:none" onchange="loadFloorPlan(event)">
+  <div id="floorPlanEmpty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--text-light);padding:40px;">
+    <div style="font-size:48px;">🏠</div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:15px;text-align:center;">Importez un plan d'étage<br><span style="font-size:12px;opacity:0.7;">Image JPG, PNG ou PDF</span></div>
+    <button onclick="document.getElementById('floorPlanInput').click()" style="background:var(--mauve);color:white;border:none;border-radius:24px;padding:12px 28px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;">Choisir un fichier</button>
+  </div>
+  <div id="floorPlanCanvas" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+    <canvas id="fpCanvas" style="width:100%;flex:1;object-fit:contain;touch-action:none;"></canvas>
+    <div style="display:flex;justify-content:space-around;padding:12px 16px calc(env(safe-area-inset-bottom,0px)+12px);background:white;border-top:1px solid var(--blush);">
+      <button onclick="fpUndo()" style="background:var(--blush);border:none;border-radius:20px;padding:8px 20px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--mauve);cursor:pointer;">↩ Annuler</button>
+      <button onclick="fpSetTool('pen')" id="fpBtnPen" class="fp-tool-btn fp-active" style="background:var(--mauve);color:white;border:none;border-radius:20px;padding:8px 20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">✏️ Stylo</button>
+      <button onclick="fpSetTool('text')" id="fpBtnText" class="fp-tool-btn" style="background:var(--blush);color:var(--mauve);border:none;border-radius:20px;padding:8px 20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">T Texte</button>
+      <button onclick="fpSave()" style="background:#34C759;color:white;border:none;border-radius:20px;padding:8px 20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">💾 Sauver</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN BUDGET ===== -->
+<div class="screen" id="screenBudget" style="flex-direction:column;background:var(--rose-cream);">
+  <div style="background:var(--mauve);padding:calc(env(safe-area-inset-top,0px)+12px) 16px 12px;display:flex;align-items:center;gap:12px;">
+    <button onclick="showScreen('screenClient')" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;">‹</button>
+    <h2 style="color:white;font-family:'Cormorant Garamond',serif;font-size:20px;margin:0;flex:1;">Budget</h2>
+    <button onclick="addBudgetLine()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">+ Ligne</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:14px;">
+    <div id="budgetSummary" style="background:white;border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow-card);display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Budget total</div>
+        <div id="budgetTotal" style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--mauve);">0 $</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Dépensé</div>
+        <div id="budgetSpent" style="font-family:'Cormorant Garamond',serif;font-size:28px;color:#FF453A;">0 $</div>
+      </div>
+    </div>
+    <div id="budgetLines" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <button onclick="printBudget()" style="width:100%;margin-top:16px;background:var(--mauve);color:white;border:none;border-radius:24px;padding:14px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;margin-bottom:calc(env(safe-area-inset-bottom,0px)+16px);">🖨️ Imprimer le budget</button>
+  </div>
+</div>
 
 <!-- RAPPORT PDF -->
 <div id="printReport">

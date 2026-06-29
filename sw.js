@@ -1,5 +1,5 @@
-// Service Worker v23 - GPS, PDF rapport, facture, phases, avant-apres, Anna, partage
-const CACHE_NAME = 'emilie-pepin-v23';
+// Service Worker v24 - Plan d'etage + Budget
+const CACHE_NAME = 'emilie-pepin-v24';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
