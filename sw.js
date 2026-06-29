@@ -1,5 +1,5 @@
-// Service Worker v27 - Facture OneDrive, MileIQ auto-detect, Gantt Outlook/Planner, Teams
-const CACHE_NAME = 'emilie-pepin-v27';
+// Service Worker v28 - Dashboard pro, Moodboard Canva, redesign visuel complet
+const CACHE_NAME = 'emilie-pepin-v28';
 
 self.addEventListener('install', e => {
   self.skipWaiting();

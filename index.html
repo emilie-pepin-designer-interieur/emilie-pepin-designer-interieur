@@ -12,30 +12,184 @@
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.0/lib/msal-browser.min.js"></script>
 <script src="https://unpkg.com/dxf-parser@1.0.3/dist/dxf-parser.js" onerror="console.warn('dxf-parser CDN unavailable — fallback parser will be used')"></script>
 <style>
 :root {
   --mauve: #6B2D45;
+  --mauve-dark: #4A1E30;
+  --mauve-light: #9B4D6B;
   --mauve-deep: #9B6B8A;
-  --mauve-light: #C4859A;
-  --rose-cream: #FDF8F8;
-  --blush: #F2D7E0;
-  --rose-powder: #ECC5D4;
+  --rose-cream: #FDF8FA;
+  --blush: #F0E0E8;
+  --rose-powder: #E8C5D5;
   --white: #ffffff;
-  --text-dark: #2A1520;
-  --text-mid: #6B4A56;
-  --text-light: #A88090;
+  --text-dark: #1A0A12;
+  --text-mid: #4A2535;
+  --text-light: #9B7A8A;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
+  --shadow-card: 0 2px 16px rgba(107,45,69,0.10), 0 1px 4px rgba(107,45,69,0.06);
   --shadow-soft: 0 4px 24px rgba(107,45,69,0.08);
-  --shadow-card: 0 2px 12px rgba(107,45,69,0.06);
-  --radius: 20px;
-  --radius-sm: 12px;
+  --shadow-lg: 0 8px 32px rgba(107,45,69,0.15), 0 2px 8px rgba(107,45,69,0.08);
+  --gradient: linear-gradient(135deg, #6B2D45 0%, #9B4D6B 100%);
+  --gradient-soft: linear-gradient(135deg, #FDF8FA 0%, #F0E0E8 100%);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; max-width: 100vw; -webkit-font-smoothing: antialiased; }
+
+/* ===== GLOBAL POLISH ===== */
+.screen { background: var(--rose-cream); }
+
+/* Premium card style */
+.card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+/* Gradient header used across all screens */
+.screen-header {
+  background: var(--gradient);
+  padding: calc(env(safe-area-inset-top,0px) + 14px) 18px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.screen-header h2 {
+  color: white;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 400;
+  margin: 0;
+  flex: 1;
+  letter-spacing: 0.02em;
+}
+.screen-header .back-btn {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.screen-header .action-btn-header {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+/* Stat cards */
+.stat-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-card .stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30px;
+  color: var(--mauve);
+  line-height: 1;
+}
+.stat-card .stat-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-light);
+}
+.stat-card .stat-icon {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+/* Section title */
+.section-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-light);
+  margin: 0 0 10px 0;
+}
+
+/* Toast redesign */
+#toast {
+  font-family: 'DM Sans', sans-serif !important;
+  border-radius: 14px !important;
+  font-size: 14px !important;
+  padding: 12px 20px !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+/* Moodboard items */
+.mb-item {
+  position: absolute;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.mb-item:active { cursor: grabbing; }
+.mb-item.selected { outline: 2px solid #0A84FF; outline-offset: 2px; }
+.mb-item .mb-delete {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 22px;
+  height: 22px;
+  background: #FF453A;
+  border: 2px solid white;
+  border-radius: 50%;
+  color: white;
+  font-size: 12px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1;
+}
+.mb-item.selected .mb-delete { display: flex; }
+.mb-resize {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border: 2px solid #0A84FF;
+  border-radius: 50%;
+  cursor: se-resize;
+  display: none;
+  z-index: 10;
+}
+.mb-item.selected .mb-resize { display: block; }
 .screen { display: none; min-height: 100vh; flex-direction: column; animation: fadeIn 0.3s ease; }
 .screen.active { display: flex; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -52,11 +206,55 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 .login-btn.connected { background: rgba(58,125,41,0.3); border-color: rgba(58,125,41,0.6); }
 
 /* BOTTOM NAV */
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--blush); display: flex; padding-bottom: var(--safe-bottom); z-index: 100; }
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(253,248,250,0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--blush);
+  display: flex;
+  padding: 8px 0 calc(env(safe-area-inset-bottom,0px) + 4px);
+  z-index: 100;
+  box-shadow: 0 -4px 20px rgba(107,45,69,0.08);
+}
 .nav-hidden { display: none !important; }
-.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; border: none; background: none; cursor: pointer; color: var(--text-light); font-family: 'DM Sans', sans-serif; font-size: 10px; }
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border: none;
+  background: none;
+  color: var(--text-light);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 2px;
+  transition: color 0.15s;
+  position: relative;
+}
 .nav-item.active { color: var(--mauve); }
-.nav-item svg { width: 22px; height: 22px; }
+.nav-item svg { width: 24px; height: 24px; stroke-width: 1.5; transition: transform 0.15s; }
+.nav-item.active svg { stroke-width: 2; transform: translateY(-1px); }
+.nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: var(--mauve);
+  border-radius: 0 0 3px 3px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.nav-item.active::before { opacity: 1; }
 
 /* SCROLL */
 .scroll-content { flex: 1; overflow-y: auto; padding-bottom: calc(70px + var(--safe-bottom)); -webkit-overflow-scrolling: touch; }
@@ -294,7 +492,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
   <div class="app-header">
     <div class="header-titles"><div class="header-title">🌸 Émilie Pépin</div><div class="header-subtitle">Designer d'intérieur</div></div>
     <button id="loginBtn" class="login-btn" onclick="handleLoginBtn()">🔐 Connexion</button>
-    <button class="header-action" onclick="navTo('screenDashboard','nav-dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+    <button class="header-action" onclick="navTo('screenDashboard','navDashboard');renderDashboard();"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
   </div>
   <div class="scroll-content">
     <div id="connectBanner" style="display:none"><div class="connect-banner"><p>🌸 Connectez-vous à Microsoft 365 pour voir vos vrais clients.</p><button class="connect-ms-btn" onclick="loginToMicrosoft()"><span>🔐</span> Se connecter avec info@emiliepepin.ca</button></div></div>
@@ -338,7 +536,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
       <button class="action-btn" onclick="showScreen('screenNote')"><div class="action-icon icon-note">📋</div><div class="action-label">Note de chantier</div></button>
       <button class="action-btn" onclick="showScreen('screenTemps')"><div class="action-icon icon-time">⏱️</div><div class="action-label">Feuille de temps</div></button>
       <button class="action-btn" onclick="showSuiviProjet()"><div class="action-icon icon-project">📊</div><div class="action-label">Suivi projet</div></button>
-      <button class="action-btn" onclick="showScreen('screenMoodboard')"><div class="action-icon" style="background:#FFF0F8">🎨</div><div class="action-label">Moodboard</div></button>
+      <button class="action-btn" onclick="openMoodboard()"><div class="action-icon" style="background:#FFF0F8">🎨</div><div class="action-label">Moodboard</div></button>
       <button class="action-btn" onclick="openKilometres()"><div class="action-icon icon-move">🚗</div><div class="action-label">Kilométrage</div></button>
       <button class="action-btn" onclick="askAnna()"><div class="action-icon icon-anna">✨</div><div class="action-label">Demander à Anna</div></button>
       <button class="action-btn" onclick="generatePhotoReport()"><div class="action-icon" style="background:#FFF0EA;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E05A00" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></div><div class="action-label">Rapport PDF</div></button>
@@ -864,23 +1062,43 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 </div>
 
 <!-- ===== SCREEN MOODBOARD ===== -->
-<div class="screen" id="screenMoodboard">
-  <div class="app-header"><button class="header-back" onclick="showScreen('screenClient')">←</button><div class="header-title">🎨 Moodboard</div><button class="header-action" onclick="addMoodImage()">+</button></div>
-  <div class="scroll-content">
-    <div class="section-label">Palette de couleurs</div>
-    <div class="color-palette">
-      <div class="color-swatch selected" style="background:#6B2D45" onclick="toggleSwatch(this)"></div>
-      <div class="color-swatch" style="background:#C4859A" onclick="toggleSwatch(this)"></div>
-      <div class="color-swatch" style="background:#FDF8F8;border:1px solid #eee" onclick="toggleSwatch(this)"></div>
-      <div class="color-swatch" style="background:#D4B896" onclick="toggleSwatch(this)"></div>
-      <div class="color-swatch" style="background:#8B7355" onclick="toggleSwatch(this)"></div>
-      <div class="color-swatch" style="background:#2C3E50" onclick="toggleSwatch(this)"></div>
+<div class="screen" id="screenMoodboard" style="flex-direction:column;background:#1A1A2E;overflow:hidden;">
+  <!-- Header -->
+  <div style="background:#0F0F1A;padding:calc(env(safe-area-inset-top,0px)+12px) 16px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.08);">
+    <button onclick="showScreen('screenClient')" style="background:rgba(255,255,255,0.1);border:none;color:white;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
+    <span style="color:white;font-family:'Cormorant Garamond',serif;font-size:20px;flex:1;" id="moodboardTitle">Moodboard</span>
+    <!-- Toolbar -->
+    <div style="display:flex;gap:6px;">
+      <button onclick="mbAddPhoto()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:10px;padding:6px 10px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:4px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Photo
+      </button>
+      <button onclick="mbAddText()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:10px;padding:6px 10px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;">T+ Texte</button>
+      <button onclick="mbAddColor()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:10px;padding:6px 10px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;">🎨</button>
+      <button onclick="mbExport()" style="background:var(--mauve);border:none;color:white;border-radius:10px;padding:6px 12px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;">↗ Export</button>
     </div>
-    <div class="section-label">Inspirations</div>
-    <div class="mood-grid" id="moodGrid"><div style="grid-column:1/-1;text-align:center;padding:22px;color:var(--text-light);font-size:13px;">Ajoutez des images 🎨</div></div>
-    <input type="file" id="moodInput" accept="image/*" style="display:none" onchange="handleMoodImage(event)">
-    <div style="padding:0 14px 14px"><button class="submit-btn" onclick="sharePhotosOneDrive()">🔗 Partager photos OneDrive</button></div>
   </div>
+
+  <!-- Canvas area -->
+  <div id="mbCanvas" style="flex:1;position:relative;overflow:hidden;background:#1A1A2E;background-image:radial-gradient(circle at 20% 30%, rgba(107,45,69,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(155,77,107,0.1) 0%, transparent 50%);">
+    <div id="mbEmpty" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;pointer-events:none;">
+      <div style="width:80px;height:80px;border-radius:20px;background:rgba(255,255,255,0.06);border:2px dashed rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:32px;">🖼️</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:14px;color:rgba(255,255,255,0.4);text-align:center;">Créez votre moodboard<br><span style="font-size:12px;opacity:0.6;">Ajoutez des photos, textes et couleurs</span></div>
+    </div>
+  </div>
+
+  <!-- Bottom palette -->
+  <div id="mbBottomBar" style="background:#0F0F1A;padding:10px 16px calc(env(safe-area-inset-bottom,0px)+10px);display:flex;gap:8px;align-items:center;border-top:1px solid rgba(255,255,255,0.08);">
+    <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,0.4);white-space:nowrap;">Fond :</span>
+    <div onclick="mbSetBg('#1A1A2E')" style="width:28px;height:28px;border-radius:50%;background:#1A1A2E;cursor:pointer;border:2px solid rgba(255,255,255,0.3);flex-shrink:0;"></div>
+    <div onclick="mbSetBg('#FDF8FA')" style="width:28px;height:28px;border-radius:50%;background:#FDF8FA;cursor:pointer;border:2px solid rgba(255,255,255,0.1);flex-shrink:0;"></div>
+    <div onclick="mbSetBg('linear-gradient(135deg,#2C1654,#6B2D45)')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2C1654,#6B2D45);cursor:pointer;border:2px solid rgba(255,255,255,0.1);flex-shrink:0;"></div>
+    <div onclick="mbSetBg('linear-gradient(135deg,#1A1A2E,#16213E,#0F3460)')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1A1A2E,#0F3460);cursor:pointer;border:2px solid rgba(255,255,255,0.1);flex-shrink:0;"></div>
+    <div onclick="mbSetBg('linear-gradient(135deg,#F5F0EB,#E8DDD5)')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#F5F0EB,#E8DDD5);cursor:pointer;border:2px solid rgba(255,255,255,0.1);flex-shrink:0;"></div>
+    <button onclick="mbClearAll()" style="margin-left:auto;background:rgba(255,69,58,0.2);border:1px solid rgba(255,69,58,0.3);color:#FF453A;border-radius:10px;padding:5px 12px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;">Vider</button>
+    <button onclick="mbSave()" style="background:rgba(52,199,89,0.2);border:1px solid rgba(52,199,89,0.3);color:#34C759;border-radius:10px;padding:5px 12px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;">Sauver</button>
+  </div>
+
+  <input type="file" id="mbPhotoInput" accept="image/*" multiple style="display:none" onchange="mbHandlePhotos(event)">
 </div>
 
 <!-- ===== SCREEN ANNA ===== -->
@@ -908,23 +1126,91 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 </div>
 
 <!-- ===== SCREEN DASHBOARD ===== -->
-<div class="screen" id="screenDashboard">
-  <div class="dashboard-greeting">
-    <div class="greeting-date" id="dashDate"></div>
-    <div class="greeting-text">Bonjour, Émilie 🌸</div>
-    <div class="greeting-sub" id="dashSub">Système en ligne</div>
+<div class="screen" id="screenDashboard" style="flex-direction:column;overflow:hidden;">
+  <!-- Header with gradient -->
+  <div style="background:var(--gradient);padding:calc(env(safe-area-inset-top,0px)+20px) 20px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,255,255,0.7);font-weight:500;letter-spacing:0.05em;">STUDIO</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:26px;color:white;font-weight:300;letter-spacing:0.03em;">Émilie Pépin</div>
+      </div>
+      <div id="dashDateBadge" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:12px;padding:6px 12px;text-align:center;backdrop-filter:blur(4px);">
+        <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,0.8);" id="dashDayName"></div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:white;line-height:1;" id="dashDayNum"></div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,0.8);" id="dashMonthName"></div>
+      </div>
+    </div>
+    <!-- Quick stats row -->
+    <div style="display:flex;gap:8px;">
+      <div style="flex:1;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:14px;padding:12px;backdrop-filter:blur(4px);">
+        <div style="font-family:'DM Mono',monospace;font-size:22px;color:white;font-weight:500;" id="dashClientCount">—</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,0.7);margin-top:2px;">Clients actifs</div>
+      </div>
+      <div style="flex:1;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:14px;padding:12px;backdrop-filter:blur(4px);">
+        <div style="font-family:'DM Mono',monospace;font-size:22px;color:white;font-weight:500;" id="dashHoursMonth">—</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,0.7);margin-top:2px;">Heures ce mois</div>
+      </div>
+      <div style="flex:1;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:14px;padding:12px;backdrop-filter:blur(4px);">
+        <div style="font-family:'DM Mono',monospace;font-size:22px;color:white;font-weight:500;" id="dashKmMonth">—</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,0.7);margin-top:2px;">km ce mois</div>
+      </div>
+    </div>
   </div>
-  <div class="scroll-content">
-    <div class="dashboard-cards">
-      <div class="dash-card"><div class="dash-number" id="dashClients">—</div><div class="dash-label">Clients actifs</div></div>
-      <div class="dash-card"><div class="dash-number" id="dashHeures">0h</div><div class="dash-label">Heures ce mois</div></div>
-      <div class="dash-card dash-card-wide">
-        <div class="dash-label" style="margin-bottom:10px">Tâches prioritaires</div>
-        <div class="task-list" id="dashTasks">
-          <div class="task-item"><div class="task-check" onclick="this.classList.toggle('done')"></div><div><div class="task-text">Migrer les clients actifs</div><div class="task-client">OneDrive</div></div></div>
-          <div class="task-item"><div class="task-check" onclick="this.classList.toggle('done')"></div><div><div class="task-text">Tester le formulaire d'intake</div><div class="task-client">Microsoft Forms</div></div></div>
-          <div class="task-item"><div class="task-check" onclick="this.classList.toggle('done')"></div><div><div class="task-text">Template facture avec logo</div><div class="task-client">Phase 4</div></div></div>
+
+  <!-- Scrollable body -->
+  <div style="flex:1;overflow-y:auto;padding:16px;padding-bottom:calc(env(safe-area-inset-bottom,0px)+90px);display:flex;flex-direction:column;gap:16px;">
+
+    <!-- Active clients cards -->
+    <div>
+      <div class="section-title">Projets actifs</div>
+      <div id="dashProjects" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+
+    <!-- Revenue this month -->
+    <div class="card" style="padding:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="section-title" style="margin:0;">Revenus du mois</div>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-light);" id="dashRevMonth"></div>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <div style="flex:1;text-align:center;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--mauve);" id="dashRevAmt">0 $</div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:var(--text-light);">Facturé</div>
         </div>
+        <div style="width:1px;background:var(--blush);"></div>
+        <div style="flex:1;text-align:center;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:#34C759;" id="dashKmRevAmt">0 $</div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:var(--text-light);">Kilométrage</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent activity -->
+    <div>
+      <div class="section-title">Activité récente</div>
+      <div id="dashActivity" class="card"></div>
+    </div>
+
+    <!-- Quick actions -->
+    <div>
+      <div class="section-title">Actions rapides</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button onclick="navTo('screenClients','navClients')" style="background:var(--gradient);color:white;border:none;border-radius:var(--radius);padding:16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-card);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          Mes clients
+        </button>
+        <button onclick="openKilometres()" style="background:white;color:var(--mauve);border:none;border-radius:var(--radius);padding:16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-card);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/></svg>
+          Kilométrage
+        </button>
+        <button onclick="navTo('screenAnna','navAnna')" style="background:white;color:var(--mauve);border:none;border-radius:var(--radius);padding:16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-card);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 110 20 10 10 0 010-20z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          Anna AI
+        </button>
+        <button onclick="navTo('screenTemps','navTemps')" style="background:white;color:var(--mauve);border:none;border-radius:var(--radius);padding:16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-card);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Temps
+        </button>
       </div>
     </div>
   </div>
@@ -932,11 +1218,26 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav" id="bottomNav">
-  <button class="nav-item active" id="nav-clients" onclick="navTo('screenClients','nav-clients')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clients</button>
-  <button class="nav-item" id="nav-dashboard" onclick="navTo('screenDashboard','nav-dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tableau</button>
-  <button class="nav-item" id="nav-temps" onclick="navTo('screenTemps','nav-temps')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Temps</button>
-  <button class="nav-item" id="nav-anna" onclick="navTo('screenAnna','nav-anna');_renderAnnaChips()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2"/><path d="M8 12s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>Anna</button>
-  <button class="nav-item" id="nav-km" onclick="openKilometres()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/><path d="M8 3.5l1.5 2.5M16 3.5L14.5 6"/></svg>Km</button>
+  <button class="nav-item active" id="navClients" onclick="navTo('screenClients','navClients')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    <span>Clients</span>
+  </button>
+  <button class="nav-item" id="navTemps" onclick="navTo('screenTemps','navTemps')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span>Temps</span>
+  </button>
+  <button class="nav-item" id="navKm" onclick="openKilometres()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/><path d="M8 3.5l1.5 2.5M16 3.5L14.5 6"/></svg>
+    <span>Km</span>
+  </button>
+  <button class="nav-item" id="navAnna" onclick="navTo('screenAnna','navAnna');_renderAnnaChips()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2a10 10 0 110 20 10 10 0 010-20z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+    <span>Anna</span>
+  </button>
+  <button class="nav-item" id="navDashboard" onclick="navTo('screenDashboard','navDashboard');renderDashboard();">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Tableau</span>
+  </button>
 </nav>
 
 <script>
@@ -2616,11 +2917,240 @@ function showSuiviProjet(){showToast('Suivi projet — bientôt disponible');}
 function showFacturer(){showToast('Facturation — utilisez Power Automate Flux 2');}
 function startVoiceNote(){showToast('Note vocale — bientôt disponible');}
 function logDeplacement(){ openKilometres(); }
-function askAnna(){navTo('screenAnna','nav-anna');_renderAnnaChips();}
+function askAnna(){navTo('screenAnna','navAnna');_renderAnnaChips();}
 function toggleSwatch(el){el.classList.toggle('selected');}
-function addMoodImage(){document.getElementById('moodInput').click();}
-function handleMoodImage(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{const grid=document.getElementById('moodGrid');const empty=grid.querySelector('div[style*="grid-column"]');if(empty)empty.remove();const item=document.createElement('div');item.className='mood-item';item.innerHTML=`<img src="${ev.target.result}" alt="Inspiration"><div class="mood-label">Inspiration</div>`;grid.appendChild(item);};r.readAsDataURL(file);e.target.value='';}
-function exportMoodboard(){showToast('Partage moodboard — bientôt disponible');}
+function addMoodImage(){document.getElementById('moodInput') && document.getElementById('moodInput').click();}
+function handleMoodImage(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{};r.readAsDataURL(file);e.target.value='';}
+function exportMoodboard(){mbExport();}
+
+// ===== MOODBOARD CANVA-STYLE =====
+let _mbItems = [], _mbSelected = null, _mbDragging = false, _mbResizing = false;
+let _mbDragOffX = 0, _mbDragOffY = 0, _mbResizeStartW = 0, _mbResizeStartH = 0, _mbResizeStartX = 0, _mbResizeStartY = 0;
+
+function _mbKey(){ return 'moodboard_'+(state.currentClient?.id||state.currentClient?.ID||'global'); }
+
+function openMoodboard(){
+  if(state.currentClient){
+    const titleEl=document.getElementById('moodboardTitle');
+    if(titleEl) titleEl.textContent=(state.currentClient.name||state.currentClient.Nom||state.currentClient.Title||'Moodboard');
+  }
+  showScreen('screenMoodboard');
+  _mbLoad();
+}
+
+function _mbLoad(){
+  try{ _mbItems=JSON.parse(localStorage.getItem(_mbKey())||'[]'); }catch(e){ _mbItems=[]; }
+  _mbRender();
+}
+
+function mbSave(){
+  localStorage.setItem(_mbKey(), JSON.stringify(_mbItems));
+  showToast('✅ Moodboard sauvegardé');
+}
+
+function mbSetBg(bg){
+  const canvas=document.getElementById('mbCanvas');
+  if(!canvas) return;
+  if(bg.startsWith('linear-gradient')){canvas.style.background=bg;canvas.style.backgroundImage=bg;}
+  else{canvas.style.background=bg;canvas.style.backgroundImage='';}
+}
+
+function mbClearAll(){
+  if(!confirm('Vider le moodboard ?')) return;
+  _mbItems=[]; mbSave(); _mbRender();
+}
+
+function mbAddPhoto(){
+  document.getElementById('mbPhotoInput').click();
+}
+
+function mbHandlePhotos(e){
+  const files=Array.from(e.target.files); if(!files.length) return;
+  const canvas=document.getElementById('mbCanvas');
+  const W=canvas.offsetWidth, H=canvas.offsetHeight;
+  files.forEach((file,i)=>{
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const item={
+        id:Date.now()+i, type:'image', src:ev.target.result,
+        x:Math.max(0,Math.random()*(W-180)), y:Math.max(0,Math.random()*(H-200)),
+        w:160, h:200, rotation:Math.random()*20-10
+      };
+      _mbItems.push(item);
+      _mbRender();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value='';
+}
+
+function mbAddText(){
+  const text=prompt('Entrez votre texte :','Inspiration');
+  if(!text) return;
+  const canvas=document.getElementById('mbCanvas');
+  const W=canvas.offsetWidth, H=canvas.offsetHeight;
+  _mbItems.push({
+    id:Date.now(), type:'text', text,
+    x:W/2-80, y:H/2-20, w:160, h:40,
+    fontSize:24, color:'#FFFFFF', fontFamily:'Cormorant Garamond', rotation:0
+  });
+  _mbRender();
+}
+
+function mbAddColor(){
+  const colors=['#6B2D45','#9B4D6B','#F0E0E8','#2C1654','#E8C5D5','#1A1A2E','#34C759','#0A84FF','#FF453A','#FFD60A','#FFFFFF','#000000'];
+  const color=colors[Math.floor(Math.random()*colors.length)];
+  const canvas=document.getElementById('mbCanvas');
+  const W=canvas.offsetWidth, H=canvas.offsetHeight;
+  _mbItems.push({
+    id:Date.now(), type:'color', color,
+    x:Math.max(0,Math.random()*(W-80)), y:Math.max(0,Math.random()*(H-80)), w:80, h:80, rotation:0
+  });
+  _mbRender();
+}
+
+function _mbRender(){
+  const canvas=document.getElementById('mbCanvas'); if(!canvas) return;
+  const empty=document.getElementById('mbEmpty');
+  if(empty) empty.style.display=_mbItems.length?'none':'flex';
+  canvas.querySelectorAll('.mb-item').forEach(el=>el.remove());
+  _mbItems.forEach(item=>{
+    const el=document.createElement('div');
+    el.className='mb-item'+(item.id===_mbSelected?' selected':'');
+    el.dataset.id=item.id;
+    el.style.cssText=`left:${item.x}px;top:${item.y}px;width:${item.w}px;transform:rotate(${item.rotation||0}deg);z-index:${item.id===_mbSelected?20:10};`;
+    if(item.type==='image'){
+      el.innerHTML=`<img src="${item.src}" style="width:100%;height:${item.h}px;object-fit:cover;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.4);display:block;"><div class="mb-delete" onclick="mbDelete(${item.id})">×</div><div class="mb-resize"></div>`;
+    } else if(item.type==='text'){
+      el.innerHTML=`<div style="font-family:'${item.fontFamily||'DM Sans'}',serif;font-size:${item.fontSize||24}px;color:${item.color||'#fff'};text-shadow:0 2px 8px rgba(0,0,0,0.5);white-space:nowrap;padding:4px 0;">${escHtml(item.text||'')}</div><div class="mb-delete" onclick="mbDelete(${item.id})">×</div>`;
+    } else if(item.type==='color'){
+      el.innerHTML=`<div style="width:${item.w}px;height:${item.h}px;background:${item.color};border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.3);"></div><div class="mb-delete" onclick="mbDelete(${item.id})">×</div>`;
+    }
+    const startDrag=e=>{
+      e.stopPropagation(); e.preventDefault();
+      _mbSelected=item.id; _mbDragging=true;
+      const t=e.touches?e.touches[0]:e;
+      const rect=canvas.getBoundingClientRect();
+      _mbDragOffX=t.clientX-rect.left-item.x;
+      _mbDragOffY=t.clientY-rect.top-item.y;
+      _mbRender();
+    };
+    el.addEventListener('mousedown',startDrag);
+    el.addEventListener('touchstart',startDrag,{passive:false});
+    const resizeEl=el.querySelector('.mb-resize');
+    if(resizeEl){
+      resizeEl.addEventListener('mousedown',e=>{
+        e.stopPropagation(); _mbResizing=true;
+        _mbResizeStartW=item.w; _mbResizeStartH=item.h;
+        _mbResizeStartX=e.clientX; _mbResizeStartY=e.clientY;
+      });
+    }
+    canvas.appendChild(el);
+  });
+  canvas.onmousemove=canvas.ontouchmove=e=>{
+    if(!_mbDragging&&!_mbResizing) return;
+    e.preventDefault();
+    const t=e.touches?e.touches[0]:e;
+    const rect=canvas.getBoundingClientRect();
+    if(_mbDragging){
+      const item=_mbItems.find(i=>i.id===_mbSelected); if(!item) return;
+      item.x=Math.max(0,Math.min(canvas.offsetWidth-item.w,t.clientX-rect.left-_mbDragOffX));
+      item.y=Math.max(0,Math.min(canvas.offsetHeight-40,t.clientY-rect.top-_mbDragOffY));
+      const el=canvas.querySelector('[data-id="'+item.id+'"]');
+      if(el){el.style.left=item.x+'px';el.style.top=item.y+'px';}
+    }
+    if(_mbResizing){
+      const item=_mbItems.find(i=>i.id===_mbSelected); if(!item) return;
+      item.w=Math.max(60,_mbResizeStartW+(t.clientX-_mbResizeStartX));
+      item.h=Math.max(60,_mbResizeStartH+(t.clientY-_mbResizeStartY));
+      _mbRender();
+    }
+  };
+  canvas.onmouseup=canvas.ontouchend=()=>{ _mbDragging=false; _mbResizing=false; };
+  canvas.onclick=e=>{ if(e.target===canvas){_mbSelected=null;_mbRender();} };
+}
+
+function mbDelete(id){
+  _mbItems=_mbItems.filter(i=>i.id!==id); _mbSelected=null; _mbRender();
+}
+
+function mbExport(){
+  showToast('📸 Export en cours…');
+  const items=_mbItems.filter(i=>i.type==='image');
+  if(!items.length){showToast('Ajoutez des photos pour exporter');return;}
+  const win=window.open('','_blank');
+  const clientName=state.currentClient?.name||state.currentClient?.Nom||state.currentClient?.Title||'Moodboard';
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Moodboard — ${escHtml(clientName)}</title>
+  <style>body{margin:0;background:#1A1A2E;font-family:'DM Sans',Arial,sans-serif;}.mb-export-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;}.mb-export-grid img{width:100%;aspect-ratio:1;object-fit:cover;}.header{padding:20px;color:white;background:linear-gradient(135deg,#6B2D45,#9B4D6B);}h1{font-family:Georgia,serif;font-size:24px;font-weight:normal;margin:0;}.sub{font-size:12px;opacity:0.7;margin-top:4px;}@media print{button{display:none;}}</style></head><body>
+  <div class="header"><h1>${escHtml(clientName)}</h1><div class="sub">Moodboard · ${new Date().toLocaleDateString('fr-CA',{day:'2-digit',month:'long',year:'numeric'})}</div></div>
+  <div class="mb-export-grid">${_mbItems.filter(i=>i.type==='image').map(i=>`<img src="${i.src}">`).join('')}</div>
+  <div style="padding:16px;display:flex;justify-content:center;"><button onclick="window.print()" style="background:#6B2D45;color:white;border:none;border-radius:8px;padding:12px 28px;font-size:14px;cursor:pointer;">🖨️ Imprimer</button></div>
+  </body></html>`);
+  win.document.close();
+}
+
+// ===== DASHBOARD =====
+function renderDashboard(){
+  const now=new Date();
+  const days=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  const months=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  const monthsFull=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const setT=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setT('dashDayName',days[now.getDay()]);
+  setT('dashDayNum',now.getDate());
+  setT('dashMonthName',months[now.getMonth()]);
+  setT('dashClientCount',(state.clients||[]).length||'—');
+  const thisMonthEntries=(state.timeEntries||[]).filter(e=>{const d=new Date(e.date||e.startTime||'');return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();});
+  const totalHours=thisMonthEntries.reduce((s,e)=>s+(e.duration||0)/3600,0);
+  setT('dashHoursMonth',totalHours.toFixed(1)+'h');
+  const trips=(()=>{try{return JSON.parse(localStorage.getItem('km_trips')||'[]');}catch(e){return [];}})();
+  const monthKm=trips.filter(t=>{const d=new Date(t.date||'');return t.type==='pro'&&d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).reduce((s,t)=>s+(parseFloat(t.km)||0),0);
+  setT('dashKmMonth',monthKm.toFixed(0)+'km');
+  const rate=parseFloat(localStorage.getItem('km_rate')||'0.70');
+  setT('dashRevAmt',(totalHours*125).toFixed(0)+' $');
+  setT('dashKmRevAmt',(monthKm*rate).toFixed(0)+' $');
+  setT('dashRevMonth',monthsFull[now.getMonth()]+' '+now.getFullYear());
+  const projects=document.getElementById('dashProjects');
+  if(projects){
+    const clients=(state.clients||[]).slice(0,4);
+    if(!clients.length){
+      projects.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light);font-family:\'DM Sans\',sans-serif;font-size:13px;">Aucun client — <a onclick="navTo(\'screenClients\',\'navClients\')" style="color:var(--mauve);cursor:pointer;">Connectez-vous à M365</a></div>';
+    } else {
+      const phaseNames=['Concept','Design','Chantier','Livraison'];
+      const phaseCols=['#9B4D6B','#0A84FF','#FF9F0A','#34C759'];
+      projects.innerHTML=clients.map(c=>{
+        const cid=c.id||c.ID||'';
+        const name=c.name||c.Nom||c.Title||'Client';
+        const phase=Math.min(3,parseInt(localStorage.getItem('phase_'+cid)||'0'));
+        return `<div onclick="openClient('${escHtml(cid)}')" style="background:white;border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-card);cursor:pointer;display:flex;align-items:center;gap:12px;">
+          <div style="width:44px;height:44px;border-radius:12px;background:var(--gradient);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:20px;color:white;">${escHtml((name[0]||'?').toUpperCase())}</span>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(name)}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:5px;">
+              <div style="flex:1;background:var(--blush);border-radius:4px;height:4px;overflow:hidden;"><div style="background:${phaseCols[phase]};height:100%;width:${(phase+1)*25}%;border-radius:4px;"></div></div>
+              <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:var(--text-light);white-space:nowrap;">${phaseNames[phase]}</span>
+            </div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>`;
+      }).join('');
+    }
+  }
+  const actEl=document.getElementById('dashActivity');
+  if(actEl){
+    const items=[];
+    (state.timeEntries||[]).slice(0,3).forEach(e=>{items.push({icon:'⏱',text:escHtml(e.clientName||e.note||'Entrée de temps'),sub:e.date||'',time:((e.duration||0)/3600).toFixed(1)+'h'});});
+    trips.slice(0,2).forEach(t=>{items.push({icon:'🚗',text:escHtml(t.client||'Trajet professionnel'),sub:t.date||'',time:(parseFloat(t.km)||0).toFixed(1)+'km'});});
+    items.sort((a,b)=>b.sub.localeCompare(a.sub));
+    if(!items.length){
+      actEl.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-light);font-family:\'DM Sans\',sans-serif;font-size:13px;">Aucune activité récente</div>';
+    } else {
+      actEl.innerHTML=items.slice(0,5).map((it,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;${i>0?'border-top:1px solid var(--blush);':''}"><div style="width:36px;height:36px;border-radius:10px;background:var(--rose-cream);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${it.icon}</div><div style="flex:1;min-width:0;"><div style="font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${it.text}</div><div style="font-family:'DM Sans',sans-serif;font-size:11px;color:var(--text-light);margin-top:1px;">${it.sub}</div></div><div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--mauve);font-weight:500;">${it.time}</div></div>`).join('');
+    }
+  }
+}
 function saveNote(){showToast('📋 Note sauvegardée dans OneNote');}
 function sendNoteToClient(){showToast('📧 Note envoyée au client');}
 function sendToAnna(msg){
@@ -3294,7 +3824,7 @@ function getKmRate(){ return parseFloat(localStorage.getItem('km_rate')||'0.70')
 function saveKmRate(v){ localStorage.setItem('km_rate', parseFloat(v)||0.70); }
 
 function openKilometres(){
-  navTo('screenKilometres','nav-km');
+  navTo('screenKilometres','navKm');
   const r = document.getElementById('kmRate');
   if(r) r.value = getKmRate().toFixed(2);
   renderTrips();
@@ -4179,7 +4709,7 @@ async function sendTeamsUpdate(){
 <div class="screen" id="screenKilometres" style="flex-direction:column;background:#F2F2F7;">
   <!-- Header -->
   <div style="background:var(--mauve);padding:calc(env(safe-area-inset-top,0px)+12px) 16px 12px;display:flex;align-items:center;gap:12px;">
-    <button onclick="navTo('screenClients','nav-clients')" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px 4px 0;">‹</button>
+    <button onclick="navTo('screenClients','navClients')" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px 4px 0;">‹</button>
     <h2 style="color:white;font-family:'Cormorant Garamond',serif;font-size:20px;margin:0;flex:1;">Kilométrage</h2>
     <button onclick="openAddTrip()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">+ Manuel</button>
   </div>
