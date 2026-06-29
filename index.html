@@ -924,7 +924,7 @@ let activeTextId = null;
 let viewerCurrentIndex = 0;
 let viewerStartX = 0;
 let _gpsCoords = null;
-navigator.geolocation?.getCurrentPosition(p=>{ _gpsCoords={lat:p.coords.latitude,lng:p.coords.longitude}; },{},{ enableHighAccuracy:false, timeout:8000 });
+navigator.geolocation?.getCurrentPosition(p=>{ _gpsCoords={lat:p.coords.latitude,lng:p.coords.longitude}; },()=>{},{ enableHighAccuracy:false, timeout:8000 });
 
 // ===== INIT =====
 window.addEventListener('load', async () => {
