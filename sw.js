@@ -1,5 +1,5 @@
-// Service Worker v25 - Kilometrage style MileIQ
-const CACHE_NAME = 'emilie-pepin-v25';
+// Service Worker v26 - OneDrive files, DXF viewer, punch list, client portal
+const CACHE_NAME = 'emilie-pepin-v26';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
