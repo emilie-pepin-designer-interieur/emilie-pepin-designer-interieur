@@ -256,6 +256,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 .budget-line input { border:none;border-bottom:1px solid var(--blush);padding:4px 0;font-family:'DM Sans',sans-serif;font-size:13px;color:#333;background:transparent;outline:none;width:100%; }
 .budget-line .bl-row { display:flex;gap:8px;align-items:center; }
 .budget-line .bl-label { font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-light);margin-bottom:2px; }
+.km-trip-card { background:white;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-card);display:flex;gap:12px;align-items:flex-start; }
+.km-trip-dot { width:10px;height:10px;border-radius:50%;background:var(--mauve);margin-top:5px;flex-shrink:0; }
+.km-trip-info { flex:1;min-width:0; }
+.km-trip-route { font-family:'DM Sans',sans-serif;font-size:13px;color:#333;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.km-trip-meta { font-size:11px;color:var(--text-light);margin-top:2px;font-family:'DM Sans',sans-serif; }
+.km-trip-amount { font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--mauve);white-space:nowrap; }
 </style>
 </head>
 <body>
@@ -319,7 +325,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
       <button class="action-btn" onclick="showScreen('screenTemps')"><div class="action-icon icon-time">⏱️</div><div class="action-label">Feuille de temps</div></button>
       <button class="action-btn" onclick="showSuiviProjet()"><div class="action-icon icon-project">📊</div><div class="action-label">Suivi projet</div></button>
       <button class="action-btn" onclick="showScreen('screenMoodboard')"><div class="action-icon" style="background:#FFF0F8">🎨</div><div class="action-label">Moodboard</div></button>
-      <button class="action-btn" onclick="logDeplacement()"><div class="action-icon icon-move">🚗</div><div class="action-label">Déplacement</div></button>
+      <button class="action-btn" onclick="openKilometres()"><div class="action-icon icon-move">🚗</div><div class="action-label">Kilométrage</div></button>
       <button class="action-btn" onclick="askAnna()"><div class="action-icon icon-anna">✨</div><div class="action-label">Demander à Anna</div></button>
       <button class="action-btn" onclick="generatePhotoReport()"><div class="action-icon" style="background:#FFF0EA;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E05A00" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></div><div class="action-label">Rapport PDF</div></button>
       <button class="action-btn" onclick="openBeforeAfterPicker()"><div class="action-icon" style="background:#F0EAFF;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B3AC4" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg></div><div class="action-label">Avant / Apr&egrave;s</div></button>
@@ -888,6 +894,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
   <button class="nav-item" id="nav-dashboard" onclick="navTo('screenDashboard','nav-dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tableau</button>
   <button class="nav-item" id="nav-temps" onclick="navTo('screenTemps','nav-temps')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Temps</button>
   <button class="nav-item" id="nav-anna" onclick="navTo('screenAnna','nav-anna');_renderAnnaChips()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2"/><path d="M8 12s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>Anna</button>
+  <button class="nav-item" id="nav-km" onclick="openKilometres()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/><path d="M8 3.5l1.5 2.5M16 3.5L14.5 6"/></svg>Km</button>
 </nav>
 
 <script>
@@ -2565,7 +2572,7 @@ function showAddClient(){showToast('Utilisez le formulaire Forms pour ajouter un
 function showSuiviProjet(){showToast('Suivi projet — bientôt disponible');}
 function showFacturer(){showToast('Facturation — utilisez Power Automate Flux 2');}
 function startVoiceNote(){showToast('Note vocale — bientôt disponible');}
-function logDeplacement(){showToast('Déplacement enregistré dans TripLog');}
+function logDeplacement(){ openKilometres(); }
 function askAnna(){navTo('screenAnna','nav-anna');_renderAnnaChips();}
 function toggleSwatch(el){el.classList.toggle('selected');}
 function addMoodImage(){document.getElementById('moodInput').click();}
@@ -3170,6 +3177,143 @@ function printBudget() {
   win.document.close();
 }
 
+// ===== KILOMÉTRAGE =====
+function _kmKey(){ return 'km_trips'; }
+function _getTrips(){ try{ return JSON.parse(localStorage.getItem(_kmKey())||'[]'); }catch(e){ return []; } }
+function _saveTrips(trips){ localStorage.setItem(_kmKey(), JSON.stringify(trips)); }
+function getKmRate(){ return parseFloat(localStorage.getItem('km_rate')||'0.70'); }
+function saveKmRate(v){ localStorage.setItem('km_rate', parseFloat(v)||0.70); }
+
+function openKilometres(){
+  navTo('screenKilometres','nav-km');
+  const rateEl = document.getElementById('kmRate');
+  if(rateEl) rateEl.value = getKmRate().toFixed(2);
+  renderTrips();
+}
+
+function openAddTrip(){
+  const modal = document.getElementById('kmModal');
+  modal.style.display = 'flex';
+  document.getElementById('kmInputDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('kmInputDepart').value = '';
+  document.getElementById('kmInputDest').value = '';
+  document.getElementById('kmInputKm').value = '';
+  document.getElementById('kmInputClient').value = state.currentClient ? (state.currentClient.name||state.currentClient.Nom||'') : '';
+  document.getElementById('kmInputMotif').value = '';
+}
+
+function closeAddTrip(){
+  document.getElementById('kmModal').style.display = 'none';
+}
+
+function useGpsDepart(){
+  if(!navigator.geolocation){ showToast('GPS non disponible'); return; }
+  showToast('📍 Localisation…');
+  navigator.geolocation.getCurrentPosition(function(p){
+    var lat = p.coords.latitude.toFixed(5), lng = p.coords.longitude.toFixed(5);
+    document.getElementById('kmInputDepart').value = lat+', '+lng;
+    showToast('📍 Position GPS capturée');
+  }, function(){ showToast('Impossible d\'obtenir la position'); }, { timeout:8000 });
+}
+
+function saveTrip(){
+  var date = document.getElementById('kmInputDate').value;
+  var depart = document.getElementById('kmInputDepart').value.trim();
+  var dest = document.getElementById('kmInputDest').value.trim();
+  var km = parseFloat(document.getElementById('kmInputKm').value)||0;
+  var client = document.getElementById('kmInputClient').value.trim();
+  var motif = document.getElementById('kmInputMotif').value.trim();
+  if(!km){ showToast('Entrez une distance en km'); return; }
+  var trips = _getTrips();
+  trips.unshift({ id: Date.now(), date: date, depart: depart, dest: dest, km: km, client: client, motif: motif });
+  _saveTrips(trips);
+  closeAddTrip();
+  renderTrips();
+  showToast('✅ Trajet enregistré — '+km+' km');
+}
+
+function deleteTrip(id){
+  if(!confirm('Supprimer ce trajet ?')) return;
+  _saveTrips(_getTrips().filter(function(t){ return t.id!==id; }));
+  renderTrips();
+}
+
+function renderTrips(){
+  var trips = _getTrips();
+  var rate = getKmRate();
+  var totalKm = trips.reduce(function(s,t){ return s+(parseFloat(t.km)||0); }, 0);
+  var totalAmt = totalKm * rate;
+  var elKm = document.getElementById('kmTotalKm');
+  var elAmt = document.getElementById('kmTotalAmt');
+  var elTrips = document.getElementById('kmTotalTrips');
+  if(elKm) elKm.textContent = totalKm.toFixed(1);
+  if(elAmt) elAmt.textContent = totalAmt.toFixed(2)+' $';
+  if(elTrips) elTrips.textContent = trips.length;
+  var list = document.getElementById('kmTripsList');
+  if(!list) return;
+  if(!trips.length){
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);font-family:\'DM Sans\',sans-serif;font-size:14px;">Aucun trajet enregistré.<br>Appuyez sur « + Trajet » pour commencer.</div>';
+    return;
+  }
+  list.innerHTML = trips.map(function(t){
+    var amt = ((parseFloat(t.km)||0)*rate).toFixed(2);
+    var route = [t.depart,t.dest].filter(Boolean).join(' → ') || 'Trajet';
+    return '<div class="km-trip-card">'
+      +'<div class="km-trip-dot"></div>'
+      +'<div class="km-trip-info">'
+        +'<div class="km-trip-route">'+escHtml(route)+'</div>'
+        +'<div class="km-trip-meta">'+escHtml(t.date||'')+(t.client?' · '+escHtml(t.client):'')+(t.motif?' · '+escHtml(t.motif):'')+'</div>'
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">'
+        +'<div class="km-trip-amount">'+((parseFloat(t.km)||0).toFixed(1))+' km</div>'
+        +'<div style="font-size:11px;color:var(--text-light);font-family:\'DM Sans\',sans-serif;">'+amt+' $</div>'
+        +'<button onclick="deleteTrip('+t.id+')" style="background:none;border:none;color:#FF453A;font-size:16px;cursor:pointer;padding:0;line-height:1;">×</button>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+function printKmReport(){
+  var trips = _getTrips();
+  var rate = getKmRate();
+  var totalKm = trips.reduce(function(s,t){ return s+(parseFloat(t.km)||0); }, 0);
+  var totalAmt = totalKm * rate;
+  var year = new Date().getFullYear();
+  var win = window.open('','_blank');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rapport kilométrage '+year+'</title>'
+  +'<style>'
+  +'body{font-family:\'DM Sans\',Arial,sans-serif;color:#2A1520;padding:24px;max-width:800px;margin:0 auto;}'
+  +'h1{font-family:Georgia,serif;color:#6B2D45;font-size:28px;margin-bottom:4px;}'
+  +'.sub{color:#6B4A56;font-size:13px;margin-bottom:20px;}'
+  +'table{width:100%;border-collapse:collapse;font-size:12px;}'
+  +'th{background:#6B2D45;color:white;padding:8px 10px;text-align:left;font-weight:500;}'
+  +'td{padding:8px 10px;border-bottom:1px solid #eee;}'
+  +'tr:nth-child(even) td{background:#fdf8fa;}'
+  +'.total-row{font-weight:700;background:#f0e8ec!important;}'
+  +'@media print{button{display:none;}}'
+  +'</style></head><body>'
+  +'<h1>Rapport kilométrage — '+year+'</h1>'
+  +'<div class="sub">Émilie Pépin Designer d\'intérieur · Taux ARC : '+rate.toFixed(2)+' $/km · Imprimé le '+new Date().toLocaleDateString('fr-CA',{day:'2-digit',month:'long',year:'numeric'})+'</div>'
+  +'<table>'
+  +'<tr><th>Date</th><th>Départ</th><th>Destination</th><th>Client</th><th>Motif</th><th style="text-align:right">km</th><th style="text-align:right">Montant</th></tr>'
+  +trips.map(function(t){
+    return '<tr>'
+      +'<td>'+escHtml(t.date||'')+'</td>'
+      +'<td>'+escHtml(t.depart||'—')+'</td>'
+      +'<td>'+escHtml(t.dest||'—')+'</td>'
+      +'<td>'+escHtml(t.client||'—')+'</td>'
+      +'<td>'+escHtml(t.motif||'—')+'</td>'
+      +'<td style="text-align:right">'+((parseFloat(t.km)||0).toFixed(1))+'</td>'
+      +'<td style="text-align:right">'+((parseFloat(t.km)||0)*rate).toFixed(2)+' $</td>'
+    +'</tr>';
+  }).join('')
+  +'<tr class="total-row"><td colspan="5">TOTAL</td><td style="text-align:right">'+totalKm.toFixed(1)+'</td><td style="text-align:right">'+totalAmt.toFixed(2)+' $</td></tr>'
+  +'</table>'
+  +'<button onclick="window.print()" style="margin-top:20px;padding:10px 24px;background:#6B2D45;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px;">🖨️ Imprimer</button>'
+  +'</body></html>');
+  win.document.close();
+}
+
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script>
   <input type="file" id="cameraInput" accept="image/*,video/*" style="display:none;" onchange="handleCameraCapture(event)" multiple>
@@ -3239,6 +3383,89 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch
   </div>
   <table id="invTable" style="width:100%;border-collapse:collapse;font-size:13px;"></table>
   <div id="invTotal" style="text-align:right;margin-top:16px;font-size:18px;font-weight:700;color:#6B2D45;"></div>
+</div>
+
+<!-- ===== SCREEN KILOMÉTRAGE ===== -->
+<div class="screen" id="screenKilometres" style="flex-direction:column;background:var(--rose-cream);">
+  <!-- Header -->
+  <div style="background:var(--mauve);padding:calc(env(safe-area-inset-top,0px)+12px) 16px 12px;display:flex;align-items:center;gap:12px;">
+    <button onclick="navTo('screenClients','nav-clients')" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px 4px 0;">‹</button>
+    <h2 style="color:white;font-family:'Cormorant Garamond',serif;font-size:20px;margin:0;flex:1;">Kilométrage</h2>
+    <button onclick="openAddTrip()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">+ Trajet</button>
+  </div>
+
+  <!-- Summary cards -->
+  <div style="display:flex;gap:10px;padding:14px 14px 0;">
+    <div style="flex:1;background:white;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-card);text-align:center;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;margin-bottom:4px;">Total km</div>
+      <div id="kmTotalKm" style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--mauve);">0</div>
+    </div>
+    <div style="flex:1;background:white;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-card);text-align:center;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;margin-bottom:4px;">Remboursement</div>
+      <div id="kmTotalAmt" style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--mauve);">0 $</div>
+    </div>
+    <div style="flex:1;background:white;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-card);text-align:center;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;margin-bottom:4px;">Trajets</div>
+      <div id="kmTotalTrips" style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--mauve);">0</div>
+    </div>
+  </div>
+
+  <!-- Rate row -->
+  <div style="display:flex;align-items:center;gap:8px;padding:10px 14px 0;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-light);">
+    <span>Taux ARC :</span>
+    <input type="number" id="kmRate" value="0.70" step="0.01" min="0" max="2"
+      style="width:58px;border:1px solid var(--blush);border-radius:8px;padding:4px 6px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--mauve);text-align:center;"
+      onchange="saveKmRate(this.value);renderTrips()">
+    <span>$/km</span>
+    <button onclick="printKmReport()" style="margin-left:auto;background:var(--mauve);color:white;border:none;border-radius:16px;padding:5px 14px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;">🖨️ Rapport</button>
+  </div>
+
+  <!-- Trips list -->
+  <div style="flex:1;overflow-y:auto;padding:12px 14px;padding-bottom:calc(env(safe-area-inset-bottom,0px)+80px);">
+    <div id="kmTripsList" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+</div>
+
+<!-- Add trip modal -->
+<div id="kmModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5);align-items:flex-end;">
+  <div style="background:white;border-radius:20px 20px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom,0px)+20px);width:100%;box-sizing:border-box;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;margin-bottom:16px;">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--mauve);margin:0;flex:1;">Nouveau trajet</h3>
+      <button onclick="closeAddTrip()" style="background:none;border:none;font-size:24px;color:var(--text-light);cursor:pointer;">×</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Date</label>
+        <input type="date" id="kmInputDate" style="width:100%;border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;box-sizing:border-box;outline:none;background:transparent;">
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;flex:1;">Départ</label>
+          <button onclick="useGpsDepart()" style="background:var(--blush);border:none;border-radius:12px;padding:3px 10px;font-size:11px;color:var(--mauve);cursor:pointer;font-family:'DM Sans',sans-serif;">📍 GPS</button>
+        </div>
+        <input type="text" id="kmInputDepart" placeholder="Adresse de départ" style="width:100%;border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;box-sizing:border-box;outline:none;background:transparent;">
+      </div>
+      <div>
+        <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Destination</label>
+        <input type="text" id="kmInputDest" placeholder="Adresse de destination" style="width:100%;border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;box-sizing:border-box;outline:none;background:transparent;">
+      </div>
+      <div>
+        <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Distance (km)</label>
+        <input type="number" id="kmInputKm" placeholder="0" min="0" step="0.1" style="width:100%;border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;box-sizing:border-box;outline:none;background:transparent;">
+      </div>
+      <div>
+        <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Client</label>
+        <input type="text" id="kmInputClient" placeholder="Nom du client (optionnel)" style="width:100%;border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;box-sizing:border-box;outline:none;background:transparent;">
+      </div>
+      <div>
+        <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Motif</label>
+        <input type="text" id="kmInputMotif" placeholder="Ex: Visite chantier, Réunion client…" style="width:100%;border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;box-sizing:border-box;outline:none;background:transparent;">
+      </div>
+    </div>
+
+    <button onclick="saveTrip()" style="width:100%;margin-top:20px;background:var(--mauve);color:white;border:none;border-radius:24px;padding:16px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;">Enregistrer le trajet</button>
+  </div>
 </div>
 
 <!-- AVANT/APRÈS VIEWER -->

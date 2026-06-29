@@ -1,5 +1,5 @@
-// Service Worker v24 - Plan d'etage + Budget
-const CACHE_NAME = 'emilie-pepin-v24';
+// Service Worker v25 - Kilometrage style MileIQ
+const CACHE_NAME = 'emilie-pepin-v25';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
