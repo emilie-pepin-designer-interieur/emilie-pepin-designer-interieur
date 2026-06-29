@@ -881,7 +881,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 const CONFIG = {
   clientId: '6cab6163-d4de-4a5a-a9f4-36f4058be920',
   tenantId: 'a8238caf-f2db-4be1-93a7-ce2789e11107',
-  redirectUri: 'https://emilie-pepin-designer-interieur.github.io/emilie-pepin-designer-interieur/',
+  redirectUri: (location.hostname==='localhost'||location.hostname==='127.0.0.1') ? location.origin+'/' : 'https://emilie-pepin-designer-interieur.github.io/emilie-pepin-designer-interieur/',
   scopes: 'https://graph.microsoft.com/Sites.Read.All https://graph.microsoft.com/Files.ReadWrite.All https://graph.microsoft.com/Notes.ReadWrite.All https://graph.microsoft.com/Tasks.ReadWrite https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/Calendars.Read https://graph.microsoft.com/Contacts.ReadWrite offline_access',
   sharePointHost: 'emiliepepin.sharepoint.com',
   sharePointSiteName: 'EmiliePepinDesignerInterieur',
