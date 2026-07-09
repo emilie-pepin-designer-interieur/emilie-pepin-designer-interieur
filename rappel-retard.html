@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Émilie Pépin Designer d'intérieur</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #FDF8FA;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 480px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(107,45,69,0.15);
+    }
+    .logo {
+      color: #6B2D45;
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 30px;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 5px solid #F2D9E0;
+      border-top-color: #6B2D45;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .icon-success { font-size: 60px; margin-bottom: 15px; }
+    .icon-error { font-size: 60px; margin-bottom: 15px; }
+    h2 { color: #6B2D45; margin: 0 0 10px; }
+    p { color: #666; font-size: 14px; margin: 5px 0; }
+    .detail { 
+      background: #FDF8FA; 
+      border-radius: 8px; 
+      padding: 15px; 
+      margin: 20px 0;
+      text-align: left;
+    }
+    .detail p { margin: 6px 0; color: #444; }
+    .detail strong { color: #6B2D45; }
+    .btn {
+      background: #6B2D45;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 20px;
+      text-decoration: none;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="logo">Émilie Pépin Designer d'intérieur</div>
+  <div class="spinner" id="spinner"></div>
+  <h2 id="titre">Envoi du rappel...</h2>
+  <p id="message">Veuillez patienter quelques secondes.</p>
+  <div class="detail" id="detail" style="display:none"></div>
+</div>
+
+<script>
+  // Lire les paramètres de l'URL
+  const params = new URLSearchParams(window.location.search);
+  const client = params.get('client') || '';
+  const numeroFacture = params.get('numeroFacture') || '';
+  const projet = params.get('projet') || '';
+  const courriel = params.get('courriel') || '';
+  const lienFacture = params.get('lienFacture') || '';
+
+  const FLUX_URL = 'https://defaulta8238caff2db4be193a7ce2789e111.07.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/01/workflows/b5b9b89335654441b889135f17de2974/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=W5Krg0ylNO6Ws5zzOwJRhcxd00YNeg5RV4V6mpm_o4Y';
+
+  async function envoyerRappel() {
+    try {
+      const response = await fetch(FLUX_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client, numeroFacture, projet, courriel, lienFacture })
+      });
+
+      document.getElementById('spinner').style.display = 'none';
+
+      if (response.ok || response.status === 202) {
+        document.getElementById('titre').textContent = 'Rappel envoyé ✅';
+        document.getElementById('message').textContent = 'Le rappel de paiement a été envoyé au client avec succès.';
+        document.getElementById('detail').style.display = 'block';
+        document.getElementById('detail').innerHTML = `
+          <p><strong>Client :</strong> ${client}</p>
+          <p><strong># Facture :</strong> ${numeroFacture}</p>
+          <p><strong>Projet :</strong> ${projet}</p>
+          <p><strong>Courriel :</strong> ${courriel}</p>
+        `;
+      } else {
+        document.getElementById('titre').textContent = 'Erreur ❌';
+        document.getElementById('message').textContent = 'Une erreur est survenue. Veuillez réessayer.';
+      }
+    } catch (error) {
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('titre').textContent = 'Erreur ❌';
+      document.getElementById('message').textContent = 'Impossible de contacter le serveur. Vérifiez votre connexion.';
+    }
+  }
+
+  envoyerRappel();
+</script>
+</body>
+</html>
