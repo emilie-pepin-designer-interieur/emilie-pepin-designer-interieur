@@ -41,15 +41,36 @@
     }
     .detail p { margin: 6px 0; color: #444; }
     .detail strong { color: #6B2D45; }
+    #success { display: none; }
+    #loading { display: block; }
   </style>
 </head>
 <body>
 <div class="card">
   <div class="logo">Émilie Pépin Designer d'intérieur</div>
-  <div class="spinner" id="spinner"></div>
-  <h2 id="titre">Envoi du rappel...</h2>
-  <p id="message">Veuillez patienter quelques secondes.</p>
-  <div class="detail" id="detail" style="display:none"></div>
+  
+  <div id="loading">
+    <div class="spinner"></div>
+    <h2>Envoi du rappel...</h2>
+    <p>Veuillez patienter quelques secondes.</p>
+  </div>
+
+  <div id="success">
+    <div style="font-size:60px">✅</div>
+    <h2>Rappel envoyé !</h2>
+    <p>Le rappel de paiement a été envoyé au client avec succès.</p>
+    <div class="detail" id="detail"></div>
+  </div>
+
+  <!-- Formulaire caché qui soumet en POST -->
+  <form id="rappelForm" method="POST" target="hiddenFrame" style="display:none">
+    <input type="hidden" name="client" id="f_client">
+    <input type="hidden" name="numeroFacture" id="f_numeroFacture">
+    <input type="hidden" name="projet" id="f_projet">
+    <input type="hidden" name="courriel" id="f_courriel">
+    <input type="hidden" name="lienFacture" id="f_lienFacture">
+  </form>
+  <iframe name="hiddenFrame" style="display:none"></iframe>
 </div>
 
 <script>
@@ -62,42 +83,26 @@
 
   const FLUX_URL = 'https://defaulta8238caff2db4be193a7ce2789e111.07.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/01/workflows/b5b9b89335654441b889135f17de2974/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=W5Krg0ylNO6Ws5zzOwJRhcxd00YNeg5RV4V6mpm_o4Y';
 
-  async function envoyerRappel() {
-    try {
-      const response = await fetch(FLUX_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        mode: 'no-cors',
-        body: JSON.stringify({ client, numeroFacture, projet, courriel, lienFacture })
-      });
+  // Remplir et soumettre le formulaire
+  document.getElementById('f_client').value = client;
+  document.getElementById('f_numeroFacture').value = numeroFacture;
+  document.getElementById('f_projet').value = projet;
+  document.getElementById('f_courriel').value = courriel;
+  document.getElementById('f_lienFacture').value = lienFacture;
+  document.getElementById('rappelForm').action = FLUX_URL;
+  document.getElementById('rappelForm').submit();
 
-      document.getElementById('spinner').style.display = 'none';
-      document.getElementById('titre').textContent = 'Rappel envoyé ✅';
-      document.getElementById('message').textContent = 'Le rappel de paiement a été envoyé au client avec succès.';
-      document.getElementById('detail').style.display = 'block';
-      document.getElementById('detail').innerHTML = `
-        <p><strong>Client :</strong> ${client}</p>
-        <p><strong># Facture :</strong> ${numeroFacture}</p>
-        <p><strong>Projet :</strong> ${projet}</p>
-        <p><strong>Courriel :</strong> ${courriel}</p>
-      `;
-    } catch (error) {
-      document.getElementById('spinner').style.display = 'none';
-      document.getElementById('titre').textContent = 'Rappel envoyé ✅';
-      document.getElementById('message').textContent = 'Le rappel de paiement a été envoyé au client avec succès.';
-      document.getElementById('detail').style.display = 'block';
-      document.getElementById('detail').innerHTML = `
-        <p><strong>Client :</strong> ${client}</p>
-        <p><strong># Facture :</strong> ${numeroFacture}</p>
-        <p><strong>Projet :</strong> ${projet}</p>
-        <p><strong>Courriel :</strong> ${courriel}</p>
-      `;
-    }
-  }
-
-  envoyerRappel();
+  // Afficher succès après 3 secondes
+  setTimeout(() => {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('success').style.display = 'block';
+    document.getElementById('detail').innerHTML = `
+      <p><strong>Client :</strong> ${client}</p>
+      <p><strong># Facture :</strong> ${numeroFacture}</p>
+      <p><strong>Projet :</strong> ${projet}</p>
+      <p><strong>Courriel :</strong> ${courriel}</p>
+    `;
+  }, 3000);
 </script>
 </body>
 </html>
