@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Studio Émilie Pépin</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -192,6 +193,35 @@
     var dernierDiagnostic = '';
     var FLOW_URL = 'https://defaulta8238caff2db4be193a7ce2789e111.07.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/13/workflows/58b618de7e634b0689bae66d8a2f7dc6/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=o5mnrp_KgGsmAVhLMmI6zwAvMSumKSksFE9xw_ShApE';
 
+    var msalConfig = {
+      auth: {
+        clientId: '0208592e-314f-429d-b825-7b85dc92f223',
+        authority: 'https://login.microsoftonline.com/a8238caf-f2db-4be1-93a7-ce2789e11107',
+        redirectUri: 'https://emilie-pepin-designer-interieur.github.io/emilie-pepin-designer-interieur/taskpane.html'
+      },
+      cache: {
+        cacheLocation: 'localStorage'
+      }
+    };
+    var msalInstance = new msal.PublicClientApplication(msalConfig);
+    var FLOW_SCOPES = ['https://service.flow.microsoft.com/user_impersonation'];
+
+    function obtenirToken() {
+      var comptes = msalInstance.getAllAccounts();
+      if (comptes.length > 0) {
+        return msalInstance.acquireTokenSilent({ scopes: FLOW_SCOPES, account: comptes[0] })
+          .catch(function () {
+            return msalInstance.acquireTokenPopup({ scopes: FLOW_SCOPES });
+          });
+      }
+      return msalInstance.loginPopup({ scopes: FLOW_SCOPES }).then(function (loginResponse) {
+        return msalInstance.acquireTokenSilent({ scopes: FLOW_SCOPES, account: loginResponse.account })
+          .catch(function () {
+            return msalInstance.acquireTokenPopup({ scopes: FLOW_SCOPES });
+          });
+      });
+    }
+
     Office.onReady(function(info) {
       if (info.host === Office.HostType.Word) {
         lireDocument();
@@ -281,16 +311,22 @@
 
       var btn = document.getElementById('btnEnvoyer');
       btn.disabled = true;
-      afficherStatut('⏳ Envoi en cours... Veuillez patienter.', 'loading');
+      afficherStatut('🔐 Connexion à Microsoft en cours...', 'loading');
 
-      fetch(FLOW_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nomClient: nomClient,
-          nomProjet: nomProjet,
-          courrielClient: courrielClient
-        })
+      obtenirToken().then(function (tokenResponse) {
+        afficherStatut('⏳ Envoi en cours... Veuillez patienter.', 'loading');
+        return fetch(FLOW_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + tokenResponse.accessToken
+          },
+          body: JSON.stringify({
+            nomClient: nomClient,
+            nomProjet: nomProjet,
+            courrielClient: courrielClient
+          })
+        });
       })
       .then(function(response) {
         if (response.ok || response.status === 202) {
