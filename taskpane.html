@@ -89,9 +89,21 @@
       padding: 8px;
       font-size: 11px;
       cursor: pointer;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
     .btn-refresh:hover { background: #F2D7E0; }
+    .btn-diagnostic {
+      width: 100%;
+      background: transparent;
+      color: #6B2D45;
+      border: 1px dashed #6B2D45;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+    .btn-diagnostic:hover { background: #F2D7E0; }
     .status {
       text-align: center;
       font-size: 12px;
@@ -113,6 +125,19 @@
       background: #F2D7E0;
       color: #6B2D45;
       display: block;
+    }
+    .diagnostic-box {
+      background: #fff;
+      border: 1px solid #C4859A;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 10px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      max-height: 250px;
+      overflow-y: auto;
+      display: none;
     }
     .footer {
       margin-top: 20px;
@@ -150,6 +175,11 @@
   <button class="btn-refresh" onclick="lireDocument()">
     ↻ Relire le document
   </button>
+  <button class="btn-diagnostic" onclick="toggleDiagnostic()">
+    🔍 Voir le diagnostic technique
+  </button>
+
+  <div class="diagnostic-box" id="diagnosticBox"></div>
 
   <div class="status" id="status"></div>
 
@@ -159,6 +189,7 @@
     var nomClient = '';
     var nomProjet = '';
     var courrielClient = '';
+    var dernierDiagnostic = '';
     var FLOW_URL = 'REMPLACER_PAR_URL_FLUX_POWER_AUTOMATE';
 
     Office.onReady(function(info) {
@@ -171,36 +202,57 @@
       document.getElementById('nomClient').textContent = 'Lecture...';
       document.getElementById('nomProjet').textContent = 'Lecture...';
       document.getElementById('courrielClient').textContent = 'Lecture...';
+      nomClient = '';
+      nomProjet = '';
+      courrielClient = '';
 
-      Word.run(function(context) {
-        var body = context.document.body;
-        body.load('text');
-        return context.sync().then(function() {
-          var texte = body.text;
-          nomClient = extraireValeur(texte, 'CLIENT');
-          nomProjet = extraireValeur(texte, 'PROJET');
-          courrielClient = extraireValeur(texte, 'COURRIEL');
+      Word.run(function (context) {
+        var contentControls = context.document.contentControls;
+        contentControls.load('items');
+        return context.sync().then(function () {
+          contentControls.items.forEach(function (cc) {
+            cc.load('tag,title,text');
+          });
+          return context.sync().then(function () {
+            var lignesDiagnostic = [];
+            lignesDiagnostic.push(contentControls.items.length + ' contrôle(s) de contenu trouvé(s) :');
+            lignesDiagnostic.push('');
 
-          document.getElementById('nomClient').textContent = nomClient || 'Non trouvé';
-          document.getElementById('nomProjet').textContent = nomProjet || 'Non trouvé';
-          document.getElementById('courrielClient').textContent = courrielClient || 'Non trouvé';
+            contentControls.items.forEach(function (cc, index) {
+              var tag = cc.tag || '(vide)';
+              var titre = cc.title || '(vide)';
+              var valeur = (cc.text || '').trim();
+
+              lignesDiagnostic.push((index + 1) + '. Tag=[' + tag + ']  Titre=[' + titre + ']  Valeur=[' + valeur + ']');
+
+              var tagUpper = tag.toUpperCase();
+              var titreUpper = titre.toUpperCase();
+
+              if ((tagUpper.indexOf('COURRIEL') !== -1 || titreUpper.indexOf('COURRIEL') !== -1 || tagUpper.indexOf('EMAIL') !== -1)) {
+                courrielClient = valeur;
+              } else if (tagUpper.indexOf('CLIENT') !== -1 || titreUpper.indexOf('CLIENT') !== -1) {
+                nomClient = valeur;
+              } else if (tagUpper.indexOf('PROJET') !== -1 || titreUpper.indexOf('PROJET') !== -1) {
+                nomProjet = valeur;
+              }
+            });
+
+            dernierDiagnostic = lignesDiagnostic.join('\n');
+            document.getElementById('diagnosticBox').textContent = dernierDiagnostic;
+
+            document.getElementById('nomClient').textContent = nomClient || 'Non trouvé';
+            document.getElementById('nomProjet').textContent = nomProjet || 'Non trouvé';
+            document.getElementById('courrielClient').textContent = courrielClient || 'Non trouvé';
+          });
         });
-      }).catch(function(err) {
+      }).catch(function (err) {
         afficherStatut('Erreur de lecture : ' + err.message, 'error');
       });
     }
 
-    function extraireValeur(texte, label) {
-      var lignes = texte.split('\n');
-      for (var i = 0; i < lignes.length; i++) {
-        var ligne = lignes[i].trim();
-        if (ligne.toUpperCase().startsWith(label)) {
-          var valeur = ligne.substring(label.length).trim();
-          if (valeur) return valeur;
-          if (i + 1 < lignes.length) return lignes[i + 1].trim();
-        }
-      }
-      return '';
+    function toggleDiagnostic() {
+      var box = document.getElementById('diagnosticBox');
+      box.style.display = (box.style.display === 'block') ? 'none' : 'block';
     }
 
     function envoyerSoumission() {
