@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nouvelle soumission fournisseur — Émilie Pépin</title>
+<script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Arial, sans-serif;
+  background: #FDF8FA;
+  color: #333;
+  padding: 20px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.logo {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #6B2D45;
+}
+.logo h1 { color: #6B2D45; font-size: 15px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+.logo p { color: #9B6B8A; font-size: 12px; margin-top: 3px; }
+label { display: block; font-size: 12px; font-weight: bold; color: #6B2D45; text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 5px; }
+select, input, textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #E8D5DB;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  background: white;
+}
+.btn-principal {
+  width: 100%;
+  background: #6B2D45;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 14px;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 20px;
+}
+.btn-principal:hover { background: #9B6B8A; }
+.btn-principal:disabled { background: #ccc; cursor: not-allowed; }
+.status { text-align: center; font-size: 13px; padding: 10px; border-radius: 4px; margin-top: 14px; display: none; }
+.status.success { background: #d4edda; color: #155724; display: block; }
+.status.error { background: #f8d7da; color: #721c24; display: block; }
+.status.loading { background: #F2D7E0; color: #6B2D45; display: block; }
+.footer { margin-top: 24px; text-align: center; font-size: 10px; color: #C4859A; }
+</style>
+</head>
+<body>
+
+<div class="logo">
+  <h1>Émilie Pépin</h1>
+  <p>Nouvelle soumission fournisseur</p>
+</div>
+
+<label for="selectProjet">Projet</label>
+<select id="selectProjet"><option>Chargement des projets...</option></select>
+
+<label for="selectFournisseur">Fournisseur / Entrepreneur</label>
+<select id="selectFournisseur"><option>Chargement des fournisseurs...</option></select>
+
+<label for="inputPoste">Poste concerné</label>
+<input type="text" id="inputPoste" placeholder="Ex : Céramique salle de bain">
+
+<button class="btn-principal" id="btnEnvoyer" onclick="creerSoumission()">🌸 Créer la soumission</button>
+
+<div class="status" id="status"></div>
+
+<div class="footer">Anna — Studio Émilie Pépin</div>
+
+<script>
+var FLOW_URL = 'REMPLACER_PAR_URL_FLUX_POWER_AUTOMATE';
+
+var msalConfig = {
+  auth: {
+    clientId: 'a2c3d23d-55c3-4764-8781-10701af6b4f5',
+    authority: 'https://login.microsoftonline.com/a8238caf-f2db-4be1-93a7-ce2789e11107',
+    redirectUri: 'https://emilie-pepin-designer-interieur.github.io/emilie-pepin-designer-interieur/soumission-fournisseur.html'
+  },
+  cache: { cacheLocation: 'localStorage' }
+};
+var msalInstance = new msal.PublicClientApplication(msalConfig);
+var GRAPH_SCOPES = ['https://graph.microsoft.com/Sites.Read.All'];
+var FLOW_SCOPES = ['https://service.flow.microsoft.com//User'];
+
+var SITE_PATH = 'emiliepepin.sharepoint.com:/sites/EmiliePepinDesignerInterieur:';
+
+var projets = [];
+var fournisseurs = [];
+
+var CATEGORIES_FOURNISSEUR_MATERIAUX = ['Fournisseur de materiaux', 'Fournisseur de matériaux', 'Décorateur / Accessoires'];
+
+function deduireType(categorie) {
+  if (!categorie) return 'Entrepreneur';
+  return CATEGORIES_FOURNISSEUR_MATERIAUX.indexOf(categorie) !== -1 ? 'Fournisseur' : 'Entrepreneur';
+}
+
+function obtenirToken(scopes) {
+  var comptes = msalInstance.getAllAccounts();
+  if (comptes.length > 0) {
+    return msalInstance.acquireTokenSilent({ scopes: scopes, account: comptes[0] })
+      .catch(function () { return msalInstance.acquireTokenPopup({ scopes: scopes }); });
+  }
+  return msalInstance.loginPopup({ scopes: scopes }).then(function (loginResponse) {
+    return msalInstance.acquireTokenSilent({ scopes: scopes, account: loginResponse.account })
+      .catch(function () { return msalInstance.acquireTokenPopup({ scopes: scopes }); });
+  });
+}
+
+function chargerDonnees() {
+  obtenirToken(GRAPH_SCOPES).then(function (tokenResponse) {
+    var headers = { 'Authorization': 'Bearer ' + tokenResponse.accessToken };
+
+    var appelProjets = fetch('https://graph.microsoft.com/v1.0/sites/' + SITE_PATH + '/lists/Projets/items?expand=fields', { headers: headers })
+      .then(function (r) { return r.json(); });
+
+    var appelFournisseurs = fetch('https://graph.microsoft.com/v1.0/sites/' + SITE_PATH + '/lists/Fournisseurs/items?expand=fields', { headers: headers })
+      .then(function (r) { return r.json(); });
+
+    Promise.all([appelProjets, appelFournisseurs]).then(function (resultats) {
+      var dataProjets = resultats[0].value || [];
+      var dataFournisseurs = resultats[1].value || [];
+
+      projets = dataProjets
+        .filter(function (p) { return p.fields.StatutProjet !== 'Terminé'; })
+        .map(function (p) {
+          return { id: p.id, nomProjet: p.fields.Title, nomClient: p.fields.NomClient };
+        });
+
+      fournisseurs = dataFournisseurs.map(function (f) {
+        return { id: f.id, nom: f.fields.Title, categorie: f.fields.Categorie };
+      });
+
+      var selProjet = document.getElementById('selectProjet');
+      selProjet.innerHTML = '';
+      if (projets.length === 0) {
+        selProjet.innerHTML = '<option>Aucun projet actif trouvé</option>';
+      } else {
+        projets.forEach(function (p) {
+          var opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = p.nomProjet + ' — ' + p.nomClient;
+          selProjet.appendChild(opt);
+        });
+      }
+
+      var selFourn = document.getElementById('selectFournisseur');
+      selFourn.innerHTML = '';
+      if (fournisseurs.length === 0) {
+        selFourn.innerHTML = '<option>Aucun fournisseur trouvé</option>';
+      } else {
+        fournisseurs.forEach(function (f) {
+          var opt = document.createElement('option');
+          opt.value = f.id;
+          opt.textContent = f.nom + ' (' + (f.categorie || 'Non catégorisé') + ')';
+          selFourn.appendChild(opt);
+        });
+      }
+    }).catch(function (err) {
+      afficherStatut('❌ Erreur de chargement : ' + err.message, 'error');
+    });
+  }).catch(function (err) {
+    afficherStatut('❌ Erreur de connexion : ' + err.message, 'error');
+  });
+}
+
+function creerSoumission() {
+  var idProjet = document.getElementById('selectProjet').value;
+  var idFournisseur = document.getElementById('selectFournisseur').value;
+  var poste = document.getElementById('inputPoste').value.trim();
+
+  if (!idProjet || !idFournisseur || !poste) {
+    afficherStatut('❌ Remplis les 3 champs avant de continuer.', 'error');
+    return;
+  }
+
+  var projetChoisi = projets.filter(function (p) { return p.id === idProjet; })[0];
+  var fournisseurChoisi = fournisseurs.filter(function (f) { return f.id === idFournisseur; })[0];
+
+  var btn = document.getElementById('btnEnvoyer');
+  btn.disabled = true;
+  afficherStatut('⏳ Création en cours...', 'loading');
+
+  obtenirToken(FLOW_SCOPES).then(function (tokenResponse) {
+    return fetch(FLOW_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + tokenResponse.accessToken
+      },
+      body: JSON.stringify({
+        projetID: projetChoisi.id,
+        nomProjet: projetChoisi.nomProjet,
+        nomClient: projetChoisi.nomClient,
+        fournisseurID: fournisseurChoisi.id,
+        nomFournisseur: fournisseurChoisi.nom,
+        typeFournisseur: deduireType(fournisseurChoisi.categorie),
+        poste: poste
+      })
+    });
+  })
+  .then(function (response) {
+    if (response.ok || response.status === 202) {
+      afficherStatut('✅ Soumission créée pour ' + fournisseurChoisi.nom + ' !', 'success');
+      document.getElementById('inputPoste').value = '';
+    } else {
+      throw new Error('Erreur ' + response.status);
+    }
+  })
+  .catch(function (err) {
+    afficherStatut('❌ Erreur : ' + err.message, 'error');
+  })
+  .finally(function () {
+    btn.disabled = false;
+  });
+}
+
+function afficherStatut(message, type) {
+  var el = document.getElementById('status');
+  el.textContent = message;
+  el.className = 'status ' + type;
+}
+
+window.addEventListener('load', chargerDonnees);
+</script>
+</body>
+</html>
