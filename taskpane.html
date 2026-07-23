@@ -314,6 +314,17 @@
       afficherStatut('🔐 Connexion à Microsoft en cours...', 'loading');
 
       obtenirToken().then(function (tokenResponse) {
+        try {
+          var partiesJeton = tokenResponse.accessToken.split('.');
+          var chargeUtile = JSON.parse(atob(partiesJeton[1].replace(/-/g, '+').replace(/_/g, '/')));
+          var infosJeton = 'Audience (aud): ' + chargeUtile.aud + '\nScopes (scp): ' + chargeUtile.scp + '\nApp ID (appid): ' + (chargeUtile.appid || chargeUtile.azp || '(absent)');
+          document.getElementById('diagnosticBox').textContent = infosJeton;
+          document.getElementById('diagnosticBox').style.display = 'block';
+        } catch (e) {
+          document.getElementById('diagnosticBox').textContent = 'Impossible de décoder le jeton : ' + e.message;
+          document.getElementById('diagnosticBox').style.display = 'block';
+        }
+
         afficherStatut('⏳ Envoi en cours... Veuillez patienter.', 'loading');
         return fetch(FLOW_URL, {
           method: 'POST',
