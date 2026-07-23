@@ -91,6 +91,15 @@ var msalConfig = {
   cache: { cacheLocation: 'localStorage' }
 };
 var msalInstance = new msal.PublicClientApplication(msalConfig);
+
+msalInstance.handleRedirectPromise().then(function (response) {
+  if (response !== null) {
+    chargerDonnees();
+  }
+}).catch(function (err) {
+  afficherStatut('❌ Erreur au retour de connexion : ' + err.message, 'error');
+});
+
 var GRAPH_SCOPES = ['https://graph.microsoft.com/Sites.Read.All'];
 var FLOW_SCOPES = ['https://service.flow.microsoft.com//User'];
 
@@ -109,13 +118,9 @@ function deduireType(categorie) {
 function obtenirToken(scopes) {
   var comptes = msalInstance.getAllAccounts();
   if (comptes.length > 0) {
-    return msalInstance.acquireTokenSilent({ scopes: scopes, account: comptes[0] })
-      .catch(function () { return msalInstance.acquireTokenPopup({ scopes: scopes }); });
+    return msalInstance.acquireTokenSilent({ scopes: scopes, account: comptes[0] });
   }
-  return msalInstance.loginPopup({ scopes: scopes }).then(function (loginResponse) {
-    return msalInstance.acquireTokenSilent({ scopes: scopes, account: loginResponse.account })
-      .catch(function () { return msalInstance.acquireTokenPopup({ scopes: scopes }); });
-  });
+  return msalInstance.loginRedirect({ scopes: scopes });
 }
 
 function chargerDonnees() {
