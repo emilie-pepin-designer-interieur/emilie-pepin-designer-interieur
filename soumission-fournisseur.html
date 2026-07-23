@@ -64,15 +64,16 @@ select, input, textarea {
 </div>
 
 <label for="selectProjet">Projet</label>
-<select id="selectProjet"><option>Chargement des projets...</option></select>
+<select id="selectProjet" disabled><option>Clique « Se connecter » pour charger</option></select>
 
 <label for="selectFournisseur">Fournisseur / Entrepreneur</label>
-<select id="selectFournisseur"><option>Chargement des fournisseurs...</option></select>
+<select id="selectFournisseur" disabled><option>Clique « Se connecter » pour charger</option></select>
 
 <label for="inputPoste">Poste concerné</label>
 <input type="text" id="inputPoste" placeholder="Ex : Céramique salle de bain">
 
-<button class="btn-principal" id="btnEnvoyer" onclick="creerSoumission()">🌸 Créer la soumission</button>
+<button class="btn-principal" id="btnConnexion" onclick="chargerDonnees()">🔐 Se connecter et charger</button>
+<button class="btn-principal" id="btnEnvoyer" onclick="creerSoumission()" style="display:none">🌸 Créer la soumission</button>
 
 <div class="status" id="status"></div>
 
@@ -118,8 +119,13 @@ function obtenirToken(scopes) {
 }
 
 function chargerDonnees() {
+  var btnConnexion = document.getElementById('btnConnexion');
+  btnConnexion.disabled = true;
+  afficherStatut('🔐 Connexion à Microsoft en cours...', 'loading');
+
   obtenirToken(GRAPH_SCOPES).then(function (tokenResponse) {
     var headers = { 'Authorization': 'Bearer ' + tokenResponse.accessToken };
+    afficherStatut('⏳ Chargement des projets et fournisseurs...', 'loading');
 
     var appelProjets = fetch('https://graph.microsoft.com/v1.0/sites/' + SITE_PATH + '/lists/Projets/items?expand=fields', { headers: headers })
       .then(function (r) { return r.json(); });
@@ -143,6 +149,7 @@ function chargerDonnees() {
 
       var selProjet = document.getElementById('selectProjet');
       selProjet.innerHTML = '';
+      selProjet.disabled = false;
       if (projets.length === 0) {
         selProjet.innerHTML = '<option>Aucun projet actif trouvé</option>';
       } else {
@@ -156,6 +163,7 @@ function chargerDonnees() {
 
       var selFourn = document.getElementById('selectFournisseur');
       selFourn.innerHTML = '';
+      selFourn.disabled = false;
       if (fournisseurs.length === 0) {
         selFourn.innerHTML = '<option>Aucun fournisseur trouvé</option>';
       } else {
@@ -166,11 +174,17 @@ function chargerDonnees() {
           selFourn.appendChild(opt);
         });
       }
+
+      btnConnexion.style.display = 'none';
+      document.getElementById('btnEnvoyer').style.display = 'block';
+      afficherStatut('✅ Connecté. Choisis un projet et un fournisseur.', 'success');
     }).catch(function (err) {
       afficherStatut('❌ Erreur de chargement : ' + err.message, 'error');
+      btnConnexion.disabled = false;
     });
   }).catch(function (err) {
     afficherStatut('❌ Erreur de connexion : ' + err.message, 'error');
+    btnConnexion.disabled = false;
   });
 }
 
@@ -231,7 +245,6 @@ function afficherStatut(message, type) {
   el.className = 'status ' + type;
 }
 
-window.addEventListener('load', chargerDonnees);
 </script>
 </body>
 </html>
