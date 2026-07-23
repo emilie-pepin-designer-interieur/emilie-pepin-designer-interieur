@@ -207,42 +207,60 @@
       courrielClient = '';
 
       Word.run(function (context) {
-        var contentControls = context.document.contentControls;
-        contentControls.load('items');
+        var tables = context.document.body.tables;
+        tables.load('items');
         return context.sync().then(function () {
-          contentControls.items.forEach(function (cc) {
-            cc.load('tag,title,text');
-          });
-          return context.sync().then(function () {
-            var lignesDiagnostic = [];
-            lignesDiagnostic.push(contentControls.items.length + ' contrôle(s) de contenu trouvé(s) :');
-            lignesDiagnostic.push('');
-
-            contentControls.items.forEach(function (cc, index) {
-              var tag = cc.tag || '(vide)';
-              var titre = cc.title || '(vide)';
-              var valeur = (cc.text || '').trim();
-
-              lignesDiagnostic.push((index + 1) + '. Tag=[' + tag + ']  Titre=[' + titre + ']  Valeur=[' + valeur + ']');
-
-              var tagUpper = tag.toUpperCase();
-              var titreUpper = titre.toUpperCase();
-
-              if ((tagUpper.indexOf('COURRIEL') !== -1 || titreUpper.indexOf('COURRIEL') !== -1 || tagUpper.indexOf('EMAIL') !== -1)) {
-                courrielClient = valeur;
-              } else if (tagUpper.indexOf('CLIENT') !== -1 || titreUpper.indexOf('CLIENT') !== -1) {
-                nomClient = valeur;
-              } else if (tagUpper.indexOf('PROJET') !== -1 || titreUpper.indexOf('PROJET') !== -1) {
-                nomProjet = valeur;
-              }
-            });
-
-            dernierDiagnostic = lignesDiagnostic.join('\n');
+          if (tables.items.length === 0) {
+            dernierDiagnostic = 'Aucun tableau trouvé dans le document.';
             document.getElementById('diagnosticBox').textContent = dernierDiagnostic;
+            document.getElementById('nomClient').textContent = 'Non trouvé';
+            document.getElementById('nomProjet').textContent = 'Non trouvé';
+            document.getElementById('courrielClient').textContent = 'Non trouvé';
+            return;
+          }
 
-            document.getElementById('nomClient').textContent = nomClient || 'Non trouvé';
-            document.getElementById('nomProjet').textContent = nomProjet || 'Non trouvé';
-            document.getElementById('courrielClient').textContent = courrielClient || 'Non trouvé';
+          var premierTableau = tables.items[0];
+          premierTableau.rows.load('items');
+          return context.sync().then(function () {
+            var rows = premierTableau.rows.items;
+            rows.forEach(function (row) {
+              row.cells.load('items');
+            });
+            return context.sync().then(function () {
+              rows.forEach(function (row) {
+                row.cells.items.forEach(function (cell) {
+                  cell.body.load('text');
+                });
+              });
+              return context.sync().then(function () {
+                var lignesDiagnostic = [];
+                lignesDiagnostic.push(rows.length + ' ligne(s) trouvée(s) dans le premier tableau :');
+                lignesDiagnostic.push('');
+
+                rows.forEach(function (row, rIndex) {
+                  var texteCellules = row.cells.items.map(function (cell) {
+                    return '[' + cell.body.text.trim() + ']';
+                  });
+                  lignesDiagnostic.push('Ligne ' + rIndex + ': ' + texteCellules.join('  '));
+
+                  if (row.cells.items.length >= 2) {
+                    var label = row.cells.items[0].body.text.trim().toUpperCase();
+                    var valeur = row.cells.items[1].body.text.trim();
+
+                    if (label.indexOf('CLIENT') !== -1) { nomClient = valeur; }
+                    else if (label.indexOf('PROJET') !== -1) { nomProjet = valeur; }
+                    else if (label.indexOf('COURRIEL') !== -1) { courrielClient = valeur; }
+                  }
+                });
+
+                dernierDiagnostic = lignesDiagnostic.join('\n');
+                document.getElementById('diagnosticBox').textContent = dernierDiagnostic;
+
+                document.getElementById('nomClient').textContent = nomClient || 'Non trouvé';
+                document.getElementById('nomProjet').textContent = nomProjet || 'Non trouvé';
+                document.getElementById('courrielClient').textContent = courrielClient || 'Non trouvé';
+              });
+            });
           });
         });
       }).catch(function (err) {
