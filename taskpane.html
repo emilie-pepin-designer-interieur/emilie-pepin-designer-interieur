@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Studio Émilie Pépin</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -89,9 +90,21 @@
       padding: 8px;
       font-size: 11px;
       cursor: pointer;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
     .btn-refresh:hover { background: #F2D7E0; }
+    .btn-diagnostic {
+      width: 100%;
+      background: transparent;
+      color: #6B2D45;
+      border: 1px dashed #6B2D45;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+    .btn-diagnostic:hover { background: #F2D7E0; }
     .status {
       text-align: center;
       font-size: 12px;
@@ -113,6 +126,19 @@
       background: #F2D7E0;
       color: #6B2D45;
       display: block;
+    }
+    .diagnostic-box {
+      background: #fff;
+      border: 1px solid #C4859A;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 10px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      max-height: 250px;
+      overflow-y: auto;
+      display: none;
     }
     .footer {
       margin-top: 20px;
@@ -150,6 +176,11 @@
   <button class="btn-refresh" onclick="lireDocument()">
     ↻ Relire le document
   </button>
+  <button class="btn-diagnostic" onclick="toggleDiagnostic()">
+    🔍 Voir le diagnostic technique
+  </button>
+
+  <div class="diagnostic-box" id="diagnosticBox"></div>
 
   <div class="status" id="status"></div>
 
@@ -159,7 +190,37 @@
     var nomClient = '';
     var nomProjet = '';
     var courrielClient = '';
-    var FLOW_URL = 'REMPLACER_PAR_URL_FLUX_POWER_AUTOMATE';
+    var dernierDiagnostic = '';
+    var FLOW_URL = 'https://defaulta8238caff2db4be193a7ce2789e111.07.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/13/workflows/58b618de7e634b0689bae66d8a2f7dc6/triggers/manual/paths/invoke?api-version=1';
+
+    var msalConfig = {
+      auth: {
+        clientId: '0208592e-314f-429d-b825-7b85dc92f223',
+        authority: 'https://login.microsoftonline.com/a8238caf-f2db-4be1-93a7-ce2789e11107',
+        redirectUri: 'https://emilie-pepin-designer-interieur.github.io/emilie-pepin-designer-interieur/taskpane.html'
+      },
+      cache: {
+        cacheLocation: 'localStorage'
+      }
+    };
+    var msalInstance = new msal.PublicClientApplication(msalConfig);
+    var FLOW_SCOPES = ['https://service.flow.microsoft.com//User'];
+
+    function obtenirToken() {
+      var comptes = msalInstance.getAllAccounts();
+      if (comptes.length > 0) {
+        return msalInstance.acquireTokenSilent({ scopes: FLOW_SCOPES, account: comptes[0] })
+          .catch(function () {
+            return msalInstance.acquireTokenPopup({ scopes: FLOW_SCOPES });
+          });
+      }
+      return msalInstance.loginPopup({ scopes: FLOW_SCOPES }).then(function (loginResponse) {
+        return msalInstance.acquireTokenSilent({ scopes: FLOW_SCOPES, account: loginResponse.account })
+          .catch(function () {
+            return msalInstance.acquireTokenPopup({ scopes: FLOW_SCOPES });
+          });
+      });
+    }
 
     Office.onReady(function(info) {
       if (info.host === Office.HostType.Word) {
@@ -171,36 +232,75 @@
       document.getElementById('nomClient').textContent = 'Lecture...';
       document.getElementById('nomProjet').textContent = 'Lecture...';
       document.getElementById('courrielClient').textContent = 'Lecture...';
+      nomClient = '';
+      nomProjet = '';
+      courrielClient = '';
 
-      Word.run(function(context) {
-        var body = context.document.body;
-        body.load('text');
-        return context.sync().then(function() {
-          var texte = body.text;
-          nomClient = extraireValeur(texte, 'CLIENT');
-          nomProjet = extraireValeur(texte, 'PROJET');
-          courrielClient = extraireValeur(texte, 'COURRIEL');
+      Word.run(function (context) {
+        var tables = context.document.body.tables;
+        tables.load('items');
+        return context.sync().then(function () {
+          if (tables.items.length === 0) {
+            dernierDiagnostic = 'Aucun tableau trouvé dans le document.';
+            document.getElementById('diagnosticBox').textContent = dernierDiagnostic;
+            document.getElementById('nomClient').textContent = 'Non trouvé';
+            document.getElementById('nomProjet').textContent = 'Non trouvé';
+            document.getElementById('courrielClient').textContent = 'Non trouvé';
+            return;
+          }
 
-          document.getElementById('nomClient').textContent = nomClient || 'Non trouvé';
-          document.getElementById('nomProjet').textContent = nomProjet || 'Non trouvé';
-          document.getElementById('courrielClient').textContent = courrielClient || 'Non trouvé';
+          var premierTableau = tables.items[0];
+          premierTableau.rows.load('items');
+          return context.sync().then(function () {
+            var rows = premierTableau.rows.items;
+            rows.forEach(function (row) {
+              row.cells.load('items');
+            });
+            return context.sync().then(function () {
+              rows.forEach(function (row) {
+                row.cells.items.forEach(function (cell) {
+                  cell.body.load('text');
+                });
+              });
+              return context.sync().then(function () {
+                var lignesDiagnostic = [];
+                lignesDiagnostic.push(rows.length + ' ligne(s) trouvée(s) dans le premier tableau :');
+                lignesDiagnostic.push('');
+
+                rows.forEach(function (row, rIndex) {
+                  var texteCellules = row.cells.items.map(function (cell) {
+                    return '[' + cell.body.text.trim() + ']';
+                  });
+                  lignesDiagnostic.push('Ligne ' + rIndex + ': ' + texteCellules.join('  '));
+
+                  if (row.cells.items.length >= 2) {
+                    var label = row.cells.items[0].body.text.trim().toUpperCase();
+                    var valeur = row.cells.items[1].body.text.trim();
+
+                    if (label.indexOf('CLIENT') !== -1) { nomClient = valeur; }
+                    else if (label.indexOf('PROJET') !== -1) { nomProjet = valeur; }
+                    else if (label.indexOf('COURRIEL') !== -1) { courrielClient = valeur; }
+                  }
+                });
+
+                dernierDiagnostic = lignesDiagnostic.join('\n');
+                document.getElementById('diagnosticBox').textContent = dernierDiagnostic;
+
+                document.getElementById('nomClient').textContent = nomClient || 'Non trouvé';
+                document.getElementById('nomProjet').textContent = nomProjet || 'Non trouvé';
+                document.getElementById('courrielClient').textContent = courrielClient || 'Non trouvé';
+              });
+            });
+          });
         });
-      }).catch(function(err) {
+      }).catch(function (err) {
         afficherStatut('Erreur de lecture : ' + err.message, 'error');
       });
     }
 
-    function extraireValeur(texte, label) {
-      var lignes = texte.split('\n');
-      for (var i = 0; i < lignes.length; i++) {
-        var ligne = lignes[i].trim();
-        if (ligne.toUpperCase().startsWith(label)) {
-          var valeur = ligne.substring(label.length).trim();
-          if (valeur) return valeur;
-          if (i + 1 < lignes.length) return lignes[i + 1].trim();
-        }
-      }
-      return '';
+    function toggleDiagnostic() {
+      var box = document.getElementById('diagnosticBox');
+      box.style.display = (box.style.display === 'block') ? 'none' : 'block';
     }
 
     function envoyerSoumission() {
@@ -211,16 +311,22 @@
 
       var btn = document.getElementById('btnEnvoyer');
       btn.disabled = true;
-      afficherStatut('⏳ Envoi en cours... Veuillez patienter.', 'loading');
+      afficherStatut('🔐 Connexion à Microsoft en cours...', 'loading');
 
-      fetch(FLOW_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nomClient: nomClient,
-          nomProjet: nomProjet,
-          courrielClient: courrielClient
-        })
+      obtenirToken().then(function (tokenResponse) {
+        afficherStatut('⏳ Envoi en cours... Veuillez patienter.', 'loading');
+        return fetch(FLOW_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + tokenResponse.accessToken
+          },
+          body: JSON.stringify({
+            nomClient: nomClient,
+            nomProjet: nomProjet,
+            courrielClient: courrielClient
+          })
+        });
       })
       .then(function(response) {
         if (response.ok || response.status === 202) {
