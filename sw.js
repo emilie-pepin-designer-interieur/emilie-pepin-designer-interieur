@@ -1,5 +1,5 @@
-// Service Worker v28 - Dashboard pro, Moodboard Canva, redesign visuel complet
-const CACHE_NAME = 'emilie-pepin-v28';
+// Service Worker v29 - Note vocale, epingles plan, kilometrage MileIQ v2, ecran OneDrive, compte-rendu par visite
+const CACHE_NAME = 'emilie-pepin-v29';
 
 self.addEventListener('install', e => {
   self.skipWaiting();

@@ -15,6 +15,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.0/lib/msal-browser.min.js"></script>
 <script src="https://unpkg.com/dxf-parser@1.0.3/dist/dxf-parser.js" onerror="console.warn('dxf-parser CDN unavailable — fallback parser will be used')"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" onerror="console.warn('Leaflet CSS CDN unavailable — carte de trajet désactivée')">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onerror="console.warn('Leaflet CDN unavailable — carte de trajet désactivée')"></script>
 <style>
 :root {
   --mauve: #6B2D45;
@@ -433,21 +435,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
 /* PRINT */
 @media print {
   body > * { display: none !important; }
-  #printReport { display: block !important; }
   #printInvoice { display: block !important; }
   @page { margin: 15mm; }
 }
-#printReport {
-  display: none;
-  font-family: 'DM Sans', Arial, sans-serif;
-  color: #2A1520;
-}
-#printReport .pr-header { text-align:center; margin-bottom: 20px; border-bottom: 2px solid #6B2D45; padding-bottom: 12px; }
-#printReport .pr-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: #6B2D45; }
-#printReport .pr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
-#printReport .pr-photo { break-inside: avoid; }
-#printReport .pr-photo img { width: 100%; border-radius: 8px; border: 1px solid #ddd; }
-#printReport .pr-caption { font-size: 11px; color: #6B4A56; margin-top: 4px; padding: 2px 4px; }
 #printInvoice { display: none; font-family: 'DM Sans', Arial, sans-serif; }
 .fp-tool-btn { transition: all 0.15s; }
 .fp-active { background: var(--mauve) !important; color: white !important; }
@@ -500,7 +490,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
     <div class="section-label" id="clientsLabel">Clients</div>
     <div class="client-list" id="clientList"><div class="empty-state"><div class="empty-icon">🌸</div><div class="empty-title">Chargement...</div></div></div>
   </div>
-  <button class="fab" onclick="showAddClient()" style="position:relative;">+<span id="offlineBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#FF453A;color:white;border-radius:50%;font-size:10px;min-width:18px;height:18px;align-items:center;justify-content:center;font-weight:700;"></span></button>
+  <button class="fab" onclick="showAddClient()">+<span id="offlineBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#FF453A;color:white;border-radius:50%;font-size:10px;min-width:18px;height:18px;align-items:center;justify-content:center;font-weight:700;"></span></button>
 </div>
 
 <!-- ===== SCREEN CLIENT DETAIL ===== -->
@@ -565,17 +555,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--rose-cream); color:
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         <span>Teams</span>
       </button>
+      <button class="action-btn" onclick="openOneDriveScreen()">
+        <div class="action-icon" style="background:#F0F4FF;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2D6BE0" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="action-label">Fichiers OneDrive</div>
+      </button>
     </div>
-    <!-- ONEDRIVE FILE BROWSER -->
-    <div id="clientFilesSection" style="margin:12px 14px;background:white;border-radius:var(--radius);box-shadow:var(--shadow-card);overflow:hidden;">
-      <div style="display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--blush);">
-        <span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);flex:1;">Fichiers OneDrive</span>
-        <button onclick="refreshClientFiles()" style="background:none;border:none;color:var(--mauve);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;">↻ Actualiser</button>
-        <button onclick="uploadClientFile()" style="background:var(--mauve);color:white;border:none;border-radius:12px;padding:4px 12px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-left:8px;">+ Ajouter</button>
-      </div>
-      <div id="clientFilesList" style="padding:8px 0;max-height:300px;overflow-y:auto;">
-        <div style="text-align:center;padding:20px;color:var(--text-light);font-size:13px;font-family:'DM Sans',sans-serif;">Chargement des fichiers…</div>
-      </div>
+    <!-- ONEDRIVE — bandeau vers l'écran dédié -->
+    <div onclick="openOneDriveScreen()" style="margin:12px 14px;background:white;border-radius:var(--radius);box-shadow:var(--shadow-card);padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;-webkit-tap-highlight-color:rgba(107,45,69,0.08);">
+      <div class="action-icon" style="width:40px;height:40px;background:#F0F4FF;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2D6BE0" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+      <span style="flex:1;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--text-dark);">Voir tous les fichiers OneDrive</span>
+      <span style="color:var(--text-light);font-size:18px;">›</span>
     </div>
     <input type="file" id="clientFileUploadInput" style="display:none" onchange="handleClientFileUpload(event)">
     <button class="bill-btn" onclick="printInvoice()"><span>💰</span> Facturer ce client</button>
@@ -1449,7 +1438,6 @@ function openClient(id) {
   if(addrEl){if(c.address){addrEl.textContent='📍 '+c.address;addrEl.style.display='block';}else addrEl.style.display='none';}
   renderPhases(c.id);
   showScreen('screenClient');
-  loadClientFiles();
 }
 
 // ===== NAVIGATION =====
@@ -1457,7 +1445,8 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='';s.style.position='';s.style.inset='';s.style.zIndex='';});
   const el = document.getElementById(id);
   if(el){el.classList.add('active');if(id==='screenPhotos')el.style.display='flex';}
-  if(id!=='screenPhotos'){const nav=document.getElementById('bottomNav');if(nav)nav.classList.remove('nav-hidden');}
+  const nav=document.getElementById('bottomNav');
+  if(nav){ if(id==='screenPhotos'||id==='screenFloorPlan') nav.classList.add('nav-hidden'); else nav.classList.remove('nav-hidden'); }
   window.scrollTo(0,0);
 }
 function navTo(screen,navId) {
@@ -1666,7 +1655,7 @@ function takePhoto(){
   else ctx.drawImage(video,0,0,w,h);
   const dataUrl=canvas.toDataURL('image/jpeg',0.93);
   const ts=new Date(),filename=formatDateForFilename(ts)+'_'+String(sessionPhotos.length+1).padStart(3,'0')+'.jpg';
-  const photo={dataUrl,saved:false,filename,oneDriveId:null,date:ts};
+  const photo={dataUrl,saved:false,filename,oneDriveId:null,date:ts,caption:'',captionSaved:false};
   sessionPhotos.push(photo);
   // Caméra reste active - rafale chantier
   updateLastPhotoThumb();
@@ -1684,11 +1673,11 @@ function formatDateForFilename(d){
 
 // ===== SAUVEGARDE AUTO =====
 async function autoSavePhoto(photo,index){
-  if(!navigator.onLine){offlineQueue.push(index);_updateOfflineBadge();showToast('📴 Hors ligne — photo en attente');return;}
-  if(!state.accessToken||!state.currentClient){offlineQueue.push(index);_updateOfflineBadge();return;}
+  if(!navigator.onLine){if(!offlineQueue.includes(index))offlineQueue.push(index);_updateOfflineBadge();showToast('📴 Hors ligne — photo en attente');return;}
+  if(!state.accessToken||!state.currentClient){if(!offlineQueue.includes(index))offlineQueue.push(index);_updateOfflineBadge();return;}
   const ok=await uploadPhotoToOneDrive(photo.dataUrl,photo.filename);
   if(ok){sessionPhotos[index].saved=true;updateFilmstripThumb();updateSavePendingBtn();}
-  else{offlineQueue.push(index);_updateOfflineBadge();}
+  else{if(!offlineQueue.includes(index))offlineQueue.push(index);_updateOfflineBadge();}
 }
 
 window.addEventListener('online',async()=>{
@@ -1696,12 +1685,18 @@ window.addEventListener('online',async()=>{
   showToast(`📶 Sync de ${offlineQueue.length} photo${offlineQueue.length>1?'s':''}...`);
   const queue=[...offlineQueue]; offlineQueue=[];
   for(const idx of queue){
+    let stillPending=false;
     if(sessionPhotos[idx]&&!sessionPhotos[idx].saved){
       const ok=await uploadPhotoToOneDrive(sessionPhotos[idx].dataUrl,sessionPhotos[idx].filename);
-      if(ok) sessionPhotos[idx].saved=true; else offlineQueue.push(idx);
+      if(ok) sessionPhotos[idx].saved=true; else stillPending=true;
     }
+    if(sessionPhotos[idx]&&sessionPhotos[idx].caption&&!sessionPhotos[idx].captionSaved){
+      const okC=await uploadCaptionToOneDrive(sessionPhotos[idx].caption,sessionPhotos[idx].filename);
+      if(okC) sessionPhotos[idx].captionSaved=true; else stillPending=true;
+    }
+    if(stillPending&&!offlineQueue.includes(idx)) offlineQueue.push(idx);
   }
-  updateFilmstripThumb(); updateSavePendingBtn(); _updateOfflineBadge();
+  updateFilmstripThumb(); updateSavePendingBtn(); renderFilmstripGrid(); _updateOfflineBadge();
   showToast(`✅ ${queue.length-offlineQueue.length} photo${queue.length>1?'s':''} synchronisée${queue.length>1?'s':''}`);
 });
 window.addEventListener('offline',()=>showToast('📴 Hors ligne — photos en attente'));
@@ -1714,7 +1709,8 @@ function updateFilmstripThumb(){
   if(sessionPhotos.length>0){
     const last=sessionPhotos[sessionPhotos.length-1];
     thumb.innerHTML=`<img src="${last.dataUrl||last.odThumbnail||''}" style="width:100%;height:100%;object-fit:cover;">
-      ${pending>0?`<div style="position:absolute;bottom:2px;right:2px;background:#FF9F0A;color:white;font-size:9px;font-weight:700;font-family:'DM Sans',sans-serif;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;">${pending}</div>`:''}`;
+      ${pending>0?`<div style="position:absolute;bottom:2px;right:2px;background:#FF9F0A;color:white;font-size:9px;font-weight:700;font-family:'DM Sans',sans-serif;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;">${pending}</div>`:''}
+      <div onclick="event.stopPropagation();openCaptionRecorder(sessionPhotos.length-1)" style="position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:${last.caption?'var(--mauve)':'rgba(0,0,0,0.45)'};display:flex;align-items:center;justify-content:center;font-size:10px;">🎤</div>`;
   } else {
     thumb.innerHTML=`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
   }
@@ -1764,7 +1760,7 @@ async function loadOneDrivePhotos(){
       for(const f of data.value){
         if(!f.name.match(/\.(jpg|jpeg|png|heic)/i)) continue;
         if(sessionFilenames.has(f.name)) continue;
-        sessionPhotos.push({dataUrl:null,odUrl:f['@microsoft.graph.downloadUrl']||null,odThumbnail:f.thumbnails?.[0]?.medium?.url||null,filename:f.name,saved:true,oneDriveId:f.id});
+        sessionPhotos.push({dataUrl:null,odUrl:f['@microsoft.graph.downloadUrl']||null,odThumbnail:f.thumbnails?.[0]?.medium?.url||null,filename:f.name,saved:true,oneDriveId:f.id,caption:'',captionSaved:false});
       }
       renderFilmstripGrid();
     }
@@ -1782,6 +1778,7 @@ function renderFilmstripGrid(){
     return `<div class="filmstrip-item" onclick="openPhotoActionMenu(${i})" style="position:relative;aspect-ratio:1;overflow:hidden;background:#333;cursor:pointer;">
       ${src?`<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:10px;">OneDrive</div>`}
       <div style="position:absolute;top:3px;right:3px;background:${p.saved?'#30D158':'#FF9F0A'};color:white;font-size:9px;font-weight:700;padding:2px 5px;border-radius:5px;font-family:'DM Sans',sans-serif;">${p.saved?'✓':'↑'}</div>
+      <div onclick="event.stopPropagation();openCaptionRecorder(${i})" style="position:absolute;bottom:3px;left:3px;width:20px;height:20px;border-radius:50%;background:${p.caption?'var(--mauve)':'rgba(0,0,0,0.45)'};display:flex;align-items:center;justify-content:center;font-size:11px;">🎤</div>
     </div>`;
   }).join('');
 }
@@ -2013,6 +2010,156 @@ async function uploadPhotoToOneDrive(dataUrl,filename){
 }
 
 function updatePhotosGallery(){renderFilmstripGrid();}
+
+// ===== CAPTION VOCALE (NOTE DE CHANTIER) =====
+let activeRecognition=null, recordingCaptionIndex=-1;
+
+function _captionFilenameFor(filename){
+  return filename.replace(/\.[a-z0-9]+$/i,'.txt');
+}
+
+async function uploadCaptionToOneDrive(caption,filename){
+  if(!state.accessToken||!state.currentClient) return false;
+  try {
+    const safeFolder=state.currentClient.Title.replace(/[/\\?%*:|"<>]/g,'_');
+    const targetPath=`${CONFIG.oneDriveRoot}/${safeFolder}/10_Photos/Chantier/${_captionFilenameFor(filename)}`;
+    const url=`https://graph.microsoft.com/v1.0/me/drive/root:/${targetPath}:/content`;
+    const request=await fetch(url,{method:'PUT',headers:{'Authorization':`Bearer ${state.accessToken}`,'Content-Type':'text/plain; charset=utf-8'},body:caption});
+    return request.ok;
+  } catch(e){ console.error('Graph API:',e); return false; }
+}
+
+async function autoSaveCaption(index){
+  if(!sessionPhotos[index]) return;
+  if(!navigator.onLine||!state.accessToken||!state.currentClient){
+    if(!offlineQueue.includes(index)) offlineQueue.push(index);
+    _updateOfflineBadge();
+    return;
+  }
+  const ok=await uploadCaptionToOneDrive(sessionPhotos[index].caption,sessionPhotos[index].filename);
+  if(ok){ sessionPhotos[index].captionSaved=true; }
+  else { if(!offlineQueue.includes(index)) offlineQueue.push(index); _updateOfflineBadge(); }
+}
+
+function saveCaptionText(index,text){
+  if(!sessionPhotos[index]) return;
+  sessionPhotos[index].caption=(text||'').trim();
+  sessionPhotos[index].captionSaved=false;
+  updateFilmstripThumb();
+  renderFilmstripGrid();
+  autoSaveCaption(index);
+}
+
+function openCaptionRecorder(index){
+  if(index<0||!sessionPhotos[index]) return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ showToast('🎤 Dictée vocale non disponible sur cet appareil — tapez votre note'); openCaptionTextFallback(index); return; }
+  if(!navigator.onLine){ showToast('📴 Hors ligne — dictée indisponible, tapez votre note'); openCaptionTextFallback(index); return; }
+  _showCaptionOverlay(index);
+}
+
+function _showCaptionOverlay(index){
+  const old=document.getElementById('captionOverlay'); if(old) old.remove();
+  if(activeRecognition){ try{ activeRecognition.abort(); }catch(e){} activeRecognition=null; }
+  recordingCaptionIndex=index;
+  const photo=sessionPhotos[index];
+  const ov=document.createElement('div');
+  ov.id='captionOverlay';
+  ov.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:500;background:#1c1c1e;border-top:1px solid rgba(255,255,255,0.12);padding-bottom:calc(env(safe-area-inset-bottom,0px)+14px);';
+  ov.innerHTML=
+    '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 6px;">'
+    +'<img src="'+(photo.dataUrl||photo.odThumbnail||'')+'" style="width:38px;height:38px;border-radius:8px;object-fit:cover;flex-shrink:0;">'
+    +'<div style="color:white;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:600;">Note vocale</div>'
+    +'<div style="flex:1;"></div>'
+    +'<div style="width:10px;height:10px;border-radius:50%;background:#FF453A;animation:pulse 1.1s infinite;"></div>'
+    +'<span style="color:rgba(255,255,255,0.6);font-family:\'DM Sans\',sans-serif;font-size:12px;">Écoute…</span>'
+    +'</div>'
+    +'<div id="captionLiveText" style="min-height:44px;margin:6px 16px;padding:10px 12px;background:#3a3a3c;border-radius:10px;color:white;font-family:\'DM Sans\',sans-serif;font-size:15px;line-height:1.4;"></div>'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:8px 16px 4px;">'
+    +'<button onclick="cancelCaptionRecording()" style="width:42px;height:42px;background:rgba(255,255,255,0.12);border:none;border-radius:10px;color:white;font-size:18px;cursor:pointer;">✕</button>'
+    +'<button onclick="openCaptionTextFallback('+index+')" style="flex:1;padding:11px;background:#3a3a3c;border:none;border-radius:10px;color:white;font-family:\'DM Sans\',sans-serif;font-size:13px;cursor:pointer;">⌨️ Clavier</button>'
+    +'<button onclick="confirmCaptionTranscript()" style="width:42px;height:42px;background:#30D158;border:none;border-radius:10px;color:white;font-size:20px;cursor:pointer;">✓</button>'
+    +'</div>';
+  document.body.appendChild(ov);
+
+  const liveEl=document.getElementById('captionLiveText');
+  let finalText=photo.caption||'';
+  if(liveEl) liveEl.textContent=finalText;
+
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const rec=new SR();
+  rec.lang='fr-CA'; rec.interimResults=true; rec.continuous=true;
+  rec.onresult=(e)=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      if(e.results[i].isFinal) finalText=(finalText?finalText+' ':'')+t.trim();
+      else interim+=t;
+    }
+    if(liveEl) liveEl.textContent=(finalText+' '+interim).trim();
+  };
+  rec.onerror=(e)=>{
+    console.error('SpeechRecognition:',e.error);
+    showToast('⚠️ Reconnaissance vocale indisponible — tapez votre note');
+    _closeCaptionOverlay();
+    openCaptionTextFallback(index);
+  };
+  rec.onend=()=>{};
+  activeRecognition=rec;
+  try{ rec.start(); }
+  catch(e){ showToast('⚠️ Reconnaissance vocale indisponible — tapez votre note'); _closeCaptionOverlay(); openCaptionTextFallback(index); }
+}
+
+function confirmCaptionTranscript(){
+  if(activeRecognition){ try{ activeRecognition.stop(); }catch(e){} activeRecognition=null; }
+  const liveEl=document.getElementById('captionLiveText');
+  const text=liveEl?liveEl.textContent:'';
+  const idx=recordingCaptionIndex;
+  _closeCaptionOverlay();
+  if(idx>=0) saveCaptionText(idx,text);
+  showToast('📝 Note enregistrée');
+}
+
+function cancelCaptionRecording(){
+  if(activeRecognition){ try{ activeRecognition.abort(); }catch(e){} activeRecognition=null; }
+  _closeCaptionOverlay();
+}
+
+function _closeCaptionOverlay(){
+  const ov=document.getElementById('captionOverlay'); if(ov) ov.remove();
+  recordingCaptionIndex=-1;
+}
+
+function openCaptionTextFallback(index){
+  if(activeRecognition){ try{ activeRecognition.abort(); }catch(e){} activeRecognition=null; }
+  const old=document.getElementById('captionOverlay'); if(old) old.remove();
+  if(index<0||!sessionPhotos[index]) return;
+  recordingCaptionIndex=index;
+  const photo=sessionPhotos[index];
+  const ov=document.createElement('div');
+  ov.id='captionOverlay';
+  ov.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:500;background:#1c1c1e;border-top:1px solid rgba(255,255,255,0.12);padding-bottom:calc(env(safe-area-inset-bottom,0px)+14px);';
+  ov.innerHTML=
+    '<div style="padding:14px 16px 6px;color:white;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:600;">Note vocale</div>'
+    +'<input id="captionTextInput" type="text" placeholder="Tapez votre note…" autocomplete="off" autocorrect="off"'
+    +' style="width:calc(100% - 32px);margin:6px 16px;padding:11px 14px;background:#3a3a3c;border:none;border-radius:10px;color:white;font-size:16px;font-family:\'DM Sans\',sans-serif;outline:none;box-sizing:border-box;display:block;">'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:10px 16px 4px;">'
+    +'<button onclick="cancelCaptionRecording()" style="width:42px;height:42px;background:rgba(255,255,255,0.12);border:none;border-radius:10px;color:white;font-size:18px;cursor:pointer;">✕</button>'
+    +'<div style="flex:1;"></div>'
+    +'<button onclick="_confirmCaptionTextFallback('+index+')" style="width:42px;height:42px;background:#30D158;border:none;border-radius:10px;color:white;font-size:20px;cursor:pointer;">✓</button>'
+    +'</div>';
+  document.body.appendChild(ov);
+  const inp=document.getElementById('captionTextInput');
+  if(inp){ inp.value=photo.caption||''; setTimeout(()=>inp.focus(),100); }
+}
+
+function _confirmCaptionTextFallback(index){
+  const inp=document.getElementById('captionTextInput');
+  const text=inp?inp.value:'';
+  _closeCaptionOverlay();
+  saveCaptionText(index,text);
+  showToast('📝 Note enregistrée');
+}
 function _updateOfflineBadge(){
   const n=offlineQueue.length;
   const badge=document.getElementById('offlineBadge');
@@ -2912,7 +3059,7 @@ function openNavigation(){
   sheet.addEventListener('click',e=>{if(e.target===sheet)sheet.remove();});
   document.body.appendChild(sheet);
 }
-function showAddClient(){showToast('Utilisez le formulaire Forms pour ajouter un client');}
+function showAddClient(){window.open('https://tally.so/r/A7Q4a0','_blank');}
 function showSuiviProjet(){showToast('Suivi projet — bientôt disponible');}
 function showFacturer(){showToast('Facturation — utilisez Power Automate Flux 2');}
 function startVoiceNote(){showToast('Note vocale — bientôt disponible');}
@@ -3429,16 +3576,130 @@ function isIPad(){return /iPad/.test(navigator.userAgent)||(navigator.maxTouchPo
 function openMarkupForDevice(index,src){openPhotoEditor(src);}
 
 // ===== RAPPORT PDF =====
-function generatePhotoReport(){
-  const client=state.currentClient;
-  const photos=sessionPhotos.filter(p=>p.dataUrl);
-  if(!photos.length){showToast('Aucune photo en session');return;}
-  document.getElementById('prTitle').textContent='Rapport Chantier'+(client?' — '+(client.name||client.Title||''):'');
-  document.getElementById('prMeta').textContent=new Date().toLocaleDateString('fr-CA',{day:'2-digit',month:'long',year:'numeric'})+' · '+photos.length+' photo'+(photos.length>1?'s':'');
-  const grid=document.getElementById('prGrid');
-  grid.innerHTML=photos.map((p,i)=>'<div class="pr-photo"><img src="'+p.dataUrl+'"><div class="pr-caption">Photo '+(i+1)+(p.filename?' — '+escHtml(p.filename):'')+'</div></div>').join('');
-  document.getElementById('printReport').style.display='block';
-  setTimeout(()=>{window.print();setTimeout(()=>{document.getElementById('printReport').style.display='none';},500);},200);
+// ===== COMPTE-RENDU DATÉ PAR VISITE =====
+async function _fetchAllVisitData(){
+  const clientName = state.currentClient.Title;
+  const safeFolder = clientName.replace(/[/\\?%*:|"<>]/g,'_');
+  const data = await graphGet(`/me/drive/root:/${CONFIG.oneDriveRoot}/${safeFolder}/10_Photos/Chantier:/children?$expand=thumbnails&$orderby=name desc&$top=200`).catch(()=>null);
+  if(!data?.value?.length) return { datesAscending:[], photosByDate:{} };
+  const photoFiles = data.value.filter(f=>f.name.match(/\.(jpg|jpeg|png|heic)$/i));
+  const captionFiles = data.value.filter(f=>f.name.match(/\.txt$/i));
+  const captionMap = {};
+  await Promise.all(captionFiles.map(async cf=>{
+    const url = cf['@microsoft.graph.downloadUrl'];
+    if(!url) return;
+    try{ const r = await fetch(url); if(r.ok) captionMap[cf.name] = await r.text(); }catch(e){}
+  }));
+  const photosByDate = {};
+  for(const f of photoFiles){
+    const dateMatch = f.name.match(/^(\d{8})_/);
+    const date = dateMatch ? dateMatch[1].replace(/(\d{4})(\d{2})(\d{2})/,'$1-$2-$3') : (f.lastModifiedDateTime?f.lastModifiedDateTime.slice(0,10):'inconnu');
+    const captionFileName = f.name.replace(/\.[a-z0-9]+$/i,'.txt');
+    const caption = captionMap[captionFileName] || '';
+    const url = f['@microsoft.graph.downloadUrl'] || f.thumbnails?.[0]?.medium?.url || '';
+    if(!photosByDate[date]) photosByDate[date] = [];
+    photosByDate[date].push({ name:f.name, url, caption });
+  }
+  const datesAscending = Object.keys(photosByDate).sort();
+  return { datesAscending, photosByDate };
+}
+
+function _showVisitPicker(datesAscending, photosByDate, onPick){
+  const old = document.getElementById('visitPicker'); if(old) old.remove();
+  window._visitPickerData = { datesAscending, photosByDate, onPick };
+  const sheet = document.createElement('div');
+  sheet.id = 'visitPicker';
+  sheet.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:600;background:#1c1c1e;border-top:1px solid rgba(255,255,255,0.12);max-height:60vh;display:flex;flex-direction:column;padding-bottom:calc(env(safe-area-inset-bottom,0px)+14px);';
+  sheet.innerHTML =
+    '<div style="padding:14px 16px 6px;color:white;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:600;">Choisir une visite</div>'
+    +'<div style="overflow-y:auto;padding:6px 16px;">'
+    +datesAscending.map((d,i)=>{
+      const n=i+1, count=photosByDate[d].length;
+      const label = new Date(d+'T00:00:00').toLocaleDateString('fr-CA',{day:'2-digit',month:'long',year:'numeric'});
+      return '<div onclick="_pickVisit('+i+')" style="padding:12px;background:#2c2c2e;border-radius:10px;color:white;font-family:\'DM Sans\',sans-serif;font-size:13px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;"><span>Visite '+n+' — '+escHtml(label)+'</span><span style="color:rgba(255,255,255,0.5);white-space:nowrap;">'+count+' photo'+(count>1?'s':'')+'</span></div>';
+    }).join('')
+    +'</div>'
+    +'<button onclick="document.getElementById(\'visitPicker\').remove()" style="margin:8px 16px 0;padding:11px;background:rgba(255,255,255,0.12);border:none;border-radius:10px;color:white;font-family:\'DM Sans\',sans-serif;font-size:13px;cursor:pointer;">Annuler</button>';
+  document.body.appendChild(sheet);
+}
+
+function _pickVisit(index){
+  const old = document.getElementById('visitPicker'); if(old) old.remove();
+  const picked = window._visitPickerData;
+  if(!picked) return;
+  const date = picked.datesAscending[index];
+  picked.onPick(date, index+1, picked.photosByDate[date]);
+}
+
+async function generatePhotoReport(){
+  if(!state.accessToken || !state.currentClient){ showToast('Connexion Microsoft requise'); return; }
+  showToast('Chargement des photos…');
+  const { datesAscending, photosByDate } = await _fetchAllVisitData();
+  if(!datesAscending.length){ showToast('Aucune photo trouvée pour ce client'); return; }
+  if(datesAscending.length===1){
+    _generateVisitReport(datesAscending[0], 1, photosByDate[datesAscending[0]]);
+    return;
+  }
+  _showVisitPicker(datesAscending, photosByDate, (date,num,photos)=>_generateVisitReport(date,num,photos));
+}
+
+async function _generateVisitReport(date, visitNumber, photos){
+  const client = state.currentClient;
+  const clientName = client?.Title || '';
+  const dateLabel = new Date(date+'T00:00:00').toLocaleDateString('fr-CA',{day:'2-digit',month:'long',year:'numeric'});
+  const items = _getItems().filter(it => (it.createdAt||'').slice(0,10) === date);
+  const statusLabel = {todo:'À faire', doing:'En cours', done:'Fait'};
+
+  const photosHtml = photos.map((p,i)=>`
+    <div class="v-photo"><img src="${p.url}"><div class="v-caption">Photo ${i+1}${p.caption?' — '+escHtml(p.caption):''}</div></div>`).join('');
+
+  const remarksHtml = items.length ? items.map(it=>`
+    <tr><td style="padding:8px 10px">${escHtml(it.title)}</td><td style="padding:8px 10px">${escHtml(it.location||'—')}</td><td style="padding:8px 10px">${escHtml(statusLabel[it.status]||it.status||'')}</td></tr>`).join('')
+    : '<tr><td colspan="3" style="padding:10px;color:#9B4D6B;">Aucune remarque pour cette visite</td></tr>';
+
+  const htmlContent = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<title>Visite de chantier ${visitNumber} — ${escHtml(clientName)}</title>
+<style>
+  body{font-family:'DM Sans',Arial,sans-serif;color:#2A1520;padding:30px;max-width:900px;margin:0 auto;}
+  .header{text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #6B2D45;}
+  .v-title{font-family:Georgia,serif;font-size:26px;color:#6B2D45;}
+  .v-sub{font-size:13px;color:#9B4D6B;margin-top:6px;}
+  .v-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
+  .v-photo{break-inside:avoid;}
+  .v-photo img{width:100%;border-radius:8px;border:1px solid #ddd;}
+  .v-caption{font-size:11px;color:#6B4A56;margin-top:4px;padding:2px 4px;}
+  .v-section-title{font-family:Georgia,serif;font-size:18px;color:#6B2D45;margin:24px 0 10px;border-bottom:1px solid #F0E0E8;padding-bottom:6px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{background:#6B2D45;color:white;padding:8px 10px;text-align:left;font-weight:500;}
+  @media print{.no-print{display:none;}}
+</style></head><body>
+<div class="header">
+  <div class="v-title">Visite de chantier ${visitNumber}</div>
+  <div class="v-sub">${escHtml(clientName)} · ${escHtml(dateLabel)}</div>
+</div>
+<div class="v-grid">${photosHtml}</div>
+<div class="v-section-title">Remarques de cette visite</div>
+<table><tr><th>Description</th><th>Emplacement</th><th>Statut</th></tr>${remarksHtml}</table>
+<div class="no-print" style="margin-top:24px;text-align:center;"><button onclick="window.print()" style="background:#6B2D45;color:white;border:none;border-radius:8px;padding:12px 28px;font-size:14px;cursor:pointer;">🖨️ Imprimer</button></div>
+</body></html>`;
+
+  if(state.accessToken && clientName){
+    try{
+      const safeFolder = clientName.replace(/[/\\?%*:|"<>]/g,'_');
+      const fileName = 'Visite-'+visitNumber+'-'+date+'.html';
+      const path = `/me/drive/root:/${CONFIG.oneDriveRoot}/${safeFolder}/04_Notes-de-chantier/${encodeURIComponent(fileName)}:/content`;
+      await fetch('https://graph.microsoft.com/v1.0'+path,{
+        method:'PUT',
+        headers:{'Authorization':'Bearer '+state.accessToken,'Content-Type':'text/html; charset=utf-8'},
+        body: htmlContent
+      });
+      showToast('✅ Rapport sauvegardé dans OneDrive/04_Notes-de-chantier');
+    }catch(err){ showToast('⚠️ Sauvegarde OneDrive échouée: '+(err.message||'')); }
+  }
+
+  const win = window.open('','_blank');
+  if(win){ win.document.write(htmlContent); win.document.close(); }
+  else{ showToast('Autorisez les pop-ups pour imprimer'); }
 }
 
 // ===== TAUX HORAIRE + FACTURE =====
@@ -3605,6 +3866,8 @@ function loadPhotoComment(idx){ return localStorage.getItem('photoComment_'+idx)
 
 // ===== PLAN D'ETAGE =====
 let fpHistory = [], fpTool = 'pen', fpDrawing = false, fpLastX = 0, fpLastY = 0, fpColor = '#6B2D45', fpSize = 3;
+let fpPins = [], _fpPendingPinPos = null;
+let _planFiles = [];
 
 function openFloorPlan() {
   showScreen('screenFloorPlan');
@@ -3612,6 +3875,69 @@ function openFloorPlan() {
   if (saved) {
     _fpLoadImage(saved);
   }
+  loadPlanFiles();
+  const panel = document.getElementById('planFilesPanel');
+  if (panel) panel.style.display = saved ? 'none' : 'block';
+}
+
+async function loadPlanFiles() {
+  const container = document.getElementById('planFilesList');
+  if (!container) return;
+  if (!state.accessToken || !state.currentClient) {
+    container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-light);font-size:12px;font-family:\'DM Sans\',sans-serif;">Connexion Microsoft requise</div>';
+    return;
+  }
+  const clientName = state.currentClient.Title || state.currentClient.name || state.currentClient.Nom || '';
+  if (!clientName) return;
+  container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-light);font-size:12px;font-family:\'DM Sans\',sans-serif;">Chargement…</div>';
+  try {
+    const path = `/me/drive/root:/${CONFIG.oneDriveRoot}/${encodeURIComponent(clientName)}/03_Plans-et-dessins:/children?$orderby=lastModifiedDateTime desc&$top=50`;
+    const res = await graphGet(path).catch(()=>null);
+    if (!res || !res.value) {
+      container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-light);font-size:12px;font-family:\'DM Sans\',sans-serif;">Dossier introuvable sur OneDrive</div>';
+      return;
+    }
+    _planFiles = res.value.filter(f=>f.file);
+    if (!_planFiles.length) {
+      container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-light);font-size:12px;font-family:\'DM Sans\',sans-serif;">Aucun plan trouvé sur OneDrive</div>';
+      return;
+    }
+    container.innerHTML = _planFiles.map((f,i)=>`
+      <div onclick="openPlanFile(${i})" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--blush);cursor:pointer;-webkit-tap-highlight-color:rgba(107,45,69,0.08);">
+        <span style="font-size:20px;">${_fileIcon(f.name)}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'DM Sans',sans-serif;font-size:13px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(f.name||'')}</div>
+          <div style="font-size:10px;color:var(--text-light);font-family:'DM Sans',sans-serif;margin-top:1px;">${_fileSize(f.size)} · ${f.lastModifiedDateTime ? new Date(f.lastModifiedDateTime).toLocaleDateString('fr-CA') : ''}</div>
+        </div>
+        <span style="color:var(--text-light);font-size:16px;">›</span>
+      </div>`).join('');
+  } catch(e) {
+    container.innerHTML = '<div style="padding:14px;color:#FF453A;font-size:12px;font-family:\'DM Sans\',sans-serif;">Erreur chargement: ' + escHtml(e.message||'') + '</div>';
+  }
+}
+
+function openPlanFile(i) {
+  const f = _planFiles[i]; if (!f) return;
+  const ext = (f.name||'').split('.').pop().toLowerCase();
+  if (['dxf','dwg'].includes(ext)) {
+    showToast('Téléchargement du plan DXF…');
+    fetch(f.webUrl, { headers: { 'Authorization': 'Bearer ' + state.accessToken } })
+      .then(r => r.text())
+      .then(text => openDxfViewer(text, f.name))
+      .catch(() => window.open(f.webUrl, '_blank'));
+    return;
+  }
+  if (['jpg','jpeg','png'].includes(ext) && f['@microsoft.graph.downloadUrl']) {
+    _fpLoadImage(f['@microsoft.graph.downloadUrl']);
+    return;
+  }
+  window.open(f.webUrl, '_blank');
+}
+
+function togglePlanFilesPanel() {
+  const panel = document.getElementById('planFilesPanel');
+  if (!panel) return;
+  panel.style.display = (panel.style.display === 'none' || !panel.style.display) ? 'block' : 'none';
 }
 
 function loadFloorPlan(e) {
@@ -3648,6 +3974,8 @@ function _fpLoadImage(src) {
     document.getElementById('floorPlanEmpty').style.display = 'none';
     container.style.display = 'flex';
     _fpBindEvents(canvas);
+    _fpLoadPins();
+    _fpRenderPins();
   };
   img.src = src;
 }
@@ -3661,7 +3989,11 @@ function _fpBindEvents(canvas) {
     const t = e.touches ? e.touches[0] : e;
     return [(t.clientX - r.left) * c.width / r.width, (t.clientY - r.top) * c.height / r.height];
   };
-  const start = e => { e.preventDefault(); fpDrawing = true; [fpLastX, fpLastY] = getPos(e); };
+  const start = e => {
+    e.preventDefault();
+    if (fpTool === 'pin') { const [x, y] = getPos(e); _fpPlacePinAt(x / c.width, y / c.height); return; }
+    fpDrawing = true; [fpLastX, fpLastY] = getPos(e);
+  };
   const move = e => {
     e.preventDefault();
     if (!fpDrawing) return;
@@ -3696,7 +4028,7 @@ function fpUndo() {
 function fpSetTool(tool) {
   fpTool = tool;
   document.querySelectorAll('.fp-tool-btn').forEach(b => b.classList.remove('fp-active'));
-  const btn = document.getElementById(tool === 'pen' ? 'fpBtnPen' : 'fpBtnText');
+  const btn = document.getElementById(tool === 'pen' ? 'fpBtnPen' : 'fpBtnPin');
   if (btn) btn.classList.add('fp-active');
 }
 
@@ -3706,6 +4038,159 @@ function fpSave() {
   const clientId = state.currentClient?.id || state.currentClient?.ID || '';
   localStorage.setItem('floorPlan_' + clientId, dataUrl);
   showToast('✅ Plan sauvegardé !');
+}
+
+// ===== ÉPINGLES SUR LE PLAN =====
+function _fpPinKey() { return 'floorPlanPins_' + (state.currentClient?.id || state.currentClient?.ID || ''); }
+function _fpLoadPins() { try { fpPins = JSON.parse(localStorage.getItem(_fpPinKey()) || '[]'); } catch(e) { fpPins = []; } }
+function _fpSavePins() { localStorage.setItem(_fpPinKey(), JSON.stringify(fpPins)); }
+
+function _fpPlacePinAt(xFrac, yFrac) {
+  const old = document.getElementById('fpPinChooser'); if (old) old.remove();
+  const items = _getItems();
+  const sheet = document.createElement('div');
+  sheet.id = 'fpPinChooser';
+  sheet.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:500;background:#1c1c1e;border-top:1px solid rgba(255,255,255,0.12);max-height:60vh;display:flex;flex-direction:column;padding-bottom:calc(env(safe-area-inset-bottom,0px)+14px);';
+  const statusIcon = {todo:'○',doing:'◑',done:'✓'};
+  sheet.innerHTML =
+    '<div style="padding:14px 16px 6px;color:white;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:600;">Épingler une remarque</div>'
+    +'<div style="overflow-y:auto;padding:6px 16px;">'
+    +'<div onclick="_fpChoosePinNewItem('+xFrac+','+yFrac+')" style="padding:12px;background:#3a3a3c;border-radius:10px;color:white;font-family:\'DM Sans\',sans-serif;font-size:14px;margin-bottom:8px;cursor:pointer;">+ Nouvel item</div>'
+    +items.map(it=>'<div onclick="_fpChoosePinExisting('+xFrac+','+yFrac+','+it.id+')" style="padding:10px 12px;background:#2c2c2e;border-radius:10px;color:white;font-family:\'DM Sans\',sans-serif;font-size:13px;margin-bottom:6px;cursor:pointer;display:flex;gap:8px;align-items:center;"><span>'+(statusIcon[it.status]||'○')+'</span><span>'+escHtml(it.title)+'</span></div>').join('')
+    +'</div>'
+    +'<button onclick="document.getElementById(\'fpPinChooser\').remove()" style="margin:8px 16px 0;padding:11px;background:rgba(255,255,255,0.12);border:none;border-radius:10px;color:white;font-family:\'DM Sans\',sans-serif;font-size:13px;cursor:pointer;">Annuler</button>';
+  document.body.appendChild(sheet);
+}
+
+function _fpChoosePinExisting(xFrac, yFrac, itemId) {
+  const item = _getItems().find(i=>i.id===itemId);
+  const old = document.getElementById('fpPinChooser'); if (old) old.remove();
+  if (!item) return;
+  _fpAddPin(xFrac, yFrac, item.id, item.title);
+}
+
+function _fpChoosePinNewItem(xFrac, yFrac) {
+  const old = document.getElementById('fpPinChooser'); if (old) old.remove();
+  _fpPendingPinPos = { x:xFrac, y:yFrac };
+  addPunchItem();
+}
+
+function _fpAddPin(xFrac, yFrac, punchItemId, title) {
+  fpPins.push({ id:Date.now(), x:xFrac, y:yFrac, punchItemId, title });
+  _fpSavePins();
+  _fpRenderPins();
+}
+
+function _fpDeletePin(pinId) {
+  fpPins = fpPins.filter(p=>p.id!==pinId);
+  _fpSavePins();
+  _fpRenderPins();
+}
+
+function _fpRenderPins() {
+  const layer = document.getElementById('fpPinLayer');
+  if (!layer) return;
+  const statusIcon = {todo:'○',doing:'◑',done:'✓'};
+  const items = _getItems();
+  layer.innerHTML = fpPins.map((pin,i)=>{
+    const live = items.find(it=>it.id===pin.punchItemId);
+    const label = live ? live.title : (pin.title+' (supprimé de la liste)');
+    const icon = live ? (statusIcon[live.status]||'○') : '✕';
+    return '<div class="fp-pin" data-pin-id="'+pin.id+'" style="position:absolute;left:'+(pin.x*100)+'%;top:'+(pin.y*100)+'%;transform:translate(-50%,-100%);pointer-events:auto;cursor:pointer;touch-action:none;" onclick="_fpOpenPinPopup('+pin.id+')">'
+      +'<div style="width:26px;height:26px;border-radius:50% 50% 50% 0;background:var(--mauve);transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.35);">'
+      +'<span style="transform:rotate(45deg);color:white;font-size:11px;font-weight:700;">'+(i+1)+'</span></div>'
+      +'</div>';
+  }).join('');
+  layer.querySelectorAll('.fp-pin').forEach(el=>_fpBindPinDrag(el));
+}
+
+function _fpBindPinDrag(el) {
+  const pinId = parseInt(el.dataset.pinId, 10);
+  let dragging=false, moved=false, startX=0, startY=0;
+  const wrap = document.getElementById('fpCanvasWrap');
+  const onStart = e => {
+    e.stopPropagation();
+    dragging=true; moved=false;
+    const t=e.touches?e.touches[0]:e;
+    startX=t.clientX; startY=t.clientY;
+  };
+  const onMove = e => {
+    if(!dragging) return;
+    e.preventDefault(); e.stopPropagation();
+    const t=e.touches?e.touches[0]:e;
+    if(Math.abs(t.clientX-startX)>4||Math.abs(t.clientY-startY)>4) moved=true;
+    if(!moved) return;
+    const r=wrap.getBoundingClientRect();
+    const xFrac=Math.min(1,Math.max(0,(t.clientX-r.left)/r.width));
+    const yFrac=Math.min(1,Math.max(0,(t.clientY-r.top)/r.height));
+    el.style.left=(xFrac*100)+'%'; el.style.top=(yFrac*100)+'%';
+    el._pendingFrac={x:xFrac,y:yFrac};
+  };
+  const onEnd = () => {
+    if(!dragging) return;
+    dragging=false;
+    if(moved && el._pendingFrac){
+      const pin=fpPins.find(p=>p.id===pinId);
+      if(pin){ pin.x=el._pendingFrac.x; pin.y=el._pendingFrac.y; _fpSavePins(); }
+    }
+  };
+  el.addEventListener('mousedown',onStart); el.addEventListener('mousemove',onMove); el.addEventListener('mouseup',onEnd);
+  el.addEventListener('touchstart',onStart,{passive:false}); el.addEventListener('touchmove',onMove,{passive:false}); el.addEventListener('touchend',onEnd);
+  el._fpMoved = () => moved;
+}
+
+function _fpOpenPinPopup(pinId) {
+  const pin = fpPins.find(p=>p.id===pinId); if(!pin) return;
+  const el = document.querySelector('.fp-pin[data-pin-id="'+pinId+'"]');
+  if (el && el._fpMoved && el._fpMoved()) return; // ignore tap right after a drag
+  const item = _getItems().find(i=>i.id===pin.punchItemId);
+  const old = document.getElementById('fpPinPopup'); if(old) old.remove();
+  const statusLabel = {todo:'À faire',doing:'En cours',done:'Fait'};
+  const body = item
+    ? '<div style="font-family:\'DM Sans\',sans-serif;font-size:14px;color:#333;font-weight:500;">'+escHtml(item.title)+'</div><div style="font-size:12px;color:var(--text-light);margin-top:4px;">'+(statusLabel[item.status]||item.status)+'</div>'
+    : '<div style="font-family:\'DM Sans\',sans-serif;font-size:14px;color:#333;font-weight:500;">'+escHtml(pin.title)+'</div><div style="font-size:12px;color:#FF453A;margin-top:4px;">Supprimé de la liste</div>';
+  const popup = document.createElement('div');
+  popup.id = 'fpPinPopup';
+  popup.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:500;background:white;border-radius:20px 20px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom,0px)+18px);box-shadow:0 -4px 20px rgba(0,0,0,0.15);';
+  popup.innerHTML = body
+    + '<div style="display:flex;gap:10px;margin-top:14px;">'
+    + '<button onclick="document.getElementById(\'fpPinPopup\').remove();openPunchList()" style="flex:1;padding:11px;background:var(--blush);color:var(--mauve);border:none;border-radius:10px;font-family:\'DM Sans\',sans-serif;font-size:13px;cursor:pointer;">Voir dans la liste</button>'
+    + '<button onclick="_fpDeletePin('+pin.id+');document.getElementById(\'fpPinPopup\').remove()" style="padding:11px 16px;background:#FFCDD2;color:#B71C1C;border:none;border-radius:10px;font-family:\'DM Sans\',sans-serif;font-size:13px;cursor:pointer;">Supprimer l\'épingle</button>'
+    + '<button onclick="document.getElementById(\'fpPinPopup\').remove()" style="padding:11px 16px;background:#F2F2F7;color:#333;border:none;border-radius:10px;font-family:\'DM Sans\',sans-serif;font-size:13px;cursor:pointer;">×</button>'
+    + '</div>';
+  document.body.appendChild(popup);
+}
+
+async function sendFloorPlanToOneDrive() {
+  if (!state.accessToken || !state.currentClient) { showToast('Connexion Microsoft requise'); return; }
+  const c = document.getElementById('fpCanvas');
+  if (!c || !c.width) { showToast('Aucun plan à envoyer'); return; }
+  const tmp = document.createElement('canvas');
+  tmp.width = c.width; tmp.height = c.height;
+  const tctx = tmp.getContext('2d');
+  tctx.drawImage(c, 0, 0);
+  fpPins.forEach((pin,i)=>{
+    const px = pin.x*tmp.width, py = pin.y*tmp.height;
+    tctx.beginPath(); tctx.arc(px,py,14,0,Math.PI*2);
+    tctx.fillStyle='#6B2D45'; tctx.fill();
+    tctx.fillStyle='white'; tctx.font='bold 14px Arial'; tctx.textAlign='center'; tctx.textBaseline='middle';
+    tctx.fillText(String(i+1), px, py+1);
+  });
+  const dataUrl = tmp.toDataURL('image/jpeg', 0.9);
+  showToast('Envoi vers OneDrive…');
+  try {
+    const safeFolder = state.currentClient.Title.replace(/[/\\?%*:|"<>]/g,'_');
+    const ts = formatDateForFilename(new Date());
+    const basePath = `${CONFIG.oneDriveRoot}/${safeFolder}/03_Plans-et-dessins/Annotations/Plan-annote-${ts}`;
+    const imgResp = await fetch(dataUrl);
+    const imgBlob = await imgResp.blob();
+    const imgUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/${basePath}.jpg:/content`;
+    const imgReq = await fetch(imgUrl, { method:'PUT', headers:{'Authorization':`Bearer ${state.accessToken}`,'Content-Type':'image/jpeg'}, body: imgBlob });
+    if (!imgReq.ok) { showToast('⚠️ Échec de l\'envoi'); return; }
+    const jsonUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/${basePath}.json:/content`;
+    await fetch(jsonUrl, { method:'PUT', headers:{'Authorization':`Bearer ${state.accessToken}`,'Content-Type':'application/json; charset=utf-8'}, body: JSON.stringify(fpPins) });
+    showToast('☁️ Plan envoyé dans OneDrive');
+  } catch(e) { console.error('Graph API:', e); showToast('⚠️ Échec de l\'envoi'); }
 }
 
 // ===== BUDGET =====
@@ -3816,6 +4301,9 @@ function printBudget() {
 // ===== KILOMÉTRAGE MileIQ-style =====
 let _kmAutoWatchId = null, _kmAutoTrip = null, _kmAutoStartPos = null, _kmAutoLastPos = null, _kmAutoDistKm = 0;
 let _kmTripType = 'pro';
+let _kmModalClientId = null, _kmModalClientLabel = '🏠 Personnel';
+let _kmEditingId = null;
+let _kmAutoRoutePoints = [];
 
 function _kmKey(){ return 'km_trips'; }
 function _getTrips(){ try{ return JSON.parse(localStorage.getItem(_kmKey())||'[]'); }catch(e){ return []; } }
@@ -3839,9 +4327,32 @@ function setTripType(type, btn){
 }
 
 // === AUTO-DETECTION (GPS speed threshold) ===
+function _kmRequestNotifPermission(){
+  if('Notification' in window && Notification.permission==='default'){
+    Notification.requestPermission().catch(()=>{});
+  }
+}
+
+async function _kmNotifyTripEnd(distKm){
+  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  const title='🚗 Trajet terminé';
+  const opts={ body: distKm.toFixed(1)+' km — appuyez pour classifier', tag:'km-trip' };
+  try{
+    new Notification(title, opts);
+  } catch(e){
+    try{
+      if(navigator.serviceWorker && navigator.serviceWorker.ready){
+        const reg = await navigator.serviceWorker.ready;
+        if(reg && reg.showNotification) reg.showNotification(title, opts);
+      }
+    } catch(e2){ console.warn('Notification indisponible:', e2); }
+  }
+}
+
 function startAutoDetect(){
   if(!navigator.geolocation){ showToast('GPS non disponible sur cet appareil'); return; }
   if(_kmAutoWatchId !== null){ stopAutoDetect(); return; }
+  _kmRequestNotifPermission();
   showToast('📍 Détection auto activée — en attente de mouvement…');
   const btn = document.getElementById('kmAutoBtn');
   if(btn){ btn.textContent = '⏹ Arrêter détection'; btn.style.background = '#FF453A'; btn.style.color = 'white'; }
@@ -3865,6 +4376,7 @@ function _kmHandleGpsUpdate(pos){
   if(speedKmh > 15 && !_kmAutoTrip){
     _kmAutoTrip = { startTime: new Date(), startLat: pos.coords.latitude, startLng: pos.coords.longitude };
     _kmAutoStartPos = pos; _kmAutoLastPos = pos; _kmAutoDistKm = 0;
+    _kmAutoRoutePoints = [{lat:pos.coords.latitude, lng:pos.coords.longitude, t:Date.now()}];
     const banner = document.getElementById('kmDrivingBanner');
     if(banner) banner.style.display = 'flex';
     showToast('🚗 Conduite détectée — trajet démarré');
@@ -3875,6 +4387,7 @@ function _kmHandleGpsUpdate(pos){
         pos.coords.latitude, pos.coords.longitude
       );
       _kmAutoLastPos = pos;
+      _kmAutoRoutePoints.push({lat:pos.coords.latitude, lng:pos.coords.longitude, t:Date.now()});
       const liveEl = document.getElementById('kmLiveKm');
       if(liveEl) liveEl.textContent = _kmAutoDistKm.toFixed(1);
     }
@@ -3882,10 +4395,34 @@ function _kmHandleGpsUpdate(pos){
     if(!_kmAutoTrip._stopTimeout){
       _kmAutoTrip._stopTimeout = setTimeout(()=>{
         if(_kmAutoDistKm > 0.5) _kmShowClassifyPrompt();
-        else { _kmAutoTrip=null; _kmAutoDistKm=0; const b=document.getElementById('kmDrivingBanner'); if(b)b.style.display='none'; }
+        else { _kmAutoTrip=null; _kmAutoDistKm=0; _kmAutoRoutePoints=[]; const b=document.getElementById('kmDrivingBanner'); if(b)b.style.display='none'; }
       }, 30000);
     }
   }
+}
+
+async function _kmReverseGeocode(lat, lng){
+  try{
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16`);
+    if(!res.ok) return null;
+    const data = await res.json();
+    return data && data.display_name ? data.display_name : null;
+  } catch(e){ return null; }
+}
+
+async function _kmResolveTripAddresses(tripId, startLat, startLng, endLat, endLng){
+  const [departAddr, destAddr] = await Promise.all([
+    _kmReverseGeocode(startLat, startLng),
+    _kmReverseGeocode(endLat, endLng)
+  ]);
+  if(!departAddr && !destAddr) return;
+  const trips = _getTrips();
+  const t = trips.find(x=>x.id===tripId);
+  if(!t) return;
+  if(departAddr) t.departAddr = departAddr;
+  if(destAddr) t.destAddr = destAddr;
+  _saveTrips(trips);
+  renderTrips();
 }
 
 function _haversineKm(lat1, lon1, lat2, lon2){
@@ -3897,6 +4434,7 @@ function _haversineKm(lat1, lon1, lat2, lon2){
 function _kmShowClassifyPrompt(){
   const banner = document.getElementById('kmDrivingBanner');
   if(banner){ banner.style.display='flex'; const l=document.getElementById('kmLiveKm'); if(l) l.textContent=_kmAutoDistKm.toFixed(1); }
+  _kmNotifyTripEnd(_kmAutoDistKm);
 }
 
 function stopAutoTrip(isPro){
@@ -3904,34 +4442,83 @@ function stopAutoTrip(isPro){
   if(_kmAutoTrip._stopTimeout){ clearTimeout(_kmAutoTrip._stopTimeout); }
   if(isPro && _kmAutoDistKm > 0.1){
     const trips = _getTrips();
-    trips.unshift({
+    const startLat=_kmAutoTrip.startLat, startLng=_kmAutoTrip.startLng;
+    const endLat=_kmAutoLastPos?_kmAutoLastPos.coords.latitude:startLat;
+    const endLng=_kmAutoLastPos?_kmAutoLastPos.coords.longitude:startLng;
+    const newTrip = {
       id: Date.now(),
       date: _kmAutoTrip.startTime.toISOString().split('T')[0],
-      depart: _kmAutoTrip.startLat.toFixed(4)+', '+_kmAutoTrip.startLng.toFixed(4),
-      dest: _kmAutoLastPos ? _kmAutoLastPos.coords.latitude.toFixed(4)+', '+_kmAutoLastPos.coords.longitude.toFixed(4) : '',
+      depart: startLat.toFixed(4)+', '+startLng.toFixed(4),
+      dest: endLat.toFixed(4)+', '+endLng.toFixed(4),
       km: parseFloat(_kmAutoDistKm.toFixed(1)),
-      client: state.currentClient ? (state.currentClient.name||state.currentClient.Nom||'') : '',
+      client: state.currentClient ? (state.currentClient.Title||'') : '🏠 Personnel',
+      clientId: state.currentClient ? state.currentClient.id : null,
       motif: 'Trajet auto-détecté',
       type: 'pro',
-      auto: true
-    });
+      auto: true,
+      points: _kmAutoRoutePoints.slice()
+    };
+    trips.unshift(newTrip);
     _saveTrips(trips);
     showToast('✅ Trajet enregistré — '+_kmAutoDistKm.toFixed(1)+' km');
     renderTrips();
+    _kmResolveTripAddresses(newTrip.id, startLat, startLng, endLat, endLng);
   }
-  _kmAutoTrip = null; _kmAutoDistKm = 0; _kmAutoLastPos = null;
+  _kmAutoTrip = null; _kmAutoDistKm = 0; _kmAutoLastPos = null; _kmAutoRoutePoints = [];
   const banner = document.getElementById('kmDrivingBanner');
   if(banner) banner.style.display = 'none';
 }
 
+// === SÉLECTEUR CLIENT/PROJET ===
+function _kmOpenClientPicker(onPick){
+  window._kmPickerCallback = onPick;
+  _kmRenderClientPicker();
+  if((!state.clients || !state.clients.length) && state.accessToken && typeof loadClients==='function'){
+    loadClients().then(_kmRenderClientPicker).catch(()=>{});
+  }
+}
+
+function _kmRenderClientPicker(){
+  const old = document.getElementById('kmClientPicker'); if(old) old.remove();
+  const clients = state.clients||[];
+  const sheet = document.createElement('div');
+  sheet.id = 'kmClientPicker';
+  sheet.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:600;background:#1c1c1e;border-top:1px solid rgba(255,255,255,0.12);max-height:60vh;display:flex;flex-direction:column;padding-bottom:calc(env(safe-area-inset-bottom,0px)+14px);';
+  sheet.innerHTML =
+    '<div style="padding:14px 16px 6px;color:white;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:600;">Client / projet</div>'
+    +'<div style="overflow-y:auto;padding:6px 16px;">'
+    +'<div onclick="_kmPickClient(-1)" style="padding:12px;background:#3a3a3c;border-radius:10px;color:white;font-family:\'DM Sans\',sans-serif;font-size:14px;margin-bottom:8px;cursor:pointer;">🏠 Personnel</div>'
+    +clients.map((c,i)=>'<div onclick="_kmPickClient('+i+')" style="padding:10px 12px;background:#2c2c2e;border-radius:10px;color:white;font-family:\'DM Sans\',sans-serif;font-size:13px;margin-bottom:6px;cursor:pointer;">'+escHtml(c.Title||'Client')+'</div>').join('')
+    +(clients.length?'':'<div style="color:rgba(255,255,255,0.5);font-family:\'DM Sans\',sans-serif;font-size:12px;padding:8px 0;">Aucun client chargé — connectez-vous à Microsoft 365</div>')
+    +'</div>'
+    +'<button onclick="document.getElementById(\'kmClientPicker\').remove()" style="margin:8px 16px 0;padding:11px;background:rgba(255,255,255,0.12);border:none;border-radius:10px;color:white;font-family:\'DM Sans\',sans-serif;font-size:13px;cursor:pointer;">Annuler</button>';
+  document.body.appendChild(sheet);
+}
+
+function _kmPickClient(index){
+  const old = document.getElementById('kmClientPicker'); if(old) old.remove();
+  let id=null, label='🏠 Personnel';
+  if(index>=0 && state.clients && state.clients[index]){ id=state.clients[index].id; label=state.clients[index].Title||'Client'; }
+  if(window._kmPickerCallback) window._kmPickerCallback(id, label);
+}
+
+function _kmSetModalClient(id, label){
+  _kmModalClientId = id;
+  _kmModalClientLabel = label;
+  const chip = document.getElementById('kmClientChip');
+  if(chip) chip.textContent = label;
+}
+
 // === MANUAL TRIP ===
 function openAddTrip(){
+  _kmEditingId = null;
   _kmTripType = 'pro';
   document.getElementById('kmInputDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('kmInputDepart').value = '';
   document.getElementById('kmInputDest').value = '';
   document.getElementById('kmInputKm').value = '';
-  document.getElementById('kmInputClient').value = state.currentClient?(state.currentClient.name||state.currentClient.Nom||''):'';
+  if(state.currentClient){ _kmSetModalClient(state.currentClient.id, state.currentClient.Title||'Client'); }
+  else { _kmSetModalClient(null, '🏠 Personnel'); }
   document.getElementById('kmInputMotif').value = '';
   setTripType('pro',null);
   document.getElementById('kmModal').style.display = 'flex';
@@ -3952,13 +4539,34 @@ function saveTrip(){
   const depart=document.getElementById('kmInputDepart').value.trim();
   const dest=document.getElementById('kmInputDest').value.trim();
   const km=parseFloat(document.getElementById('kmInputKm').value)||0;
-  const client=document.getElementById('kmInputClient').value.trim();
+  const client=_kmModalClientLabel;
+  const clientId=_kmModalClientId;
   const motif=document.getElementById('kmInputMotif').value.trim();
   if(!km){ showToast('Entrez une distance en km'); return; }
   const trips=_getTrips();
-  trips.unshift({id:Date.now(),date,depart,dest,km,client,motif,type:_kmTripType});
+  if(_kmEditingId){
+    const t=trips.find(x=>x.id===_kmEditingId);
+    if(t){ Object.assign(t,{date,depart,dest,km,client,clientId,motif,type:_kmTripType}); }
+    _kmEditingId=null;
+  } else {
+    trips.unshift({id:Date.now(),date,depart,dest,km,client,clientId,motif,type:_kmTripType});
+  }
   _saveTrips(trips); closeAddTrip(); renderTrips();
   showToast('✅ Trajet enregistré — '+km+' km');
+}
+
+function _kmEditTrip(id){
+  const t=_getTrips().find(x=>x.id===id); if(!t) return;
+  _kmEditingId=id;
+  document.getElementById('kmInputDate').value = t.date||new Date().toISOString().split('T')[0];
+  document.getElementById('kmInputDepart').value = t.depart||'';
+  document.getElementById('kmInputDest').value = t.dest||'';
+  document.getElementById('kmInputKm').value = t.km||'';
+  _kmSetModalClient(t.clientId||null, t.client||'🏠 Personnel');
+  document.getElementById('kmInputMotif').value = t.motif||'';
+  _kmTripType = t.type||'pro';
+  setTripType(_kmTripType,null);
+  document.getElementById('kmModal').style.display = 'flex';
 }
 
 function classifyTrip(id, type){
@@ -4003,16 +4611,46 @@ function renderTrips(){
         <div style="background:white;border-radius:14px;padding:14px;margin-bottom:6px;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:10px;">
           <div style="width:36px;height:36px;border-radius:50%;background:var(--blush);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;">🚗</div>
           <div style="flex:1;min-width:0;">
-            <div style="font-family:'DM Sans',sans-serif;font-size:13px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(t.depart?t.depart+'→'+(t.dest||''):'Trajet')}</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:13px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml((t.departAddr||t.depart)?(t.departAddr||t.depart)+'→'+(t.destAddr||t.dest||''):'Trajet')}</div>
             <div style="font-size:11px;color:#8E8E93;margin-top:2px;font-family:'DM Sans',sans-serif;">${escHtml(t.client||'')}${t.motif?' · '+escHtml(t.motif):''}</div>
           </div>
           <div style="text-align:right;flex-shrink:0;">
             <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--mauve);">${(parseFloat(t.km)||0).toFixed(1)} km</div>
             <div style="font-size:11px;color:#8E8E93;">${((parseFloat(t.km)||0)*rate).toFixed(2)} $</div>
           </div>
+          ${t.points&&t.points.length>1?'<button onclick="_kmOpenTripMap('+t.id+')" style="background:none;border:none;color:var(--mauve);font-size:16px;cursor:pointer;padding:0 0 0 4px;">🗺️</button>':''}
+          <button onclick="_kmEditTrip(${t.id})" style="background:none;border:none;color:#8E8E93;font-size:15px;cursor:pointer;padding:0 0 0 6px;">✏️</button>
           <button onclick="deleteTrip(${t.id})" style="background:none;border:none;color:#FF453A;font-size:18px;cursor:pointer;padding:0 0 0 6px;">×</button>
         </div>`).join('')}
     </div>`).join('');
+}
+
+function _kmOpenTripMap(tripId){
+  if(typeof L==='undefined'){ showToast('🗺️ Carte indisponible hors ligne'); return; }
+  const t = _getTrips().find(x=>x.id===tripId);
+  if(!t || !t.points || t.points.length<2){ showToast('🗺️ Aucun tracé pour ce trajet'); return; }
+  const old = document.getElementById('kmMapOverlay'); if(old) old.remove();
+  const ov = document.createElement('div');
+  ov.id = 'kmMapOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:600;background:white;display:flex;flex-direction:column;';
+  ov.innerHTML =
+    '<div style="background:var(--mauve);padding:calc(env(safe-area-inset-top,0px)+12px) 16px 12px;display:flex;align-items:center;gap:12px;">'
+    +'<button onclick="document.getElementById(\'kmMapOverlay\').remove()" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;">‹</button>'
+    +'<h2 style="color:white;font-family:\'Cormorant Garamond\',serif;font-size:20px;margin:0;flex:1;">Trajet</h2>'
+    +'</div>'
+    +'<div id="kmMapEl" style="flex:1;"></div>';
+  document.body.appendChild(ov);
+  setTimeout(()=>{
+    try{
+      const map = L.map('kmMapEl');
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
+      const latlngs = t.points.map(p=>[p.lat,p.lng]);
+      const line = L.polyline(latlngs, {color:'#6B2D45', weight:4}).addTo(map);
+      map.fitBounds(line.getBounds(), {padding:[24,24]});
+      L.marker(latlngs[0]).addTo(map);
+      L.marker(latlngs[latlngs.length-1]).addTo(map);
+    } catch(e){ console.warn('Carte Leaflet:', e); showToast('🗺️ Erreur d\'affichage de la carte'); }
+  }, 50);
 }
 
 function printKmReport(){
@@ -4046,6 +4684,32 @@ function _fileIcon(name) {
   return FILE_ICONS[ext] || FILE_ICONS.default;
 }
 
+const FILE_ICON_SVG_MAP = {
+  pdf:['#FFF0EA','#E05A00','doc'], doc:['#FFF0EA','#E05A00','doc'], docx:['#FFF0EA','#E05A00','doc'], txt:['#FFF0EA','#E05A00','doc'],
+  xls:['#FFFBF0','#C9971F','grid'], xlsx:['#FFFBF0','#C9971F','grid'],
+  ppt:['#F8F0FF','#6B3AC4','present'], pptx:['#F8F0FF','#6B3AC4','present'],
+  jpg:['#F0F4FF','#2D6BE0','image'], jpeg:['#F0F4FF','#2D6BE0','image'], png:['#F0F4FF','#2D6BE0','image'], heic:['#F0F4FF','#2D6BE0','image'],
+  dxf:['#F0EAFF','#6B3AC4','draft'], dwg:['#F0EAFF','#6B3AC4','draft'],
+  skp:['#F0FFF4','#1F9D55','cube'],
+  mp4:['#FDF0F5','#C43A7A','video'], mov:['#FDF0F5','#C43A7A','video'],
+  mp3:['#F0F8FF','#2D8BE0','audio']
+};
+const FILE_ICON_SVG_PATHS = {
+  doc: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+  grid: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>',
+  present: '<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+  draft: '<path d="M16 2 22 8 8 22 2 16Z"/><path d="M14.5 3.5 17 6"/><path d="M11.5 6 14 8.5"/><path d="M8.5 9 11 11.5"/><path d="M5.5 12 8 14.5"/>',
+  cube: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+  video: '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>',
+  audio: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'
+};
+function _fileIconSvg(name) {
+  const ext = (name||'').split('.').pop().toLowerCase();
+  const [bg, stroke, kind] = FILE_ICON_SVG_MAP[ext] || ['#F2F2F7','#8E8E93','doc'];
+  return '<div style="width:40px;height:40px;border-radius:12px;background:'+bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="'+stroke+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+FILE_ICON_SVG_PATHS[kind]+'</svg></div>';
+}
+
 function _fileSize(bytes) {
   if (!bytes) return '';
   if (bytes < 1024) return bytes + ' o';
@@ -4053,43 +4717,52 @@ function _fileSize(bytes) {
   return (bytes/1048576).toFixed(1) + ' Mo';
 }
 
+async function _fetchClientFileGroups() {
+  if (!state.accessToken || !state.currentClient) return null;
+  const clientName = state.currentClient.Title || state.currentClient.name || state.currentClient.Nom || '';
+  if (!clientName) return null;
+  const basePath = '/me/drive/root:/Emilie Pepin Designer Interieur/CLIENTS/' + encodeURIComponent(clientName);
+  const root = await graphGet(basePath + ':/children?$select=name,id,size,lastModifiedDateTime,file,folder,webUrl&$orderby=lastModifiedDateTime desc&$top=100').catch(()=>null);
+  if (!root || !root.value) return { notFound: true };
+  let allFiles = root.value.filter(i => i.file);
+  const folders = root.value.filter(i => i.folder);
+  for (const folder of folders) {
+    const sub = await graphGet(basePath + '/' + encodeURIComponent(folder.name) + ':/children?$select=name,id,size,lastModifiedDateTime,file,webUrl&$orderby=lastModifiedDateTime desc&$top=50').catch(()=>null);
+    if (sub && sub.value) {
+      sub.value.filter(i=>i.file).forEach(f => { f._folder = folder.name; allFiles.push(f); });
+    }
+  }
+  if (!allFiles.length) return { groups: {}, sortedGroups: [] };
+  const groups = {};
+  allFiles.forEach(f => {
+    const g = f._folder || 'Racine';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(f);
+  });
+  const folderOrder = ['Factures','Soumissions','Devis','Contrats','Plans','10_Photos','Racine'];
+  const sortedGroups = Object.keys(groups).sort((a,b) => {
+    const ia = folderOrder.indexOf(a), ib = folderOrder.indexOf(b);
+    return (ia===-1?99:ia) - (ib===-1?99:ib);
+  });
+  return { groups, sortedGroups };
+}
+
 async function loadClientFiles() {
   if (!state.accessToken || !state.currentClient) return;
-  const clientName = state.currentClient.Title || state.currentClient.name || state.currentClient.Nom || '';
-  if (!clientName) return;
   const container = document.getElementById('clientFilesList');
   if (!container) return;
   container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);font-size:13px;font-family:\'DM Sans\',sans-serif;">Chargement des fichiers…</div>';
   try {
-    const basePath = '/me/drive/root:/Emilie Pepin Designer Interieur/CLIENTS/' + encodeURIComponent(clientName);
-    const root = await graphGet(basePath + ':/children?$select=name,id,size,lastModifiedDateTime,file,folder,webUrl&$orderby=lastModifiedDateTime desc&$top=100').catch(()=>null);
-    if (!root || !root.value) {
+    const result = await _fetchClientFileGroups();
+    if (!result || result.notFound) {
       container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);font-size:13px;font-family:\'DM Sans\',sans-serif;">Dossier client introuvable sur OneDrive</div>';
       return;
     }
-    let allFiles = root.value.filter(i => i.file);
-    const folders = root.value.filter(i => i.folder);
-    for (const folder of folders) {
-      const sub = await graphGet(basePath + '/' + encodeURIComponent(folder.name) + ':/children?$select=name,id,size,lastModifiedDateTime,file,webUrl&$orderby=lastModifiedDateTime desc&$top=50').catch(()=>null);
-      if (sub && sub.value) {
-        sub.value.filter(i=>i.file).forEach(f => { f._folder = folder.name; allFiles.push(f); });
-      }
-    }
-    if (!allFiles.length) {
+    const { groups, sortedGroups } = result;
+    if (!sortedGroups.length) {
       container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);font-size:13px;font-family:\'DM Sans\',sans-serif;">Aucun fichier trouvé</div>';
       return;
     }
-    const groups = {};
-    allFiles.forEach(f => {
-      const g = f._folder || 'Racine';
-      if (!groups[g]) groups[g] = [];
-      groups[g].push(f);
-    });
-    const folderOrder = ['Factures','Soumissions','Devis','Contrats','Plans','10_Photos','Racine'];
-    const sortedGroups = Object.keys(groups).sort((a,b) => {
-      const ia = folderOrder.indexOf(a), ib = folderOrder.indexOf(b);
-      return (ia===-1?99:ia) - (ib===-1?99:ib);
-    });
     container.innerHTML = sortedGroups.map(g => `
       <div>
         <div style="padding:6px 14px 2px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;background:var(--rose-cream);">${escHtml(g)}</div>
@@ -4107,6 +4780,48 @@ async function loadClientFiles() {
   } catch(e) {
     const c2 = document.getElementById('clientFilesList');
     if(c2) c2.innerHTML = '<div style="padding:14px;color:#FF453A;font-size:12px;font-family:\'DM Sans\',sans-serif;">Erreur chargement: ' + escHtml(e.message||'') + '</div>';
+  }
+}
+
+function openOneDriveScreen(){
+  showScreen('screenOneDrive');
+  renderOneDriveScreen();
+}
+
+async function renderOneDriveScreen(){
+  const container = document.getElementById('odFilesList');
+  if(!container) return;
+  if(!state.accessToken || !state.currentClient){
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);font-family:\'DM Sans\',sans-serif;font-size:14px;">Connexion Microsoft requise</div>';
+    return;
+  }
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);font-family:\'DM Sans\',sans-serif;font-size:13px;">Chargement des fichiers…</div>';
+  try{
+    const result = await _fetchClientFileGroups();
+    if(!result || result.notFound){
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);font-family:\'DM Sans\',sans-serif;font-size:13px;">Dossier client introuvable sur OneDrive</div>';
+      return;
+    }
+    const {groups, sortedGroups} = result;
+    if(!sortedGroups.length){
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);font-family:\'DM Sans\',sans-serif;font-size:13px;">Aucun fichier trouvé</div>';
+      return;
+    }
+    container.innerHTML = sortedGroups.map(g=>`
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;margin-bottom:8px;padding:0 2px;">${escHtml(g)}</div>
+        ${groups[g].map(f=>`
+          <div onclick="openClientFile('${escHtml(f.webUrl||'')}','${escHtml(f.name||'')}')" style="display:flex;align-items:center;gap:12px;background:white;border-radius:var(--radius-sm);box-shadow:var(--shadow-card);padding:12px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:rgba(107,45,69,0.08);">
+            ${_fileIconSvg(f.name)}
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(f.name||'')}</div>
+              <div style="font-size:11px;color:var(--text-light);font-family:'DM Sans',sans-serif;margin-top:2px;">${_fileSize(f.size)} · ${f.lastModifiedDateTime?new Date(f.lastModifiedDateTime).toLocaleDateString('fr-CA'):''}</div>
+            </div>
+            <span style="color:var(--text-light);font-size:18px;">›</span>
+          </div>`).join('')}
+      </div>`).join('');
+  } catch(e){
+    container.innerHTML = '<div style="padding:20px;color:#FF453A;font-size:13px;font-family:\'DM Sans\',sans-serif;text-align:center;">Erreur: '+escHtml(e.message||'')+'</div>';
   }
 }
 
@@ -4144,7 +4859,7 @@ async function handleClientFileUpload(e) {
         headers: { 'Authorization': 'Bearer ' + state.accessToken, 'Content-Type': file.type || 'application/octet-stream' },
         body: arrayBuffer
       });
-      if (resp.ok) { showToast('✅ ' + file.name + ' envoyé !'); loadClientFiles(); }
+      if (resp.ok) { showToast('✅ ' + file.name + ' envoyé !'); renderOneDriveScreen(); }
       else showToast('⚠️ Erreur envoi fichier');
     } catch(err) { showToast('⚠️ ' + (err.message||'Erreur')); }
   };
@@ -4306,12 +5021,13 @@ function addPunchItem() {
   _piPriority = 'normale'; _piPhotoData = null;
   document.getElementById('piTitle').value = '';
   document.getElementById('piLocation').value = '';
+  document.getElementById('piDueDate').value = '';
   document.getElementById('piPhotoPreview').style.display = 'none';
   document.querySelectorAll('.prio-btn').forEach(b => b.style.opacity = b.textContent.trim()==='Normale'?'1':'0.5');
   document.getElementById('punchModal').style.display = 'flex';
 }
 
-function closePunchModal() { document.getElementById('punchModal').style.display = 'none'; }
+function closePunchModal() { document.getElementById('punchModal').style.display = 'none'; _fpPendingPinPos = null; }
 
 function setPunchPriority(p, btn) {
   _piPriority = p;
@@ -4331,8 +5047,9 @@ function savePunchItem() {
   const title = document.getElementById('piTitle').value.trim();
   if (!title) { showToast('Entrez une description'); return; }
   const items = _getItems();
-  items.unshift({ id:Date.now(), title, location:document.getElementById('piLocation').value.trim(), priority:_piPriority, status:'todo', photo:_piPhotoData, createdAt:new Date().toISOString() });
+  items.unshift({ id:Date.now(), title, location:document.getElementById('piLocation').value.trim(), priority:_piPriority, status:'todo', photo:_piPhotoData, createdAt:new Date().toISOString(), dueDate:document.getElementById('piDueDate').value||null, waiting:false });
   _saveItems(items);
+  if (_fpPendingPinPos) { _fpAddPin(_fpPendingPinPos.x, _fpPendingPinPos.y, items[0].id, items[0].title); }
   closePunchModal();
   renderPunchList();
   showToast('✅ Item ajouté');
@@ -4345,6 +5062,15 @@ function cyclePunchStatus(id) {
   const cycle = {todo:'doing', doing:'done', done:'todo'};
   item.status = cycle[item.status]||'todo';
   if(item.status==='done') item.completedAt=new Date().toISOString();
+  _saveItems(items);
+  renderPunchList();
+}
+
+function toggleWaiting(id) {
+  const items = _getItems();
+  const item = items.find(i=>i.id===id);
+  if(!item) return;
+  item.waiting = !item.waiting;
   _saveItems(items);
   renderPunchList();
 }
@@ -4379,20 +5105,36 @@ function renderPunchList() {
     container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);font-family:\'DM Sans\',sans-serif;font-size:14px;">Aucun item'+(all.length&&_plFilter!=='all'?' dans cette catégorie':' — appuyez sur « + Item »')+'.</div>';
     return;
   }
-  container.innerHTML = items.map(item=>`
+  const todayISO = new Date().toISOString().slice(0,10);
+  container.innerHTML = items.map(item=>{
+    const isOverdue = !!(item.dueDate && item.status!=='done' && item.dueDate<todayISO);
+    const daysLeft = item.dueDate ? Math.ceil((new Date(item.dueDate)-new Date(todayISO))/86400000) : null;
+    const isSoon = !!(item.dueDate && !isOverdue && item.status!=='done' && daysLeft!==null && daysLeft<=3);
+    let dueBadge='';
+    if(item.dueDate){
+      const label=new Date(item.dueDate+'T00:00:00').toLocaleDateString('fr-CA');
+      if(isOverdue) dueBadge='<span style="background:#FFCDD2;color:#B71C1C;border-radius:10px;padding:2px 8px;font-size:10px;font-family:\'DM Sans\',sans-serif;">⚠️ En retard '+label+'</span>';
+      else if(isSoon) dueBadge='<span style="background:#FFF3E0;color:#E07B00;border-radius:10px;padding:2px 8px;font-size:10px;font-family:\'DM Sans\',sans-serif;">'+label+'</span>';
+      else dueBadge='<span style="background:#F2F2F7;color:var(--text-light);border-radius:10px;padding:2px 8px;font-size:10px;font-family:\'DM Sans\',sans-serif;">'+label+'</span>';
+    }
+    const waitingBadge='<span onclick="toggleWaiting('+item.id+')" style="background:'+(item.waiting?'#8E8E93':'transparent')+';color:'+(item.waiting?'white':'#8E8E93')+';border:1px solid #8E8E93;border-radius:10px;padding:2px 8px;font-size:10px;font-family:\'DM Sans\',sans-serif;cursor:pointer;">⏸ En attente</span>';
+    return `
     <div class="punch-card" style="margin-bottom:10px;opacity:${item.status==='done'?'0.6':'1'};">
       <div class="punch-status ${item.status}" onclick="cyclePunchStatus(${item.id})">${statusIcon[item.status]||'○'}</div>
       <div style="flex:1;min-width:0;">
         <div style="font-family:'DM Sans',sans-serif;font-size:14px;color:#333;font-weight:500;${item.status==='done'?'text-decoration:line-through;':''}">${escHtml(item.title)}</div>
         ${item.location?'<div style="font-size:11px;color:var(--text-light);margin-top:2px;font-family:\'DM Sans\',sans-serif;">📍 '+escHtml(item.location)+'</div>':''}
-        <div style="display:flex;gap:6px;margin-top:6px;align-items:center;">
+        <div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap;">
           <span style="background:${prioColor[item.priority]||'#ccc'};color:white;border-radius:10px;padding:2px 8px;font-size:10px;font-family:\'DM Sans\',sans-serif;">${escHtml(item.priority)}</span>
           <span style="font-size:10px;color:var(--text-light);font-family:\'DM Sans\',sans-serif;">${item.createdAt?new Date(item.createdAt).toLocaleDateString('fr-CA'):''}</span>
+          ${dueBadge}
+          ${waitingBadge}
         </div>
         ${item.photo?'<img src="'+item.photo+'" style="margin-top:8px;width:100%;max-height:120px;object-fit:cover;border-radius:8px;">':''}
       </div>
       <button onclick="deletePunchItem(${item.id})" style="background:none;border:none;color:#FF453A;font-size:18px;cursor:pointer;padding:0;align-self:flex-start;">×</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 // ===== CLIENT PORTAL =====
@@ -4640,25 +5382,34 @@ async function sendTeamsUpdate(){
   <input type="file" id="galleryFileInput" accept="image/*,video/*" style="display:none;" onchange="handleGalleryCapture(event)" multiple>
 
 <!-- ===== SCREEN PLAN D'ÉTAGE ===== -->
-<div class="screen" id="screenFloorPlan" style="flex-direction:column;background:var(--rose-cream);">
+<div class="screen" id="screenFloorPlan" style="flex-direction:column;background:var(--rose-cream);height:100vh;max-height:100vh;overflow:hidden;">
   <div style="background:var(--mauve);padding:calc(env(safe-area-inset-top,0px)+12px) 16px 12px;display:flex;align-items:center;gap:12px;">
     <button onclick="showScreen('screenClient')" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;">‹</button>
     <h2 style="color:white;font-family:'Cormorant Garamond',serif;font-size:20px;margin:0;flex:1;">Plan d'étage</h2>
+    <button onclick="togglePlanFilesPanel()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:20px;padding:6px 10px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">📂</button>
     <button onclick="document.getElementById('floorPlanInput').click()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">+ Importer</button>
   </div>
   <input type="file" id="floorPlanInput" accept="image/*,.pdf,.dxf,.dwg" style="display:none" onchange="loadFloorPlan(event)">
+  <div id="planFilesPanel" style="display:none;background:white;border-bottom:1px solid var(--blush);max-height:40vh;overflow-y:auto;">
+    <div style="padding:10px 14px 4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Plans dans OneDrive</div>
+    <div id="planFilesList"></div>
+  </div>
   <div id="floorPlanEmpty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--text-light);padding:40px;">
     <div style="font-size:48px;">🏠</div>
     <div style="font-family:'DM Sans',sans-serif;font-size:15px;text-align:center;">Importez un plan d'étage<br><span style="font-size:12px;opacity:0.7;">Image JPG, PNG ou PDF</span></div>
     <button onclick="document.getElementById('floorPlanInput').click()" style="background:var(--mauve);color:white;border:none;border-radius:24px;padding:12px 28px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;">Choisir un fichier</button>
   </div>
-  <div id="floorPlanCanvas" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
-    <canvas id="fpCanvas" style="width:100%;flex:1;object-fit:contain;touch-action:none;"></canvas>
-    <div style="display:flex;justify-content:space-around;padding:12px 16px calc(env(safe-area-inset-bottom,0px)+12px);background:white;border-top:1px solid var(--blush);">
-      <button onclick="fpUndo()" style="background:var(--blush);border:none;border-radius:20px;padding:8px 20px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--mauve);cursor:pointer;">↩ Annuler</button>
-      <button onclick="fpSetTool('pen')" id="fpBtnPen" class="fp-tool-btn fp-active" style="background:var(--mauve);color:white;border:none;border-radius:20px;padding:8px 20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">✏️ Stylo</button>
-      <button onclick="fpSetTool('text')" id="fpBtnText" class="fp-tool-btn" style="background:var(--blush);color:var(--mauve);border:none;border-radius:20px;padding:8px 20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">T Texte</button>
-      <button onclick="fpSave()" style="background:#34C759;color:white;border:none;border-radius:20px;padding:8px 20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">💾 Sauver</button>
+  <div id="floorPlanCanvas" style="display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0;">
+    <div id="fpCanvasWrap" style="position:relative;flex:1;overflow:hidden;min-height:0;">
+      <canvas id="fpCanvas" style="width:100%;height:100%;object-fit:contain;touch-action:none;display:block;"></canvas>
+      <div id="fpPinLayer" style="position:absolute;inset:0;pointer-events:none;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-around;align-items:center;padding:8px 16px calc(env(safe-area-inset-bottom,0px)+8px);background:white;flex-wrap:wrap;gap:6px;max-height:35vh;overflow-y:auto;">
+      <button onclick="fpUndo()" style="background:var(--blush);border:none;border-radius:20px;padding:7px 18px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--mauve);cursor:pointer;">↩ Annuler</button>
+      <button onclick="fpSetTool('pen')" id="fpBtnPen" class="fp-tool-btn fp-active" style="background:var(--mauve);color:white;border:none;border-radius:20px;padding:7px 18px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Stylo</button>
+      <button onclick="fpSetTool('pin')" id="fpBtnPin" class="fp-tool-btn" style="background:var(--blush);color:var(--mauve);border:none;border-radius:20px;padding:7px 18px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Épingle</button>
+      <button onclick="fpSave()" style="background:#34C759;color:white;border:none;border-radius:20px;padding:7px 18px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Sauver</button>
+      <button onclick="sendFloorPlanToOneDrive()" style="flex-basis:100%;background:#0A84FF;color:white;border:none;border-radius:20px;padding:9px 20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><polyline points="9 15 12 12 15 15"/><line x1="12" y1="12" x2="12" y2="19"/></svg> Envoyer à OneDrive</button>
     </div>
   </div>
 </div>
@@ -4684,15 +5435,6 @@ async function sendTeamsUpdate(){
     <div id="budgetLines" style="display:flex;flex-direction:column;gap:10px;"></div>
     <button onclick="printBudget()" style="width:100%;margin-top:16px;background:var(--mauve);color:white;border:none;border-radius:24px;padding:14px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;margin-bottom:calc(env(safe-area-inset-bottom,0px)+16px);">🖨️ Imprimer le budget</button>
   </div>
-</div>
-
-<!-- RAPPORT PDF -->
-<div id="printReport">
-  <div class="pr-header">
-    <div class="pr-title" id="prTitle">Rapport Chantier</div>
-    <div id="prMeta" style="font-size:13px;color:#6B4A56;margin-top:6px;"></div>
-  </div>
-  <div class="pr-grid" id="prGrid"></div>
 </div>
 
 <!-- FACTURE IMPRIMABLE -->
@@ -4751,6 +5493,7 @@ async function sendTeamsUpdate(){
     <button onclick="startAutoDetect()" id="kmAutoBtn" style="margin-left:8px;background:var(--blush);border:none;border-radius:16px;padding:5px 12px;font-size:11px;color:var(--mauve);cursor:pointer;font-family:'DM Sans',sans-serif;">📍 Activer détection auto</button>
     <button onclick="printKmReport()" style="margin-left:auto;background:var(--mauve);color:white;border:none;border-radius:16px;padding:5px 14px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;">🖨️ Rapport</button>
   </div>
+  <div style="padding:2px 14px 0;font-size:10px;color:#8E8E93;font-family:'DM Sans',sans-serif;font-style:italic;">Fonctionne pendant que l'app est ouverte — pas en arrière-plan.</div>
 
   <!-- MileIQ-style trip list -->
   <div style="flex:1;overflow-y:auto;padding:12px 14px;padding-bottom:calc(env(safe-area-inset-bottom,0px)+80px);">
@@ -4783,7 +5526,7 @@ async function sendTeamsUpdate(){
       <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8E8E93;font-family:'DM Sans',sans-serif;">Distance (km)</label>
         <input type="number" id="kmInputKm" placeholder="0.0" min="0" step="0.1" style="width:100%;border:none;border-bottom:2px solid #E5E5EA;padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;outline:none;background:transparent;box-sizing:border-box;"></div>
       <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8E8E93;font-family:'DM Sans',sans-serif;">Client</label>
-        <input type="text" id="kmInputClient" placeholder="Nom du client" style="width:100%;border:none;border-bottom:2px solid #E5E5EA;padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;outline:none;background:transparent;box-sizing:border-box;"></div>
+        <div id="kmClientChip" onclick="_kmOpenClientPicker(_kmSetModalClient)" style="width:100%;border:none;border-bottom:2px solid #E5E5EA;padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;cursor:pointer;box-sizing:border-box;">🏠 Personnel</div></div>
       <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8E8E93;font-family:'DM Sans',sans-serif;">Motif</label>
         <input type="text" id="kmInputMotif" placeholder="Visite chantier, Réunion client…" style="width:100%;border:none;border-bottom:2px solid #E5E5EA;padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;outline:none;background:transparent;box-sizing:border-box;"></div>
       <!-- Classification MileIQ style -->
@@ -4826,6 +5569,16 @@ async function sendTeamsUpdate(){
   </div>
 </div>
 
+<!-- ===== SCREEN ONEDRIVE ===== -->
+<div class="screen" id="screenOneDrive" style="flex-direction:column;background:var(--rose-cream);">
+  <div style="background:var(--mauve);padding:calc(env(safe-area-inset-top,0px)+12px) 16px 12px;display:flex;align-items:center;gap:12px;">
+    <button onclick="showScreen('screenClient')" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;">‹</button>
+    <h2 style="color:white;font-family:'Cormorant Garamond',serif;font-size:20px;margin:0;flex:1;">Fichiers OneDrive</h2>
+    <button onclick="uploadClientFile()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">+ Ajouter</button>
+  </div>
+  <div id="odFilesList" style="flex:1;overflow-y:auto;padding:14px;padding-bottom:calc(env(safe-area-inset-bottom,0px)+80px);"></div>
+</div>
+
 <!-- ===== SCREEN PUNCH LIST ===== -->
 <div class="screen" id="screenPunchList" style="flex-direction:column;background:var(--rose-cream);">
   <div style="background:var(--mauve);padding:calc(env(safe-area-inset-top,0px)+12px) 16px 12px;display:flex;align-items:center;gap:12px;">
@@ -4861,6 +5614,10 @@ async function sendTeamsUpdate(){
     <div style="display:flex;flex-direction:column;gap:12px;">
       <input type="text" id="piTitle" placeholder="Description de l'item" style="border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;color:#333;background:transparent;">
       <input type="text" id="piLocation" placeholder="Emplacement (ex: Cuisine, Salon…)" style="border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;color:#333;background:transparent;">
+      <div>
+        <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Date limite (optionnel) :</span>
+        <input type="date" id="piDueDate" style="width:100%;border:none;border-bottom:2px solid var(--blush);padding:8px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:#333;outline:none;background:transparent;box-sizing:border-box;">
+      </div>
       <div style="display:flex;gap:8px;align-items:center;">
         <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);font-family:'DM Sans',sans-serif;">Priorité :</span>
         <button onclick="setPunchPriority('haute',this)" class="prio-btn" style="background:#FF453A;color:white;border:none;border-radius:12px;padding:4px 12px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;opacity:0.5;">Haute</button>
